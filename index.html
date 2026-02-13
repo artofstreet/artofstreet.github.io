@@ -2,849 +2,473 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#DC2626">
-    <title>블랙아웃 가디언 - SMS 자동화 개선판</title>
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블랙아웃 가디언</title>
     <style>
         * {
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
         
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-            overflow-x: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #000;
+            min-height: 100vh;
+            overflow: hidden;
         }
-
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
-            50% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); }
+        
+        /* 메인 화면 */
+        #mainScreen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
         }
-
-        .emergency-pulse {
-            animation: pulse-red 2s infinite;
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-
-        .bounce-animation {
-            animation: bounce 1s infinite;
-        }
-
-        /* 자동 클릭을 위한 숨겨진 링크 */
-        .hidden-sms-link {
+        
+        /* 설정 아이콘 (우측 상단) */
+        .settings-icon {
             position: fixed;
-            left: -9999px;
-            opacity: 0;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 24px;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .settings-icon:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.1);
+        }
+        
+        /* 긴급 버튼 (메인) */
+        .emergency-btn {
+            width: 280px;
+            height: 280px;
+            background: #ff1744;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 32px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 20px 60px rgba(255, 23, 68, 0.5);
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+            text-align: center;
+            line-height: 1.3;
+            padding: 20px;
+        }
+        
+        .emergency-btn:active {
+            transform: scale(0.95);
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 20px 60px rgba(255, 23, 68, 0.5);
+            }
+            50% {
+                box-shadow: 0 20px 80px rgba(255, 23, 68, 0.8);
+            }
+        }
+        
+        /* 설정 화면 */
+        #settingsScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 200;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        #settingsScreen.active {
+            display: block;
+        }
+        
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .settings-header h2 {
+            font-size: 28px;
+            color: #333;
+        }
+        
+        .close-btn {
+            font-size: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .contact-group {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 15px;
+        }
+        
+        .contact-group h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .contact-input {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .contact-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .save-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 22px;
+            font-weight: bold;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        
+        .save-btn:active {
+            background: #45a049;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .info-box p {
+            color: #1976D2;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* 검은 화면 (SMS 전송 후) */
+        #blackScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 300;
+        }
+        
+        #blackScreen.active {
+            display: block;
+        }
+        
+        /* 상태 표시 (작게) */
+        .status-indicator {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-
-    <script type="text/babel">
-        const { useState, useEffect, useRef } = React;
-
-        // ==================== SMS 전송 유틸리티 ====================
+    <!-- 메인 화면 -->
+    <div id="mainScreen">
+        <!-- 설정 아이콘 -->
+        <div class="settings-icon" onclick="openSettings()">
+            ⚙️
+        </div>
         
-        // 방법 1: 동적 링크 + 자동 클릭 (가장 효과적)
-        const sendSMSViaAutoClick = (phone, message) => {
-            const link = document.createElement('a');
-            link.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
-            link.style.display = 'none';
-            document.body.appendChild(link);
-            
-            // 약간의 지연 후 클릭 (보안 정책 우회)
-            setTimeout(() => {
-                link.click();
-                document.body.removeChild(link);
-            }, 100);
+        <!-- 긴급 버튼 -->
+        <button class="emergency-btn" onclick="sendEmergencySMS()">
+            🚨<br>
+            긴급<br>
+            구조
+        </button>
+        
+        <!-- 상태 표시 -->
+        <div class="status-indicator" id="statusText">
+            설정에서 연락처를 등록하세요
+        </div>
+    </div>
+    
+    <!-- 설정 화면 -->
+    <div id="settingsScreen">
+        <div class="settings-header">
+            <h2>⚙️ 비상 연락처 설정</h2>
+            <button class="close-btn" onclick="closeSettings()">✕</button>
+        </div>
+        
+        <div class="contact-group">
+            <h3>📱 연락처 1 (필수)</h3>
+            <input type="tel" class="contact-input" id="contact1" placeholder="01012345678" maxlength="11">
+        </div>
+        
+        <div class="contact-group">
+            <h3>📱 연락처 2</h3>
+            <input type="tel" class="contact-input" id="contact2" placeholder="01023456789" maxlength="11">
+        </div>
+        
+        <div class="contact-group">
+            <h3>📱 연락처 3</h3>
+            <input type="tel" class="contact-input" id="contact3" placeholder="01034567890" maxlength="11">
+        </div>
+        
+        <div class="contact-group">
+            <h3>📱 연락처 4</h3>
+            <input type="tel" class="contact-input" id="contact4" placeholder="01045678901" maxlength="11">
+        </div>
+        
+        <div class="contact-group">
+            <h3>📱 연락처 5</h3>
+            <input type="tel" class="contact-input" id="contact5" placeholder="01056789012" maxlength="11">
+        </div>
+        
+        <button class="save-btn" onclick="saveContacts()">
+            💾 저장하기
+        </button>
+        
+        <div class="info-box">
+            <p>
+                <strong>💡 사용 안내</strong><br>
+                • 최소 1개의 연락처는 필수입니다<br>
+                • 전화번호는 하이픈(-) 없이 숫자만 입력하세요<br>
+                • 긴급 버튼을 누르면 즉시 문자 앱이 열립니다<br>
+                • 문자 전송 후 화면이 검은색으로 변합니다
+            </p>
+        </div>
+    </div>
+    
+    <!-- 검은 화면 (SMS 전송 후) -->
+    <div id="blackScreen"></div>
+    
+    <script>
+        // ========== 전역 변수 ==========
+        let currentLocation = null;
+        
+        // ========== 페이지 로드 시 ==========
+        window.onload = function() {
+            loadSavedContacts();
+            getLocation();
+            updateStatus();
         };
-
-        // 방법 2: 멀티 SMS (여러 연락처 순차 전송)
-        const sendMultipleSMS = async (contacts, message) => {
-            for (let i = 0; i < contacts.length; i++) {
-                const contact = contacts[i];
-                
-                // 각 SMS 사이에 지연 (사용자가 확인할 시간)
-                if (i > 0) {
-                    await new Promise(resolve => setTimeout(resolve, 1500));
-                }
-                
-                sendSMSViaAutoClick(contact.phone, message);
+        
+        // ========== 위치 정보 가져오기 (고정밀) ==========
+        function getLocation() {
+            if (!navigator.geolocation) {
+                console.log('위치 서비스 미지원');
+                currentLocation = { lat: 37.5665, lng: 126.9780 }; // 기본값
+                return;
             }
-        };
-
-        // 방법 3: 안드로이드 인텐트 스타일 (더 강력)
-        const sendSMSViaIntent = (phone, message) => {
-            // 안드로이드 인텐트 URL 스킴
-            const intentUrl = `intent://send?address=${phone}&sms_body=${encodeURIComponent(message)}#Intent;scheme=sms;package=com.android.mms;end`;
             
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    currentLocation = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    console.log('위치 확인:', currentLocation);
+                },
+                function(error) {
+                    console.log('위치 오류:', error.message);
+                    currentLocation = { lat: 37.5665, lng: 126.9780 }; // 기본값
+                },
+                {
+                    enableHighAccuracy: true,  // 고정밀 GPS
+                    timeout: 15000,
+                    maximumAge: 0
+                }
+            );
+        }
+        
+        // ========== 저장된 연락처 불러오기 ==========
+        function loadSavedContacts() {
+            for (let i = 1; i <= 5; i++) {
+                const saved = localStorage.getItem('contact' + i);
+                if (saved) {
+                    document.getElementById('contact' + i).value = saved;
+                }
+            }
+        }
+        
+        // ========== 연락처 저장 ==========
+        function saveContacts() {
+            let savedCount = 0;
+            
+            for (let i = 1; i <= 5; i++) {
+                const contact = document.getElementById('contact' + i).value.trim();
+                if (contact) {
+                    localStorage.setItem('contact' + i, contact);
+                    savedCount++;
+                }
+            }
+            
+            if (savedCount === 0) {
+                alert('⚠️ 최소 1개의 연락처를 입력해주세요!');
+                return;
+            }
+            
+            alert('✅ ' + savedCount + '개의 연락처가 저장되었습니다!');
+            updateStatus();
+            closeSettings();
+        }
+        
+        // ========== 긴급 SMS 전송 ==========
+        function sendEmergencySMS() {
+            // 위치 정보 다시 확인
+            getLocation();
+            
+            // 저장된 연락처 수집
+            const contacts = [];
+            for (let i = 1; i <= 5; i++) {
+                const contact = localStorage.getItem('contact' + i);
+                if (contact) {
+                    contacts.push(contact);
+                }
+            }
+            
+            if (contacts.length === 0) {
+                alert('⚠️ 먼저 설정에서 연락처를 등록해주세요!');
+                openSettings();
+                return;
+            }
+            
+            // 위치가 없으면 기본값 사용
+            if (!currentLocation) {
+                currentLocation = { lat: 37.5665, lng: 126.9780 };
+            }
+            
+            // 구글맵 링크 생성
+            const mapLink = 'https://maps.google.com/?q=' + currentLocation.lat + ',' + currentLocation.lng;
+            
+            // 메시지 내용
+            const message = '통화할수없는긴급상황! 내 위치 확인하고 도와줘. ' + mapLink;
+            
+            // SMS 링크 생성 (Android & iOS 호환)
+            let smsLink;
+            
+            // iOS 방식 시도
+            const recipientsIOS = contacts.join(',');
+            smsLink = 'sms:' + recipientsIOS + '&body=' + encodeURIComponent(message);
+            
+            // Android 방식도 준비 (fallback)
+            const recipientsAndroid = contacts.join(';');
+            const smsLinkAndroid = 'sms:' + recipientsAndroid + '?body=' + encodeURIComponent(message);
+            
+            // 즉시 SMS 앱 열기
             try {
-                window.location.href = intentUrl;
+                window.location.href = smsLink;
             } catch (e) {
-                // Fallback to normal SMS link
-                window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`;
+                // iOS 실패 시 Android 방식 시도
+                window.location.href = smsLinkAndroid;
             }
-        };
-
-        // ==================== 유틸리티 함수 ====================
-        const vibrate = (pattern) => {
-            if ('vibrate' in navigator) {
-                navigator.vibrate(pattern);
-            }
-        };
-
-        const getCurrentLocation = () => {
-            return new Promise((resolve) => {
-                if ('geolocation' in navigator) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            resolve({
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                accuracy: position.coords.accuracy
-                            });
-                        },
-                        () => {
-                            resolve({
-                                latitude: 37.5665,
-                                longitude: 126.9780,
-                                accuracy: 0
-                            });
-                        }
-                    );
-                } else {
-                    resolve({
-                        latitude: 37.5665,
-                        longitude: 126.9780,
-                        accuracy: 0
-                    });
-                }
-            });
-        };
-
-        const getBatteryLevel = async () => {
-            if ('getBattery' in navigator) {
-                try {
-                    const battery = await navigator.getBattery();
-                    return Math.round(battery.level * 100);
-                } catch {
-                    return 75;
-                }
-            }
-            return 75;
-        };
-
-        const saveToLocalStorage = (key, value) => {
-            try {
-                localStorage.setItem(key, JSON.stringify(value));
-            } catch (error) {
-                console.error('LocalStorage 저장 실패:', error);
-            }
-        };
-
-        const loadFromLocalStorage = (key, defaultValue) => {
-            try {
-                const item = localStorage.getItem(key);
-                return item ? JSON.parse(item) : defaultValue;
-            } catch (error) {
-                console.error('LocalStorage 불러오기 실패:', error);
-                return defaultValue;
-            }
-        };
-
-        // ==================== 메인 앱 컴포넌트 ====================
-        function BlackoutGuardianApp() {
-            const [screen, setScreen] = useState('main');
-            const [contacts, setContacts] = useState(() => {
-                return loadFromLocalStorage('contacts', [
-                    { id: 1, name: '엄마', phone: '01012345678', priority: 1 },
-                    { id: 2, name: '친구', phone: '01023456789', priority: 2 },
-                    { id: 3, name: '동생', phone: '01034567890', priority: 3 }
-                ]);
-            });
             
-            const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
-            const [battery, setBattery] = useState(0);
-            const [countdown, setCountdown] = useState(30);
-            const [isCountingDown, setIsCountingDown] = useState(false);
-            const [emergencyLogs, setEmergencyLogs] = useState(() => {
-                return loadFromLocalStorage('emergencyLogs', []);
-            });
-            const [settings, setSettings] = useState(() => {
-                return loadFromLocalStorage('settings', {
-                    countdownSeconds: 30,
-                    enableVibration: true,
-                    smsMethod: 'auto-click' // 'auto-click', 'intent', 'manual'
-                });
-            });
-
-            useEffect(() => {
-                saveToLocalStorage('contacts', contacts);
-            }, [contacts]);
-
-            useEffect(() => {
-                saveToLocalStorage('emergencyLogs', emergencyLogs);
-            }, [emergencyLogs]);
-
-            useEffect(() => {
-                saveToLocalStorage('settings', settings);
-            }, [settings]);
-
-            useEffect(() => {
-                const updateStatus = async () => {
-                    const loc = await getCurrentLocation();
-                    setLocation(loc);
-                    
-                    if ('getBattery' in navigator) {
-                        try {
-                            const battery = await navigator.getBattery();
-                            setBattery(Math.round(battery.level * 100));
-                            
-                            battery.addEventListener('levelchange', () => {
-                                setBattery(Math.round(battery.level * 100));
-                            });
-                        } catch (error) {
-                            setBattery(75);
-                        }
-                    } else {
-                        setBattery(75);
-                    }
-                };
-                
-                updateStatus();
-                const interval = setInterval(() => {
-                    getCurrentLocation().then(loc => setLocation(loc));
-                }, 10000);
-                
-                return () => clearInterval(interval);
-            }, []);
-
-            const triggerStealth = () => {
-                setScreen('stealth');
-                setCountdown(settings.countdownSeconds);
-                setIsCountingDown(true);
-                if (settings.enableVibration) {
-                    vibrate([200, 100, 200]);
-                }
-            };
-
-            const cancelEmergency = () => {
-                setIsCountingDown(false);
-                setScreen('main');
-                if (settings.enableVibration) {
-                    vibrate([100, 50, 100]);
-                }
-            };
-
-            const sendEmergencyAlert = async () => {
-                const loc = await getCurrentLocation();
-                const bat = await getBatteryLevel();
-                const timestamp = new Date().toLocaleString('ko-KR');
-                
-                const message = `[긴급] 블랙아웃 가디언
-시각: ${timestamp}
-위치: https://maps.google.com/?q=${loc.latitude},${loc.longitude}
-배터리: ${bat}%`;
-
-                const log = {
-                    id: Date.now(),
-                    timestamp,
-                    location: loc,
-                    battery: bat,
-                    contacts: contacts.map(c => c.name).join(', '),
-                    status: 'sent'
-                };
-                setEmergencyLogs([log, ...emergencyLogs]);
-
-                if (settings.enableVibration) {
-                    vibrate([500]);
-                }
-
-                // SMS 전송 (선택된 방법에 따라)
-                switch (settings.smsMethod) {
-                    case 'auto-click':
-                        await sendMultipleSMS(contacts, message);
-                        break;
-                    case 'intent':
-                        contacts.forEach(contact => {
-                            sendSMSViaIntent(contact.phone, message);
-                        });
-                        break;
-                    case 'manual':
-                        // 수동 전송 화면으로 이동
-                        setScreen('sms-manual');
-                        return;
-                }
-
-                setTimeout(() => {
-                    setScreen('main');
-                    setIsCountingDown(false);
-                }, 2000);
-            };
-
-            switch (screen) {
-                case 'stealth':
-                    return (
-                        <StealthModeScreen
-                            countdown={countdown}
-                            setCountdown={setCountdown}
-                            isCountingDown={isCountingDown}
-                            onCancel={cancelEmergency}
-                            onComplete={sendEmergencyAlert}
-                            enableVibration={settings.enableVibration}
-                        />
-                    );
-                case 'sms-manual':
-                    return (
-                        <ManualSMSScreen
-                            contacts={contacts}
-                            location={location}
-                            battery={battery}
-                            onBack={() => setScreen('main')}
-                        />
-                    );
-                case 'contacts':
-                    return (
-                        <ContactsScreen
-                            contacts={contacts}
-                            setContacts={setContacts}
-                            onBack={() => setScreen('main')}
-                        />
-                    );
-                case 'settings':
-                    return (
-                        <SettingsScreen
-                            settings={settings}
-                            setSettings={setSettings}
-                            emergencyLogs={emergencyLogs}
-                            onBack={() => setScreen('main')}
-                        />
-                    );
-                default:
-                    return (
-                        <MainScreen
-                            location={location}
-                            battery={battery}
-                            onEmergencyClick={triggerStealth}
-                            onContactsClick={() => setScreen('contacts')}
-                            onSettingsClick={() => setScreen('settings')}
-                        />
-                    );
+            // 0.5초 후 검은 화면 활성화
+            setTimeout(function() {
+                activateBlackScreen();
+            }, 500);
+        }
+        
+        // ========== 검은 화면 활성화 ==========
+        function activateBlackScreen() {
+            document.getElementById('blackScreen').classList.add('active');
+            
+            // 진동 (지원되는 경우)
+            if (navigator.vibrate) {
+                navigator.vibrate([300, 100, 300]);
             }
         }
-
-        // ==================== 메인 화면 ====================
-        function MainScreen({ location, battery, onEmergencyClick, onContactsClick, onSettingsClick }) {
-            const [address, setAddress] = useState('위치 확인 중...');
-            const [isCharging, setIsCharging] = useState(false);
-
-            useEffect(() => {
-                if (location.latitude && location.longitude) {
-                    setAddress(`위도 ${location.latitude.toFixed(4)}, 경도 ${location.longitude.toFixed(4)}`);
-                }
-            }, [location]);
-
-            useEffect(() => {
-                const checkCharging = async () => {
-                    if ('getBattery' in navigator) {
-                        try {
-                            const battery = await navigator.getBattery();
-                            setIsCharging(battery.charging);
-                            
-                            battery.addEventListener('chargingchange', () => {
-                                setIsCharging(battery.charging);
-                            });
-                        } catch (error) {
-                            console.error('Battery API 오류:', error);
-                        }
-                    }
-                };
-                checkCharging();
-            }, []);
-
-            return (
-                <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-                    <div className="bg-white shadow-sm p-6 text-center">
-                        <h1 className="text-4xl font-bold text-gray-800">🛡️ 블랙아웃 가디언</h1>
-                        <p className="text-gray-500 mt-2 text-lg">SMS 자동화 개선판</p>
-                    </div>
-
-                    <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
-                        <button
-                            onClick={onEmergencyClick}
-                            className="emergency-pulse w-full max-w-md h-32 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-3xl shadow-2xl transform transition-all hover:scale-105 active:scale-95"
-                        >
-                            <div className="flex items-center justify-center space-x-4">
-                                <span className="text-5xl">🚨</span>
-                                <span className="text-3xl font-bold">긴급 알림 보내기</span>
-                            </div>
-                        </button>
-
-                        <button
-                            onClick={onContactsClick}
-                            className="w-full max-w-md h-24 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-2xl shadow-xl transform transition-all hover:scale-105 active:scale-95"
-                        >
-                            <div className="flex items-center justify-center space-x-3">
-                                <span className="text-4xl">👥</span>
-                                <span className="text-2xl font-bold">비상 연락처 관리</span>
-                            </div>
-                        </button>
-
-                        <button
-                            onClick={onSettingsClick}
-                            className="w-full max-w-md h-24 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white rounded-2xl shadow-xl transform transition-all hover:scale-105 active:scale-95"
-                        >
-                            <div className="flex items-center justify-center space-x-3">
-                                <span className="text-4xl">⚙️</span>
-                                <span className="text-2xl font-bold">설정</span>
-                            </div>
-                        </button>
-
-                        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 mt-8">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-4">📍 현재 상태</h3>
-                            <div className="space-y-3">
-                                <div className="flex items-center space-x-3">
-                                    <span className="text-2xl">📍</span>
-                                    <div>
-                                        <p className="text-sm text-gray-500">위치</p>
-                                        <p className="text-lg font-medium text-gray-800">{address}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    <span className="text-2xl">{isCharging ? '⚡' : '🔋'}</span>
-                                    <div>
-                                        <p className="text-sm text-gray-500">배터리</p>
-                                        <p className="text-lg font-medium text-gray-800">
-                                            {battery}% {isCharging && <span className="text-green-600">(충전 중)</span>}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={onEmergencyClick}
-                        className="fixed bottom-4 right-4 w-16 h-16 bg-red-500 bg-opacity-20 hover:bg-opacity-40 rounded-full shadow-lg transition-all"
-                        aria-label="스텔스 활성화"
-                    >
-                        <span className="text-2xl opacity-30">🚨</span>
-                    </button>
-                </div>
-            );
+        
+        // ========== 검은 화면 비활성화 (뒤로가기 시) ==========
+        function deactivateBlackScreen() {
+            document.getElementById('blackScreen').classList.remove('active');
         }
-
-        // ==================== 스텔스 모드 화면 ====================
-        function StealthModeScreen({ countdown, setCountdown, isCountingDown, onCancel, onComplete, enableVibration }) {
-            const timerRef = useRef(null);
-            const [showSendButton, setShowSendButton] = useState(false);
-
-            useEffect(() => {
-                if (isCountingDown && countdown > 0) {
-                    timerRef.current = setInterval(() => {
-                        setCountdown(prev => {
-                            const newVal = prev - 1;
-                            
-                            if (newVal > 0 && newVal % 5 === 0 && enableVibration) {
-                                vibrate([100]);
-                            }
-                            
-                            if (newVal <= 0) {
-                                clearInterval(timerRef.current);
-                                setShowSendButton(true);
-                                
-                                // 1초 후 자동 전송 (사용자 제스처 활용)
-                                setTimeout(() => {
-                                    onComplete();
-                                }, 1000);
-                                
-                                return 0;
-                            }
-                            
-                            return newVal;
-                        });
-                    }, 1000);
-                }
-
-                return () => {
-                    if (timerRef.current) {
-                        clearInterval(timerRef.current);
-                    }
-                };
-            }, [isCountingDown, countdown]);
-
-            return (
-                <div className="min-h-screen bg-black flex items-center justify-center p-6">
-                    <div className="text-center space-y-12">
-                        {!showSendButton ? (
-                            <>
-                                <div className="text-white text-opacity-30">
-                                    <div className="text-8xl font-bold mb-2">{countdown}</div>
-                                    <div className="text-2xl">초 남음</div>
-                                </div>
-
-                                <div className="w-64 h-3 bg-white bg-opacity-10 rounded-full overflow-hidden mx-auto">
-                                    <div 
-                                        className="h-full bg-red-500 bg-opacity-50 transition-all duration-1000"
-                                        style={{ width: `${((30 - countdown) / 30) * 100}%` }}
-                                    />
-                                </div>
-
-                                <button
-                                    onClick={onCancel}
-                                    className="w-72 h-24 bg-white bg-opacity-20 hover:bg-opacity-30 active:bg-opacity-40 text-white rounded-2xl shadow-2xl transform transition-all hover:scale-105 active:scale-95"
-                                >
-                                    <div className="text-3xl font-bold">✕ 취소</div>
-                                </button>
-
-                                <div className="text-white text-opacity-50 text-lg">
-                                    긴급 알림 전송 대기 중...
-                                </div>
-                            </>
-                        ) : (
-                            <>
-                                <div className="text-white text-opacity-50 text-3xl mb-8">
-                                    ⏰ 시간 종료!
-                                </div>
-
-                                <button
-                                    onClick={onComplete}
-                                    className="bounce-animation w-80 h-32 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-3xl shadow-2xl transform transition-all"
-                                >
-                                    <div className="text-4xl font-bold">📱 긴급 문자 보내기</div>
-                                    <div className="text-lg mt-2">탭하여 전송</div>
-                                </button>
-
-                                <div className="text-white text-opacity-40 text-sm">
-                                    자동 전송 시도 중...
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
-            );
+        
+        // ========== 설정 화면 열기 ==========
+        function openSettings() {
+            document.getElementById('settingsScreen').classList.add('active');
         }
-
-        // ==================== 수동 SMS 전송 화면 ====================
-        function ManualSMSScreen({ contacts, location, battery, onBack }) {
-            const message = `[긴급] 블랙아웃 가디언
-시각: ${new Date().toLocaleString('ko-KR')}
-위치: https://maps.google.com/?q=${location.latitude},${location.longitude}
-배터리: ${battery}%`;
-
-            const sendToContact = (contact) => {
-                const link = document.createElement('a');
-                link.href = `sms:${contact.phone}?body=${encodeURIComponent(message)}`;
-                link.click();
-            };
-
-            return (
-                <div className="min-h-screen bg-gray-50">
-                    <div className="bg-white shadow-sm p-6 flex items-center">
-                        <button
-                            onClick={onBack}
-                            className="text-3xl text-gray-600 hover:text-gray-800 mr-4"
-                        >
-                            ←
-                        </button>
-                        <h2 className="text-3xl font-bold text-gray-800">📱 긴급 문자 전송</h2>
-                    </div>
-
-                    <div className="p-6 space-y-4">
-                        <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6">
-                            <p className="text-yellow-800 font-semibold">각 연락처 버튼을 탭하여 문자를 전송하세요</p>
-                        </div>
-
-                        {contacts.map((contact, index) => (
-                            <button
-                                key={contact.id}
-                                onClick={() => sendToContact(contact)}
-                                className="w-full bg-white rounded-xl shadow-md p-6 flex items-center justify-between hover:shadow-lg transition-all active:scale-95"
-                            >
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center text-2xl font-bold text-white">
-                                        {index + 1}
-                                    </div>
-                                    <div className="text-left">
-                                        <h3 className="text-2xl font-bold text-gray-800">{contact.name}</h3>
-                                        <p className="text-lg text-gray-500">{contact.phone}</p>
-                                    </div>
-                                </div>
-                                <div className="text-3xl">📨</div>
-                            </button>
-                        ))}
-
-                        <div className="bg-white rounded-xl shadow-md p-6 mt-8">
-                            <h3 className="text-xl font-bold text-gray-800 mb-3">전송될 메시지 미리보기</h3>
-                            <div className="bg-gray-100 p-4 rounded-lg">
-                                <pre className="text-sm text-gray-700 whitespace-pre-wrap">{message}</pre>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            );
+        
+        // ========== 설정 화면 닫기 ==========
+        function closeSettings() {
+            document.getElementById('settingsScreen').classList.remove('active');
         }
-
-        // ==================== 연락처 관리 화면 ====================
-        function ContactsScreen({ contacts, setContacts, onBack }) {
-            const [isAdding, setIsAdding] = useState(false);
-            const [newContact, setNewContact] = useState({ name: '', phone: '' });
-
-            const addContact = () => {
-                if (newContact.name && newContact.phone) {
-                    // 전화번호에서 하이픈 제거
-                    const cleanPhone = newContact.phone.replace(/-/g, '');
-                    
-                    setContacts([
-                        ...contacts,
-                        {
-                            id: Date.now(),
-                            name: newContact.name,
-                            phone: cleanPhone,
-                            priority: contacts.length + 1
-                        }
-                    ]);
-                    setNewContact({ name: '', phone: '' });
-                    setIsAdding(false);
-                }
-            };
-
-            const deleteContact = (id) => {
-                if (confirm('이 연락처를 삭제하시겠습니까?')) {
-                    setContacts(contacts.filter(c => c.id !== id));
-                }
-            };
-
-            return (
-                <div className="min-h-screen bg-gray-50">
-                    <div className="bg-white shadow-sm p-6 flex items-center justify-between">
-                        <button
-                            onClick={onBack}
-                            className="text-3xl text-gray-600 hover:text-gray-800"
-                        >
-                            ← 
-                        </button>
-                        <h2 className="text-3xl font-bold text-gray-800">👥 비상 연락처</h2>
-                        <button
-                            onClick={() => setIsAdding(true)}
-                            className="text-3xl text-blue-600 hover:text-blue-700"
-                        >
-                            +
-                        </button>
-                    </div>
-
-                    <div className="p-6 space-y-4">
-                        <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
-                            <p className="text-blue-800 text-sm">💡 전화번호는 하이픈 없이 저장됩니다 (예: 01012345678)</p>
-                        </div>
-
-                        {contacts.map((contact, index) => (
-                            <div key={contact.id} className="bg-white rounded-xl shadow-md p-6 flex items-center justify-between">
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600">
-                                        {index + 1}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-2xl font-bold text-gray-800">{contact.name}</h3>
-                                        <p className="text-lg text-gray-500">{contact.phone}</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => deleteContact(contact.id)}
-                                    className="text-3xl text-red-500 hover:text-red-700"
-                                >
-                                    🗑️
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-
-                    {isAdding && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
-                            <div className="bg-white rounded-2xl p-8 w-full max-w-md space-y-6">
-                                <h3 className="text-3xl font-bold text-gray-800">새 연락처 추가</h3>
-                                
-                                <input
-                                    type="text"
-                                    placeholder="이름"
-                                    value={newContact.name}
-                                    onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                                    className="w-full px-6 py-4 text-2xl border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-                                />
-                                
-                                <input
-                                    type="tel"
-                                    placeholder="전화번호 (01012345678)"
-                                    value={newContact.phone}
-                                    onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                                    className="w-full px-6 py-4 text-2xl border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
-                                />
-                                
-                                <div className="flex space-x-4">
-                                    <button
-                                        onClick={() => setIsAdding(false)}
-                                        className="flex-1 py-4 text-xl font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-xl"
-                                    >
-                                        취소
-                                    </button>
-                                    <button
-                                        onClick={addContact}
-                                        className="flex-1 py-4 text-xl font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl"
-                                    >
-                                        추가
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-            );
+        
+        // ========== 상태 업데이트 ==========
+        function updateStatus() {
+            const contact1 = localStorage.getItem('contact1');
+            const statusText = document.getElementById('statusText');
+            
+            if (contact1) {
+                statusText.textContent = '긴급 연락처 등록됨 ✅';
+            } else {
+                statusText.textContent = '설정에서 연락처를 등록하세요';
+            }
         }
-
-        // ==================== 설정 화면 ====================
-        function SettingsScreen({ settings, setSettings, emergencyLogs, onBack }) {
-            return (
-                <div className="min-h-screen bg-gray-50">
-                    <div className="bg-white shadow-sm p-6 flex items-center">
-                        <button
-                            onClick={onBack}
-                            className="text-3xl text-gray-600 hover:text-gray-800 mr-4"
-                        >
-                            ←
-                        </button>
-                        <h2 className="text-3xl font-bold text-gray-800">⚙️ 설정</h2>
-                    </div>
-
-                    <div className="p-6 space-y-6">
-                        {/* SMS 전송 방법 선택 */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-4">📱 SMS 전송 방법</h3>
-                            <div className="space-y-3">
-                                <label className="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                                    <input
-                                        type="radio"
-                                        name="smsMethod"
-                                        value="auto-click"
-                                        checked={settings.smsMethod === 'auto-click'}
-                                        onChange={(e) => setSettings({ ...settings, smsMethod: e.target.value })}
-                                        className="w-6 h-6 mr-4"
-                                    />
-                                    <div>
-                                        <div className="text-lg font-semibold">자동 클릭 (권장)</div>
-                                        <div className="text-sm text-gray-500">동적 링크 생성 + 자동 클릭</div>
-                                    </div>
-                                </label>
-                                
-                                <label className="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                                    <input
-                                        type="radio"
-                                        name="smsMethod"
-                                        value="intent"
-                                        checked={settings.smsMethod === 'intent'}
-                                        onChange={(e) => setSettings({ ...settings, smsMethod: e.target.value })}
-                                        className="w-6 h-6 mr-4"
-                                    />
-                                    <div>
-                                        <div className="text-lg font-semibold">안드로이드 인텐트</div>
-                                        <div className="text-sm text-gray-500">더 강력한 방법 (일부 기기)</div>
-                                    </div>
-                                </label>
-                                
-                                <label className="flex items-center p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100">
-                                    <input
-                                        type="radio"
-                                        name="smsMethod"
-                                        value="manual"
-                                        checked={settings.smsMethod === 'manual'}
-                                        onChange={(e) => setSettings({ ...settings, smsMethod: e.target.value })}
-                                        className="w-6 h-6 mr-4"
-                                    />
-                                    <div>
-                                        <div className="text-lg font-semibold">수동 전송</div>
-                                        <div className="text-sm text-gray-500">각 연락처 버튼 개별 클릭</div>
-                                    </div>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* 카운트다운 시간 */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-4">⏱️ 카운트다운 시간</h3>
-                            <div className="flex items-center justify-between">
-                                <span className="text-xl text-gray-600">{settings.countdownSeconds}초</span>
-                                <input
-                                    type="range"
-                                    min="15"
-                                    max="60"
-                                    step="5"
-                                    value={settings.countdownSeconds}
-                                    onChange={(e) => setSettings({ ...settings, countdownSeconds: parseInt(e.target.value) })}
-                                    className="w-48 h-3"
-                                />
-                            </div>
-                        </div>
-
-                        {/* 진동 알림 */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h3 className="text-2xl font-bold text-gray-800">📳 진동 알림</h3>
-                                    <p className="text-lg text-gray-500 mt-1">카운트다운 시 진동으로 알림</p>
-                                </div>
-                                <button
-                                    onClick={() => setSettings({ ...settings, enableVibration: !settings.enableVibration })}
-                                    className={`w-20 h-10 rounded-full transition-colors ${
-                                        settings.enableVibration ? 'bg-blue-600' : 'bg-gray-300'
-                                    }`}
-                                >
-                                    <div className={`w-8 h-8 bg-white rounded-full shadow-md transform transition-transform ${
-                                        settings.enableVibration ? 'translate-x-10' : 'translate-x-1'
-                                    }`} />
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 긴급 로그 */}
-                        <div className="bg-white rounded-xl shadow-md p-6">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-4">📜 긴급 이벤트 기록</h3>
-                            {emergencyLogs.length === 0 ? (
-                                <p className="text-lg text-gray-400 text-center py-8">아직 기록이 없습니다</p>
-                            ) : (
-                                <div className="space-y-3">
-                                    {emergencyLogs.slice(0, 5).map((log) => (
-                                        <div key={log.id} className="border-l-4 border-red-500 pl-4 py-2">
-                                            <div className="text-lg font-semibold text-gray-800">{log.timestamp}</div>
-                                            <div className="text-sm text-gray-600">
-                                                위치: {log.location.latitude.toFixed(6)}, {log.location.longitude.toFixed(6)}
-                                            </div>
-                                            <div className="text-sm text-gray-600">배터리: {log.battery}%</div>
-                                            <div className="text-sm text-gray-600">전송: {log.contacts}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
-        // ==================== 앱 렌더링 ====================
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<BlackoutGuardianApp />);
+        
+        // ========== 뒤로가기 버튼 처리 ==========
+        window.addEventListener('popstate', function(event) {
+            // 검은 화면 활성화되어 있으면 비활성화
+            if (document.getElementById('blackScreen').classList.contains('active')) {
+                deactivateBlackScreen();
+            }
+            
+            // 설정 화면 열려있으면 닫기
+            if (document.getElementById('settingsScreen').classList.contains('active')) {
+                closeSettings();
+            }
+        });
+        
+        // ========== 화면 터치로 검은 화면 해제 (선택적) ==========
+        document.getElementById('blackScreen').addEventListener('click', function() {
+            deactivateBlackScreen();
+        });
     </script>
 </body>
 </html>
