@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#DC2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>블랙아웃 가디언 - 개인 안전 앱</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM CDN -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel Standalone for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* 큰 버튼 호버 효과 */
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7); }
+            50% { box-shadow: 0 0 0 20px rgba(220, 38, 38, 0); }
+        }
+
+        .emergency-pulse {
+            animation: pulse-red 2s infinite;
+        }
+
+        /* 로딩 스피너 */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ==================== 유틸리티 함수 ====================
+        const vibrate = (pattern) => {
+            if ('vibrate' in navigator) {
+                navigator.vibrate(pattern);
+            }
+        };
+
+        const getCurrentLocation = () => {
+            return new Promise((resolve) => {
+                if ('geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            resolve({
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude,
+                                accuracy: position.coords.accuracy
+                            });
+                        },
+                        () => {
+                            // 위치 권한 거부 시 서울 시청 좌표 반환
+                            resolve({
+                                latitude: 37.5665,
+                                longitude: 126.9780,
+                                accuracy: 0
+                            });
+                        }
+                    );
+                } else {
+                    resolve({
+                        latitude: 37.5665,
+                        longitude: 126.9780,
+                        accuracy: 0
+                    });
+                }
+            });
+        };
+
+        const getBatteryLevel = async () => {
+            if ('getBattery' in navigator) {
+                try {
+                    const battery = await navigator.getBattery();
+                    return Math.round(battery.level * 100);
+                } catch {
+                    return 75;
+                }
+            }
+            return 75;
+        };
+
+        // LocalStorage 헬퍼 함수
+        const saveToLocalStorage = (key, value) => {
+            try {
+                localStorage.setItem(key, JSON.stringify(value));
+            } catch (error) {
+                console.error('LocalStorage 저장 실패:', error);
+            }
+        };
+
+        const loadFromLocalStorage = (key, defaultValue) => {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultValue;
+            } catch (error) {
+                console.error('LocalStorage 불러오기 실패:', error);
+                return defaultValue;
+            }
+        };
+
+        // ==================== 메인 앱 컴포넌트 ====================
+        function BlackoutGuardianApp() {
+            const [screen, setScreen] = useState('main');
+            
+            // localStorage에서 연락처 불러오기
+            const [contacts, setContacts] = useState(() => {
+                return loadFromLocalStorage('contacts', [
+                    { id: 1, name: '엄마', phone: '010-1234-5678', priority: 1 },
+                    { id: 2, name: '친구', phone: '010-2345-6789', priority: 2 },
+                    { id: 3, name: '동생', phone: '010-3456-7890', priority: 3 }
+                ]);
+            });
+            
+            const [location, setLocation] = useState({ latitude: 0, longitude: 0 });
+            const [battery, setBattery] = useState(0);
+            const [countdown, setCountdown] = useState(30);
+            const [isCountingDown, setIsCountingDown] = useState(false);
+            
+            // localStorage에서 긴급 로그 불러오기
+            const [emergencyLogs, setEmergencyLogs] = useState(() => {
+                return loadFromLocalStorage('emergencyLogs', []);
+            });
+            
+            // localStorage에서 설정 불러오기
+            const [settings, setSettings] = useState(() => {
+                return loadFromLocalStorage('settings', {
+                    countdownSeconds: 30,
+                    enableVibration: true,
+                    autoRecording: true
+                });
+            });
+
+            // 연락처 변경 시 localStorage에 저장
+            useEffect(() => {
+                saveToLocalStorage('contacts', contacts);
+            }, [contacts]);
+
+            // 긴급 로그 변경 시 localStorage에 저장
+            useEffect(() => {
+                saveToLocalStorage('emergencyLogs', emergencyLogs);
+            }, [emergencyLogs]);
+
+            // 설정 변경 시 localStorage에 저장
+            useEffect(() => {
+                saveToLocalStorage('settings', settings);
+            }, [settings]);
+
+            // 위치 및 배터리 실시간 업데이트
+            useEffect(() => {
+                const updateStatus = async () => {
+                    const loc = await getCurrentLocation();
+                    setLocation(loc);
+                    
+                    // Battery Status API 실시간 모니터링
+                    if ('getBattery' in navigator) {
+                        try {
+                            const battery = await navigator.getBattery();
+                            setBattery(Math.round(battery.level * 100));
+                            
+                            // 배터리 레벨 변경 이벤트 리스너
+                            battery.addEventListener('levelchange', () => {
+                                setBattery(Math.round(battery.level * 100));
+                            });
+                            
+                            // 충전 상태 변경 이벤트 리스너
+                            battery.addEventListener('chargingchange', () => {
+                                console.log('충전 상태:', battery.charging ? '충전 중' : '충전 안 함');
+                            });
+                        } catch (error) {
+                            console.error('Battery API 오류:', error);
+                            setBattery(75);
+                        }
+                    } else {
+                        setBattery(75);
+                    }
+                };
+                
+                updateStatus();
+                const interval = setInterval(() => {
+                    getCurrentLocation().then(loc => setLocation(loc));
+                }, 10000);
+                
+                return () => clearInterval(interval);
+            }, []);
+
+            const triggerStealth = () => {
+                setScreen('stealth');
+                setCountdown(settings.countdownSeconds);
+                setIsCountingDown(true);
+                if (settings.enableVibration) {
+                    vibrate([200, 100, 200]);
+                }
+            };
+
+            const cancelEmergency = () => {
+                setIsCountingDown(false);
+                setScreen('main');
+                if (settings.enableVibration) {
+                    vibrate([100, 50, 100]);
+                }
+            };
+
+            const sendEmergencyAlert = async () => {
+                const loc = await getCurrentLocation();
+                const bat = await getBatteryLevel();
+                const timestamp = new Date().toLocaleString('ko-KR');
+                
+                const message = `[긴급 알림] 블랙아웃 가디언
+발신 시각: ${timestamp}
+위치: 위도 ${loc.latitude.toFixed(6)}, 경도 ${loc.longitude.toFixed(6)}
+지도: https://maps.google.com/?q=${loc.latitude},${loc.longitude}
+배터리: ${bat}%`;
+
+                const log = {
+                    id: Date.now(),
+                    timestamp,
+                    location: loc,
+                    battery: bat,
+                    contacts: contacts.map(c => c.name).join(', '),
+                    status: 'sent'
+                };
+                setEmergencyLogs([log, ...emergencyLogs]);
+
+                console.log('📱 긴급 알림 전송됨:');
+                contacts.forEach(contact => {
+                    console.log(`→ ${contact.name} (${contact.phone})`);
+                    console.log(message);
+                });
+
+                if (settings.enableVibration) {
+                    vibrate([500]);
+                }
+
+                alert(`✅ 긴급 알림이 ${contacts.length}명에게 전송되었습니다!\n\n전송 내용:\n${message}`);
+
+                setTimeout(() => {
+                    setScreen('main');
+                    setIsCountingDown(false);
+                }, 3000);
+            };
+
+            switch (screen) {
+                case 'stealth':
+                    return (
+                        <StealthModeScreen
+                            countdown={countdown}
+                            setCountdown={setCountdown}
+                            isCountingDown={isCountingDown}
+                            onCancel={cancelEmergency}
+                            onComplete={sendEmergencyAlert}
+                            enableVibration={settings.enableVibration}
+                        />
+                    );
+                case 'contacts':
+                    return (
+                        <ContactsScreen
+                            contacts={contacts}
+                            setContacts={setContacts}
+                            onBack={() => setScreen('main')}
+                        />
+                    );
+                case 'settings':
+                    return (
+                        <SettingsScreen
+                            settings={settings}
+                            setSettings={setSettings}
+                            emergencyLogs={emergencyLogs}
+                            onBack={() => setScreen('main')}
+                        />
+                    );
+                default:
+                    return (
+                        <MainScreen
+                            location={location}
+                            battery={battery}
+                            onEmergencyClick={triggerStealth}
+                            onContactsClick={() => setScreen('contacts')}
+                            onSettingsClick={() => setScreen('settings')}
+                        />
+                    );
+            }
+        }
+
+        // ==================== 메인 화면 ====================
+        function MainScreen({ location, battery, onEmergencyClick, onContactsClick, onSettingsClick }) {
+            const [address, setAddress] = useState('위치 확인 중...');
+            const [isCharging, setIsCharging] = useState(false);
+
+            useEffect(() => {
+                if (location.latitude && location.longitude) {
+                    setAddress(`위도 ${location.latitude.toFixed(4)}, 경도 ${location.longitude.toFixed(4)}`);
+                }
+            }, [location]);
+
+            // 배터리 충전 상태 확인
+            useEffect(() => {
+                const checkCharging = async () => {
+                    if ('getBattery' in navigator) {
+                        try {
+                            const battery = await navigator.getBattery();
+                            setIsCharging(battery.charging);
+                            
+                            battery.addEventListener('chargingchange', () => {
+                                setIsCharging(battery.charging);
+                            });
+                        } catch (error) {
+                            console.error('Battery API 오류:', error);
+                        }
+                    }
+                };
+                checkCharging();
+            }, []);
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
+                    <div className="bg-white shadow-sm p-6 text-center">
+                        <h1 className="text-4xl font-bold text-gray-800">🛡️ 블랙아웃 가디언</h1>
+                        <p className="text-gray-500 mt-2 text-lg">당신의 안전을 지킵니다</p>
+                    </div>
+
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
+                        <button
+                            onClick={onEmergencyClick}
+                            className="emergency-pulse w-full max-w-md h-32 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-3xl shadow-2xl transform transition-all hover:scale-105 active:scale-95"
+                        >
+                            <div className="flex items-center justify-center space-x-4">
+                                <span className="text-5xl">🚨</span>
+                                <span className="text-3xl font-bold">긴급 알림 보내기</span>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={onContactsClick}
+                            className="w-full max-w-md h-24 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-2xl shadow-xl transform transition-all hover:scale-105 active:scale-95"
+                        >
+                            <div className="flex items-center justify-center space-x-3">
+                                <span className="text-4xl">👥</span>
+                                <span className="text-2xl font-bold">비상 연락처 관리</span>
+                            </div>
+                        </button>
+
+                        <button
+                            onClick={onSettingsClick}
+                            className="w-full max-w-md h-24 bg-gray-600 hover:bg-gray-700 active:bg-gray-800 text-white rounded-2xl shadow-xl transform transition-all hover:scale-105 active:scale-95"
+                        >
+                            <div className="flex items-center justify-center space-x-3">
+                                <span className="text-4xl">⚙️</span>
+                                <span className="text-2xl font-bold">설정</span>
+                            </div>
+                        </button>
+
+                        <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-6 mt-8">
+                            <h3 className="text-2xl font-bold text-gray-800 mb-4">📍 현재 상태</h3>
+                            <div className="space-y-3">
+                                <div className="flex items-center space-x-3">
+                                    <span className="text-2xl">📍</span>
+                                    <div>
+                                        <p className="text-sm text-gray-500">위치</p>
+                                        <p className="text-lg font-medium text-gray-800">{address}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center space-x-3">
+                                    <span className="text-2xl">{isCharging ? '⚡' : '🔋'}</span>
+                                    <div>
+                                        <p className="text-sm text-gray-500">배터리</p>
+                                        <p className="text-lg font-medium text-gray-800">
+                                            {battery}% {isCharging && <span className="text-green-600">(충전 중)</span>}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={onEmergencyClick}
+                        className="fixed bottom-4 right-4 w-16 h-16 bg-red-500 bg-opacity-20 hover:bg-opacity-40 rounded-full shadow-lg transition-all"
+                        aria-label="스텔스 활성화"
+                    >
+                        <span className="text-2xl opacity-30">🚨</span>
+                    </button>
+                </div>
+            );
+        }
+
+        // ==================== 스텔스 모드 화면 ====================
+        function StealthModeScreen({ countdown, setCountdown, isCountingDown, onCancel, onComplete, enableVibration }) {
+            const timerRef = useRef(null);
+            const mediaRecorderRef = useRef(null);
+            const audioChunksRef = useRef([]);
+            const [isRecording, setIsRecording] = useState(false);
+            const [recordingError, setRecordingError] = useState(null);
+
+            // 녹음 시작
+            useEffect(() => {
+                const startRecording = async () => {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        const mediaRecorder = new MediaRecorder(stream);
+                        mediaRecorderRef.current = mediaRecorder;
+                        audioChunksRef.current = [];
+
+                        mediaRecorder.ondataavailable = (event) => {
+                            if (event.data.size > 0) {
+                                audioChunksRef.current.push(event.data);
+                            }
+                        };
+
+                        mediaRecorder.onstop = () => {
+                            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                            const audioUrl = URL.createObjectURL(audioBlob);
+                            
+                            // 녹음 파일 다운로드
+                            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                            const fileName = `emergency_recording_${timestamp}.webm`;
+                            
+                            const a = document.createElement('a');
+                            a.href = audioUrl;
+                            a.download = fileName;
+                            a.click();
+                            
+                            console.log('✅ 녹음 완료! 파일:', fileName);
+                            
+                            // 스트림 종료
+                            stream.getTracks().forEach(track => track.stop());
+                        };
+
+                        mediaRecorder.start();
+                        setIsRecording(true);
+                        console.log('🎙️ 녹음 시작됨');
+                    } catch (error) {
+                        console.error('녹음 오류:', error);
+                        setRecordingError('마이크 권한이 거부되었거나 녹음을 시작할 수 없습니다.');
+                    }
+                };
+
+                startRecording();
+
+                return () => {
+                    // 컴포넌트 언마운트 시 녹음 중지
+                    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                        mediaRecorderRef.current.stop();
+                    }
+                };
+            }, []);
+
+            // 카운트다운 타이머
+            useEffect(() => {
+                if (isCountingDown && countdown > 0) {
+                    timerRef.current = setInterval(() => {
+                        setCountdown(prev => {
+                            const newVal = prev - 1;
+                            
+                            if (newVal > 0 && newVal % 5 === 0 && enableVibration) {
+                                vibrate([100]);
+                            }
+                            
+                            if (newVal <= 0) {
+                                clearInterval(timerRef.current);
+                                
+                                // 녹음 중지
+                                if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                                    mediaRecorderRef.current.stop();
+                                }
+                                
+                                onComplete();
+                                return 0;
+                            }
+                            
+                            return newVal;
+                        });
+                    }, 1000);
+                }
+
+                return () => {
+                    if (timerRef.current) {
+                        clearInterval(timerRef.current);
+                    }
+                };
+            }, [isCountingDown, countdown]);
+
+            const handleCancel = () => {
+                // 녹음 중지 및 삭제
+                if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                    mediaRecorderRef.current.stop();
+                    // 스트림 종료하고 녹음 데이터 삭제
+                    if (mediaRecorderRef.current.stream) {
+                        mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+                    }
+                    audioChunksRef.current = [];
+                    console.log('❌ 녹음 취소됨');
+                }
+                onCancel();
+            };
+
+            return (
+                <div className="min-h-screen bg-black flex items-center justify-center p-6">
+                    <div className="text-center space-y-12">
+                        <div className="text-white text-opacity-30">
+                            <div className="text-8xl font-bold mb-2">{countdown}</div>
+                            <div className="text-2xl">초 남음</div>
+                        </div>
+
+                        <div className="w-64 h-3 bg-white bg-opacity-10 rounded-full overflow-hidden mx-auto">
+                            <div 
+                                className="h-full bg-red-500 bg-opacity-50 transition-all duration-1000"
+                                style={{ width: `${((30 - countdown) / 30) * 100}%` }}
+                            />
+                        </div>
+
+                        <button
+                            onClick={handleCancel}
+                            className="w-72 h-24 bg-white bg-opacity-20 hover:bg-opacity-30 active:bg-opacity-40 text-white rounded-2xl shadow-2xl transform transition-all hover:scale-105 active:scale-95"
+                        >
+                            <div className="text-3xl font-bold">✕ 취소</div>
+                        </button>
+
+                        <div className="text-white text-opacity-50 text-lg">
+                            {countdown > 0 ? '긴급 알림 전송 대기 중...' : '알림 전송 완료'}
+                        </div>
+
+                        {isRecording && countdown > 0 && (
+                            <div className="flex items-center justify-center space-x-3 text-white text-opacity-60">
+                                <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+                                <span className="text-base">🎙️ 음성 녹음 중</span>
+                            </div>
+                        )}
+
+                        {recordingError && (
+                            <div className="text-yellow-400 text-sm px-4 py-2 bg-yellow-900 bg-opacity-30 rounded-lg">
+                                ⚠️ {recordingError}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ==================== 연락처 관리 화면 ====================
+        function ContactsScreen({ contacts, setContacts, onBack }) {
+            const [isAdding, setIsAdding] = useState(false);
+            const [newContact, setNewContact] = useState({ name: '', phone: '' });
+
+            const addContact = () => {
+                if (newContact.name && newContact.phone) {
+                    setContacts([
+                        ...contacts,
+                        {
+                            id: Date.now(),
+                            name: newContact.name,
+                            phone: newContact.phone,
+                            priority: contacts.length + 1
+                        }
+                    ]);
+                    setNewContact({ name: '', phone: '' });
+                    setIsAdding(false);
+                }
+            };
+
+            const deleteContact = (id) => {
+                if (confirm('이 연락처를 삭제하시겠습니까?')) {
+                    setContacts(contacts.filter(c => c.id !== id));
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <div className="bg-white shadow-sm p-6 flex items-center justify-between">
+                        <button
+                            onClick={onBack}
+                            className="text-3xl text-gray-600 hover:text-gray-800"
+                        >
+                            ← 
+                        </button>
+                        <h2 className="text-3xl font-bold text-gray-800">👥 비상 연락처</h2>
+                        <button
+                            onClick={() => setIsAdding(true)}
+                            className="text-3xl text-blue-600 hover:text-blue-700"
+                        >
+                            +
+                        </button>
+                    </div>
+
+                    <div className="p-6 space-y-4">
+                        {contacts.map((contact, index) => (
+                            <div key={contact.id} className="bg-white rounded-xl shadow-md p-6 flex items-center justify-between">
+                                <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl font-bold text-blue-600">
+                                        {index + 1}
+                                    </div>
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-gray-800">{contact.name}</h3>
+                                        <p className="text-lg text-gray-500">{contact.phone}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => deleteContact(contact.id)}
+                                    className="text-3xl text-red-500 hover:text-red-700"
+                                >
+                                    🗑️
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {isAdding && (
+                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-6 z-50">
+                            <div className="bg-white rounded-2xl p-8 w-full max-w-md space-y-6">
+                                <h3 className="text-3xl font-bold text-gray-800">새 연락처 추가</h3>
+                                
+                                <input
+                                    type="text"
+                                    placeholder="이름"
+                                    value={newContact.name}
+                                    onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
+                                    className="w-full px-6 py-4 text-2xl border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                />
+                                
+                                <input
+                                    type="tel"
+                                    placeholder="전화번호 (010-1234-5678)"
+                                    value={newContact.phone}
+                                    onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
+                                    className="w-full px-6 py-4 text-2xl border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none"
+                                />
+                                
+                                <div className="flex space-x-4">
+                                    <button
+                                        onClick={() => setIsAdding(false)}
+                                        className="flex-1 py-4 text-xl font-bold text-gray-600 bg-gray-200 hover:bg-gray-300 rounded-xl"
+                                    >
+                                        취소
+                                    </button>
+                                    <button
+                                        onClick={addContact}
+                                        className="flex-1 py-4 text-xl font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl"
+                                    >
+                                        추가
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // ==================== 설정 화면 ====================
+        function SettingsScreen({ settings, setSettings, emergencyLogs, onBack }) {
+            return (
+                <div className="min-h-screen bg-gray-50">
+                    <div className="bg-white shadow-sm p-6 flex items-center">
+                        <button
+                            onClick={onBack}
+                            className="text-3xl text-gray-600 hover:text-gray-800 mr-4"
+                        >
+                            ←
+                        </button>
+                        <h2 className="text-3xl font-bold text-gray-800">⚙️ 설정</h2>
+                    </div>
+
+                    <div className="p-6 space-y-6">
+                        <div className="bg-white rounded-xl shadow-md p-6">
+                            <h3 className="text-2xl font-bold text-gray-800 mb-4">⏱️ 카운트다운 시간</h3>
+                            <div className="flex items-center justify-between">
+                                <span className="text-xl text-gray-600">{settings.countdownSeconds}초</span>
+                                <input
+                                    type="range"
+                                    min="15"
+                                    max="60"
+                                    step="5"
+                                    value={settings.countdownSeconds}
+                                    onChange={(e) => setSettings({ ...settings, countdownSeconds: parseInt(e.target.value) })}
+                                    className="w-48 h-3"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl shadow-md p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-800">📳 진동 알림</h3>
+                                    <p className="text-lg text-gray-500 mt-1">카운트다운 시 진동으로 알림</p>
+                                </div>
+                                <button
+                                    onClick={() => setSettings({ ...settings, enableVibration: !settings.enableVibration })}
+                                    className={`w-20 h-10 rounded-full transition-colors ${
+                                        settings.enableVibration ? 'bg-blue-600' : 'bg-gray-300'
+                                    }`}
+                                >
+                                    <div className={`w-8 h-8 bg-white rounded-full shadow-md transform transition-transform ${
+                                        settings.enableVibration ? 'translate-x-10' : 'translate-x-1'
+                                    }`} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl shadow-md p-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <h3 className="text-2xl font-bold text-gray-800">🎙️ 자동 녹음</h3>
+                                    <p className="text-lg text-gray-500 mt-1">긴급 상황 시 자동으로 녹음 시작</p>
+                                </div>
+                                <button
+                                    onClick={() => setSettings({ ...settings, autoRecording: !settings.autoRecording })}
+                                    className={`w-20 h-10 rounded-full transition-colors ${
+                                        settings.autoRecording ? 'bg-blue-600' : 'bg-gray-300'
+                                    }`}
+                                >
+                                    <div className={`w-8 h-8 bg-white rounded-full shadow-md transform transition-transform ${
+                                        settings.autoRecording ? 'translate-x-10' : 'translate-x-1'
+                                    }`} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-xl shadow-md p-6">
+                            <h3 className="text-2xl font-bold text-gray-800 mb-4">📜 긴급 이벤트 기록</h3>
+                            {emergencyLogs.length === 0 ? (
+                                <p className="text-lg text-gray-400 text-center py-8">아직 기록이 없습니다</p>
+                            ) : (
+                                <div className="space-y-3">
+                                    {emergencyLogs.slice(0, 5).map((log) => (
+                                        <div key={log.id} className="border-l-4 border-red-500 pl-4 py-2">
+                                            <div className="text-lg font-semibold text-gray-800">{log.timestamp}</div>
+                                            <div className="text-sm text-gray-600">
+                                                위치: {log.location.latitude.toFixed(6)}, {log.location.longitude.toFixed(6)}
+                                            </div>
+                                            <div className="text-sm text-gray-600">배터리: {log.battery}%</div>
+                                            <div className="text-sm text-gray-600">전송: {log.contacts}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // ==================== 앱 렌더링 ====================
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<BlackoutGuardianApp />);
+    </script>
+</body>
+</html>
