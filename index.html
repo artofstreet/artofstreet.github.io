@@ -3,56 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>블랙아웃 가디언 - 개인 안전 앱</title>
+    <title>블랙아웃 가디언</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // 클로드의 핵심 기술: 화면을 깜깜하게 만드는 스타일
+        tailwind.config = {
+            theme: { extend: { colors: { 'black-out': '#000000' } } }
+        }
+    </script>
     <style>
-        .stealth-active { background-color: black !important; cursor: none; }
-        .stealth-active * { display: none !important; }
-        #emergency-action { display: flex !important; background-color: black; min-height: 100vh; width: 100%; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; z-index: 9999; }
+        /* 스텔스 모드일 때 모든 터치 차단 해제 및 스타일 */
+        .stealth-active { background-color: black !important; }
+        .hidden-menu { display: none !important; }
+        .show-emergency { display: flex !important; }
     </style>
 </head>
-<body class="bg-zinc-50" id="main-body">
-    <div id="emergency-action" style="display: none;">
-        <button onclick="sendSMS()" class="w-11/12 py-12 bg-red-700 text-white text-4xl font-black rounded-3xl animate-pulse">
-            🚨 긴급 문자 보내기
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div id="main-ui" class="w-full max-w-md space-y-6 text-center">
+        <h1 class="text-3xl font-black text-gray-800">🛡️ 블랙아웃 가디언</h1>
+        
+        <div class="bg-white p-4 rounded-xl shadow-md">
+            <label class="block text-left text-gray-600 mb-2 font-bold">📞 보호자 전화번호 (필수)</label>
+            <input type="tel" id="guardian-number" placeholder="01012345678" class="w-full text-2xl p-3 border-2 border-red-200 rounded-lg text-center font-bold" onchange="saveNumber()">
+            <p class="text-xs text-gray-400 mt-2 text-left">* 한 번 입력하면 자동 저장됩니다.</p>
+        </div>
+
+        <button onclick="startCountdown()" class="w-full py-8 bg-red-600 text-white text-3xl font-black rounded-3xl shadow-xl animate-pulse active:bg-red-800 transition transform active:scale-95">
+            🚨 긴급 모드 시작
         </button>
+
+        <p class="text-gray-500 mt-4">버튼을 누르면 5초 후 스텔스 모드로 전환됩니다.</p>
     </div>
 
-    <div id="ui-content" class="p-6">
-        <h1 class="text-2xl font-bold text-center mb-8">🛡️ 블랙아웃 가디언</h1>
-        <button onclick="startTimer()" class="w-full py-6 bg-red-500 text-white text-xl font-bold rounded-2xl mb-4">
-            🚨 긴급 알림 보내기 (30초)
+    <div id="stealth-ui" class="hidden-menu fixed inset-0 bg-black z-50 flex-col justify-center items-center w-full h-full">
+        <div class="absolute inset-0 bg-black"></div>
+        
+        <button onclick="sendRealSMS()" class="relative z-50 w-3/4 py-16 border-4 border-red-900 text-red-900 bg-black text-2xl font-bold rounded-3xl opacity-50 hover:opacity-100 transition">
+            🚨 문자 전송<br>(여기를 누르세요)
         </button>
-        <div id="timer-display" class="text-6xl font-black text-center py-10 text-red-600"></div>
     </div>
 
     <script>
-        let timer;
-        function startTimer() {
-            let count = 30;
-            document.getElementById('timer-display').innerText = count;
-            timer = setInterval(() => {
-                count--;
-                document.getElementById('timer-display').innerText = count;
-                if(count <= 0) {
-                    clearInterval(timer);
-                    activateStealth();
-                }
-            }, 1000);
+        // 1. 저장된 번호 불러오기
+        window.onload = function() {
+            const saved = localStorage.getItem('guardianPhone');
+            if(saved) document.getElementById('guardian-number').value = saved;
         }
 
-        function activateStealth() {
-            document.getElementById('ui-content').style.display = 'none';
-            document.getElementById('emergency-action').style.display = 'flex';
-            document.body.classList.add('stealth-active');
-            // 0초가 되면 자동으로 문자 앱 연결
-            sendSMS();
+        // 2. 번호 저장하기
+        function saveNumber() {
+            const num = document.getElementById('guardian-number').value;
+            localStorage.setItem('guardianPhone', num);
+            alert("보호자 번호가 저장되었습니다! (" + num + ")");
         }
 
-        function sendSMS() {
-            const msg = `[긴급] 위급 상황 발생! 현재 위치: 위도 35.1757, 경도 126.8951 (광주 중흥동 인근)`; [cite: 2026-02-13]
-            const tel = "010-0000-0000"; // 테스트 후 실제 번호로 고쳐보세요! [cite: 2026-02-01]
-            window.location.href = `sms:${tel}?body=${encodeURIComponent(msg)}`;
+        // 3. 카운트다운 및 스텔스 전환
+        function startCountdown() {
+            const num = document.getElementById('guardian-number').value;
+            if (!num) {
+                alert("먼저 보호자 전화번호를 입력해주세요!");
+                return;
+            }
+            
+            // 5초만 셉니다 (빠른 테스트를 위해)
+            alert("5초 후 화면이 꺼집니다. (스텔스 모드 진입)");
+            setTimeout(() => {
+                document.getElementById('main-ui').classList.add('hidden-menu');
+                document.getElementById('stealth-ui').classList.remove('hidden-menu');
+                document.getElementById('stealth-ui').classList.add('show-emergency');
+            }, 5000);
+        }
+
+        // 4. 진짜 문자 보내기 (위치 추적 포함)
+        function sendRealSMS() {
+            // 위치 가져오기 시도
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    sendFinal(lat, lng);
+                }, () => {
+                    sendFinal(0, 0); // 위치 실패 시 0,0으로 보냄
+                });
+            } else {
+                sendFinal(0, 0);
+            }
+        }
+
+        function sendFinal(lat, lng) {
+            const phone = document.getElementById('guardian-number').value;
+            // 구글 지도 링크 생성
+            const mapLink = `https://www.google.com/maps?q=${lat},${lng}`;
+            const text = `[긴급구조] 위급상황입니다! 제 위치는 여기입니다: ${mapLink}`;
+            
+            // 안드로이드/아이폰 통합 문자 링크
+            location.href = `sms:${phone}${getSMSDivider()}body=${encodeURIComponent(text)}`;
+        }
+
+        // 기기별로 문자 구분자(? 또는 &)를 다르게 줌
+        function getSMSDivider() {
+            return navigator.userAgent.match(/iPhone|iPad/i) ? '&' : '?';
         }
     </script>
 </body>
