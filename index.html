@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 V5.4</title>
+    <title>안전지대 V5.5</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%); color: white; height: 100vh; overflow: hidden; font-weight: 900; }
@@ -28,6 +28,10 @@
         .btn-add { background: #ffd700; color: #1e3c72; }
         .btn-back { background: rgba(255,255,255,0.2); color: white; margin-top: 20px; }
         
+        /* 친구 목록 아이템 스타일 */
+        .friend-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 8px; font-size: 20px; }
+        .btn-del { background: transparent; border: none; color: #ff4757; font-size: 22px; cursor: pointer; }
+
         /* 블랙아웃 모드 */
         #blackout { background: #000; z-index: 1000; }
     </style>
@@ -57,8 +61,8 @@
         </div>
 
         <div class="card">
-            <p style="opacity: 0.8; margin-bottom: 10px; font-size: 20px;">연결된 친구 목록</p>
-            <div id="friendList" style="font-size: 22px; color: #ffd700; line-height: 1.8;">등록된 친구가 없습니다.</div>
+            <p style="opacity: 0.8; margin-bottom: 15px; font-size: 20px;">연결된 친구 목록</p>
+            <div id="friendList" style="color: #ffd700;">등록된 친구가 없습니다.</div>
         </div>
 
         <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
@@ -74,17 +78,14 @@
     </div>
 
     <script>
-        // 화면 이동 함수
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        // [기능 1] 내 고유 ID 자동 부여 및 불러오기
         function initID() {
             let savedID = localStorage.getItem('safeZoneID');
             if (!savedID) {
-                // 새로운 ID 무작위 생성 (예: SZ-W4X9)
                 savedID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                 localStorage.setItem('safeZoneID', savedID);
             }
@@ -92,29 +93,30 @@
             loadFriends();
         }
 
-        // [기능 2] 친구 추가 및 목록 렌더링
         function addFriend() {
             const idInput = document.getElementById('friendID');
             const newFriendID = idInput.value.trim().toUpperCase();
             
-            // 입력값 확인
             if (newFriendID.length < 5 || !newFriendID.startsWith('SZ-')) { 
-                alert("올바른 ID 형식이 아닙니다. (예: SZ-XXXX)"); 
-                return; 
+                alert("올바른 ID 형식이 아닙니다. (예: SZ-XXXX)"); return; 
             }
             
-            // 기존 친구 목록 불러오기
             let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
-            
-            // 중복 확인 및 저장
             if (!friends.includes(newFriendID)) {
                 friends.push(newFriendID);
                 localStorage.setItem('myFriends', JSON.stringify(friends));
-                alert(newFriendID + "님이 친구로 등록되었습니다!");
-                idInput.value = ""; // 입력창 비우기
-                loadFriends(); // 목록 새로고침
-            } else {
-                alert("이미 등록된 친구입니다.");
+                idInput.value = ""; 
+                loadFriends(); 
+            } else { alert("이미 등록된 친구입니다."); }
+        }
+
+        // ❌ 친구 삭제 기능 추가
+        function removeFriend(idToRemove) {
+            if(confirm(idToRemove + " 님을 친구 목록에서 지우시겠습니까?")) {
+                let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
+                friends = friends.filter(f => f !== idToRemove);
+                localStorage.setItem('myFriends', JSON.stringify(friends));
+                loadFriends();
             }
         }
 
@@ -122,16 +124,20 @@
             let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
             const listDiv = document.getElementById('friendList');
             if (friends.length > 0) {
-                listDiv.innerHTML = friends.map(f => `<div>✅ ${f}</div>`).join('');
+                // 삭제 버튼(❌)을 포함한 리스트 디자인 적용
+                listDiv.innerHTML = friends.map(f => 
+                    `<div class="friend-item">
+                        <span>✅ ${f}</span>
+                        <button class="btn-del" onclick="removeFriend('${f}')">❌</button>
+                    </div>`
+                ).join('');
             } else {
                 listDiv.innerHTML = "등록된 친구가 없습니다.";
             }
         }
 
-        // 앱 켜질 때 ID 세팅 실행
         initID();
 
-        // 긴급구조 2초 꾹 누르기 로직
         let timer, isHolding = false;
         const btn = document.getElementById('sosBtn');
         
@@ -139,34 +145,21 @@
             e.preventDefault();
             if (isHolding) return;
             isHolding = true;
-            navigator.vibrate(100); // 1. 누르기 시작할 때 짧은 진동
+            navigator.vibrate(100); 
             
             timer = setTimeout(() => {
-                // 2. 2초 도달 시 강력한 진동
                 navigator.vibrate([200, 100, 200, 100, 200]);
-                
-                // 3. 소리 설정 체크
-                const isSoundOn = document.getElementById('snd').checked;
-                
-                if(isSoundOn) {
-                    // 소리 켜짐: 음성 알림 및 팝업
+                if(document.getElementById('snd').checked) {
                     const ut = new SpeechSynthesisUtterance('구조 신호가 친구들에게 발송되었습니다');
                     ut.lang = 'ko-KR'; window.speechSynthesis.speak(ut);
                     alert('🚨 등록된 친구들에게 구조 요청 발송 완료!');
-                } else {
-                    // 소리 꺼짐: 스텔스(블랙아웃) 모드 진입
-                    go('blackout');
-                }
+                } else { go('blackout'); }
                 isHolding = false;
-            }, 2000); // 2000ms = 2초
+            }, 2000); 
         };
         
-        btn.onpointerup = btn.onpointerleave = () => { 
-            clearTimeout(timer); 
-            isHolding = false; 
-        };
+        btn.onpointerup = btn.onpointerleave = () => { clearTimeout(timer); isHolding = false; };
 
-        // 스텔스 모드 해제 (화면 3번 터치)
         let tapCount = 0, tapTimer;
         function handleTap() {
             tapCount++; clearTimeout(tapTimer);
