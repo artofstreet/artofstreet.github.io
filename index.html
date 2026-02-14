@@ -192,7 +192,20 @@
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
 const database = getDatabase(app);
-set(ref(database, 'test'), "스르사마, 연결 성공!");
+// 버튼을 눌렀을 때 실행될 마법의 함수!
+window.sendSOS = function() {
+    const database = getDatabase(app);
+    const now = new Date().toLocaleString(); // 지금 시간 기록
+    
+    // 구글 서버에 '긴급 상황' 알리기!
+    set(ref(database, 'emergency_signal'), {
+        status: "도와주세요!",
+        time: now,
+        message: "장화님이 긴급 신호를 보냈습니다!"
+    });
+    
+    alert("구조 신호가 구글 서버로 전송되었습니다!");
+}
 </script>
 </body>
 </html>
