@@ -3,35 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 발신소 V3.0 (실제 위치)</title>
+    <title>안전지대 발신소 V4.0</title>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; text-align: center; padding: 20px; }
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .id-text { font-size: 32px; color: #ffd700; font-weight: 900; margin: 10px 0; letter-spacing: 2px; }
-        .btn-emergency { width: 100%; max-width: 350px; padding: 25px; font-size: 28px; font-weight: 900; color: white; background: #ff4757; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.2s; }
-        .btn-emergency:active { transform: scale(0.95); background: #ff0844; }
-        #statusMsg { margin-top: 15px; font-size: 16px; color: #ffd700; font-weight: bold; }
+        body { height: 100vh; background: #2b2b85; /* 사진과 똑같은 짙은 파란색 배경 */ color: white; text-align: center; overflow: hidden; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; }
+        .active { display: flex; }
+        
+        /* 우측 상단 톱니바퀴 버튼 */
+        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+        /* [핵심] 원형 레이더 버튼 디자인 */
+        .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
+        
+        /* 빙글빙글 도는 3색 레이더 테두리 */
+        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* 중앙 빨간색 긴급구조 버튼 */
+        .btn-circle { width: 220px; height: 220px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.5); cursor: pointer; transition: 0.1s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .btn-circle:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(249, 11, 62, 0.5); background: #d0002f; }
+
+        /* 상태 메시지 텍스트 */
+        #statusMsg { position: absolute; bottom: 50px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
+
+        /* 설정창 전용 스타일 */
+        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .id-text { font-size: 38px; color: #ffd700; font-weight: 900; margin: 15px 0; letter-spacing: 2px; }
+        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 90%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <p style="opacity: 0.8;">나의 발신 ID (수신자에게 알려주세요)</p>
-        <div id="myIDDisplay" class="id-text">불러오는 중...</div>
+    <div id="mainScreen" class="screen active">
+        <div class="gear-btn" onclick="go('setScreen')">⚙️</div>
+        
+        <div class="radar-container">
+            <div class="radar-ring"></div>
+            <button class="btn-circle" onclick="startEmergency()">긴급구조</button>
+        </div>
+
+        <p id="statusMsg">버튼을 누르면 구조 신호가 전송됩니다.</p>
     </div>
 
-    <button class="btn-emergency" onclick="startEmergency()">🚨 긴급 구조 요청</button>
-    <p id="statusMsg">버튼을 누르면 실제 위치가 전송됩니다.</p>
+    <div id="setScreen" class="screen">
+        <h1 style="margin-bottom: 30px;">⚙️ 설정</h1>
+        <div class="card">
+            <p style="opacity: 0.8; font-size: 20px;">내 안전 ID (발신용)</p>
+            <div id="myIDDisplay" class="id-text">로딩중...</div>
+            <p style="font-size: 14px; opacity: 0.6; margin-top: 10px;">이 번호를 친구의 수신소에 등록하세요</p>
+        </div>
+        <button class="btn-pill" onclick="go('mainScreen')">메인으로 돌아가기</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
         import { getDatabase, ref, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-        // [중요] 파이어베이스 설정값 (스르사마의 서버 키)
+        // 파이어베이스 설정
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
             databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
@@ -42,7 +74,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 1. 내 고유 ID 생성 (수신소에 등록할 번호)
+        // 화면 전환 함수
+        window.go = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        };
+
+        // 내 고유 ID 생성 (설정창에 표시됨)
         let myID = localStorage.getItem('safeZoneID_SND');
         if (!myID) {
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
@@ -51,58 +89,17 @@
         document.getElementById('myIDDisplay').innerText = myID;
 
         const statusMsg = document.getElementById('statusMsg');
-
-        // [핵심 2] 카카오 주소 변환기 준비 (API 키가 정상이어야 작동합니다)
         const geocoder = new kakao.maps.services.Geocoder();
 
+        // 긴급 구조 전송 로직 (카카오 위치 기반)
         window.startEmergency = function() {
             statusMsg.innerText = "📍 현재 위치를 파악 중입니다...";
             
-            // 2. 핸드폰의 GPS 센서 켜기
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
 
-                    // 3. 카카오 API로 위도/경도를 진짜 '한글 주소'로 번역
                     geocoder.coord2Address(lon, lat, function(result, status) {
                         if (status === kakao.maps.services.Status.OK) {
-                            
-                            // 도로명 주소가 있으면 우선 사용, 없으면 지번 주소 사용
                             const address = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
-                            const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
-                            
-                            // 4. 번역된 주소를 내 아이디 전용 채널에 전송 [보안 채널]
-                            const myPath = ref(db, 'emergency_signals/' + myID);
-                            
-                            set(myPath, {
-                                sender: myID,
-                                address: address,
-                                lat: lat,
-                                lon: lon,
-                                mapUrl: mapUrl,
-                                time: new Date().toLocaleString(),
-                                timestamp: serverTimestamp()
-                            }).then(() => {
-                                statusMsg.innerText = "✅ 구조 신호 전송 완료!";
-                                alert("실제 위치가 성공적으로 전송되었습니다!\n\n주소: " + address);
-                            });
-
-                        } else {
-                            statusMsg.innerText = "❌ 주소 변환 실패. 카카오 API 키를 확인해주세요.";
-                        }
-                    });
-                }, function(error) {
-                    statusMsg.innerText = "❌ 위치를 찾을 수 없습니다. 핸드폰의 GPS(위치) 설정이 켜져 있는지 확인하세요.";
-                }, {
-                    enableHighAccuracy: true, // 배터리를 조금 더 쓰더라도 가장 정확한 위치를 잡도록 설정
-                    timeout: 10000,
-                    maximumAge: 0
-                });
-            } else {
-                statusMsg.innerText = "❌ 이 브라우저에서는 GPS 기능을 지원하지 않습니다.";
-            }
-        };
-    </script>
-</body>
-</html>
