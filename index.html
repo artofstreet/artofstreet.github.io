@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 발신소 V2.5</title>
+    <title>안전지대 발신소 V3.0 (실제 위치)</title>
+
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
+    
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; text-align: center; padding: 20px; }
@@ -11,6 +14,7 @@
         .id-text { font-size: 32px; color: #ffd700; font-weight: 900; margin: 10px 0; letter-spacing: 2px; }
         .btn-emergency { width: 100%; max-width: 350px; padding: 25px; font-size: 28px; font-weight: 900; color: white; background: #ff4757; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); transition: 0.2s; }
         .btn-emergency:active { transform: scale(0.95); background: #ff0844; }
+        #statusMsg { margin-top: 15px; font-size: 16px; color: #ffd700; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -21,13 +25,13 @@
     </div>
 
     <button class="btn-emergency" onclick="startEmergency()">🚨 긴급 구조 요청</button>
-    <p style="margin-top: 20px; opacity: 0.6;">버튼을 누르면 내 전용 채널로 신호가 전송됩니다.</p>
+    <p id="statusMsg">버튼을 누르면 실제 위치가 전송됩니다.</p>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
         import { getDatabase, ref, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-        // [중요] 여기에 스르사마의 Firebase 설정값을 꼭 붙여넣으세요!
+        // [중요] 파이어베이스 설정값 (스르사마의 서버 키)
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
             databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
@@ -38,7 +42,7 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 내 고유 ID 생성 (SZ-XXXX)
+        // 1. 내 고유 ID 생성 (수신소에 등록할 번호)
         let myID = localStorage.getItem('safeZoneID_SND');
         if (!myID) {
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
@@ -46,22 +50,58 @@
         }
         document.getElementById('myIDDisplay').innerText = myID;
 
+        const statusMsg = document.getElementById('statusMsg');
+
+        // [핵심 2] 카카오 주소 변환기 준비 (API 키가 정상이어야 작동합니다)
+        const geocoder = new kakao.maps.services.Geocoder();
+
         window.startEmergency = function() {
-            // 실제 서비스에서는 여기에 GPS 주소 추출 코드가 들어갑니다.
-            // 연습용으로 임시 데이터를 내 아이디 방에 저장합니다.
-            const myPath = ref(db, 'emergency_signals/' + myID);
+            statusMsg.innerText = "📍 현재 위치를 파악 중입니다...";
             
-            set(myPath, {
-                sender: myID,
-                address: "테스트 위치 (광주광역시 북구)",
-                lat: 35.1595,
-                lon: 126.8526,
-                mapUrl: "https://map.kakao.com/link/map/테스트위치,35.1595,126.8526",
-                time: new Date().toLocaleString(),
-                timestamp: serverTimestamp()
-            }).then(() => {
-                alert("긴급 신호가 내 채널(" + myID + ")로 전송되었습니다!");
-            });
+            // 2. 핸드폰의 GPS 센서 켜기
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+
+                    // 3. 카카오 API로 위도/경도를 진짜 '한글 주소'로 번역
+                    geocoder.coord2Address(lon, lat, function(result, status) {
+                        if (status === kakao.maps.services.Status.OK) {
+                            
+                            // 도로명 주소가 있으면 우선 사용, 없으면 지번 주소 사용
+                            const address = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+                            const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
+                            
+                            // 4. 번역된 주소를 내 아이디 전용 채널에 전송 [보안 채널]
+                            const myPath = ref(db, 'emergency_signals/' + myID);
+                            
+                            set(myPath, {
+                                sender: myID,
+                                address: address,
+                                lat: lat,
+                                lon: lon,
+                                mapUrl: mapUrl,
+                                time: new Date().toLocaleString(),
+                                timestamp: serverTimestamp()
+                            }).then(() => {
+                                statusMsg.innerText = "✅ 구조 신호 전송 완료!";
+                                alert("실제 위치가 성공적으로 전송되었습니다!\n\n주소: " + address);
+                            });
+
+                        } else {
+                            statusMsg.innerText = "❌ 주소 변환 실패. 카카오 API 키를 확인해주세요.";
+                        }
+                    });
+                }, function(error) {
+                    statusMsg.innerText = "❌ 위치를 찾을 수 없습니다. 핸드폰의 GPS(위치) 설정이 켜져 있는지 확인하세요.";
+                }, {
+                    enableHighAccuracy: true, // 배터리를 조금 더 쓰더라도 가장 정확한 위치를 잡도록 설정
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                statusMsg.innerText = "❌ 이 브라우저에서는 GPS 기능을 지원하지 않습니다.";
+            }
         };
     </script>
 </body>
