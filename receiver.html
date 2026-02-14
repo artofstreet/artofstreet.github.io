@@ -2,58 +2,62 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안전지대 수신소</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>안전지대 수신소 V1.5</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; transition: background 0.5s; padding: 20px; }
+        body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; transition: background 0.5s; padding: 20px; overflow: hidden; }
+        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: absolute; }
+        .active { display: flex; }
         
+        /* 배경 색상 */
         .safe { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
 
-        h1 { font-size: 40px; margin-bottom: 20px; font-weight: 900; }
-        p { font-size: 24px; margin: 10px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; }
-        
-        /* 주소를 보여주는 특별한 박스 디자인 */
-        #addressBox { display: none; margin: 15px 0; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; border: 2px solid #ffd700; }
-        .addr-title { font-size: 18px; color: #ffd700; margin-bottom: 5px; font-weight: bold; }
-        .addr-text { font-size: 22px; line-height: 1.4; word-break: keep-all; }
-        .coord-text { font-size: 14px; opacity: 0.7; margin-top: 10px; }
-        
-        /* 지도 바로가기 버튼 */
-        #mapBtn { display: none; margin-top: 10px; padding: 15px 30px; font-size: 20px; font-weight: bold; color: #1e3c72; background: #ffd700; border-radius: 50px; text-decoration: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        /* 설정 아이콘 */
+        .gear { position: absolute; top: 30px; right: 30px; font-size: 35px; cursor: pointer; z-index: 100; }
 
-        #startSoundBtn {
-            margin-top: 30px; padding: 20px 40px; font-size: 22px; font-weight: bold;
-            color: white; background: rgba(0,0,0,0.5); border: 2px solid white; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        #resetBtn {
-            display: none; 
-            margin-top: 30px; padding: 20px 40px; font-size: 24px; font-weight: bold;
-            color: #ff4757; background: white; border: none; border-radius: 50px;
-            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
+        /* 디자인 요소 */
+        .card { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); }
+        .id-val { font-size: 32px; color: #ffd700; font-weight: 900; margin: 10px 0; }
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; font-weight: bold; }
+        .btn-ui { width: 100%; padding: 18px; font-size: 20px; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body id="bg" class="safe">
 
-    <h1 id="statusText">✅ 현재 안전합니다</h1>
-    <p id="timeText">대기 중...</p>
-    <p id="msgText">수신 대기 중</p>
-    
-    <div id="addressBox">
-        <div class="addr-title">🚨 구조 위치 (지번/도로명)</div>
-        <div id="addressText" class="addr-text"></div>
-        <div id="coordText" class="coord-text"></div>
-    </div>
-    
-    <a href="#" id="mapBtn" target="_blank">🗺️ 카카오 지도로 길찾기</a>
+    <div id="mainScreen" class="screen active">
+        <div class="gear" onclick="go('setScreen')">⚙️</div>
+        <h1 id="statusText" style="font-size: 36px; margin-bottom: 20px;">✅ 현재 안전합니다</h1>
+        
+        <div class="card">
+            <p style="opacity: 0.8;">나의 수신 전용 ID</p>
+            <div id="myID" class="id-val">불러오는 중...</div>
+        </div>
 
-    <button id="startSoundBtn" onclick="unlockSound()">🔊 터치해서 스피커 켜기</button>
-    <button id="resetBtn" onclick="resetEmergency()">상황 종료 (알람 끄기)</button>
+        <p id="msgText" class="card">수신 대기 중</p>
+
+        <div id="addressBox" class="card" style="display: none; border: 2px solid #ffd700; background: rgba(0,0,0,0.6);">
+            <div style="color:#ffd700; font-weight:bold; margin-bottom:5px;">🚨 구조 위치</div>
+            <div id="addressText" style="font-size:20px;"></div>
+        </div>
+
+        <a href="#" id="mapBtn" target="_blank" class="btn-ui" style="display:none; background:#ffd700; color:#1e3c72; text-decoration:none; margin-top:10px;">🗺️ 지도로 길찾기</a>
+        
+        <button id="startBtn" class="btn-ui" style="margin-top:20px; background:rgba(255,255,255,0.2); color:white;" onclick="unlockSound()">🔊 스피커 켜기</button>
+        <button id="resetBtn" class="btn-ui" style="display:none; margin-top:20px; background:white; color:#ff4757;" onclick="resetEmergency()">상황 종료</button>
+    </div>
+
+    <div id="setScreen" class="screen" style="background: #1e293b;">
+        <h1>⚙️ 수신 설정</h1>
+        <div class="card">
+            <p>보호할 친구 ID 등록</p>
+            <input type="text" id="targetID" class="input-box" placeholder="예: SZ-A1B2">
+            <button class="btn-ui" style="background:#ffd700; color:#0f172a;" onclick="saveTarget()">등록 완료</button>
+        </div>
+        <button class="btn-ui" style="margin-top:20px; background:rgba(255,255,255,0.1); color:white;" onclick="go('mainScreen')">돌아가기</button>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -61,105 +65,99 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            authDomain: "safezone-2c1b2.firebaseapp.com",
             databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
             projectId: "safezone-2c1b2",
-            storageBucket: "safezone-2c1b2.firebasestorage.app",
-            messagingSenderId: "181205095456",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845",
-            measurementId: "G-X6QBMSL7DS"
+            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
         };
 
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const emergencyRef = ref(database, 'emergency_signal');
+        const db = getDatabase(app);
+        const emergencyRef = ref(db, 'emergency_signal');
 
-        // 핸드폰 내장 부저 엔진 준비!
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        window.sirenOscillator = null;
-        window.sirenInterval = null;
+        window.sirenOsc = null;
+        window.sirenInt = null;
 
-        // 스피커 시동 걸기
-        window.unlockSound = function() {
-            audioCtx.resume(); 
-            
-            const ut = new SpeechSynthesisUtterance("수신 대기를 시작합니다.");
-            ut.lang = 'ko-KR';
-            window.speechSynthesis.speak(ut);
-            
-            document.getElementById('startSoundBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
-            document.getElementById('startSoundBtn').style.background = "white";
-            document.getElementById('startSoundBtn').style.color = "#11998e";
-            document.getElementById('startSoundBtn').onclick = null; 
+        function init() {
+            let rcvID = localStorage.getItem('safeZoneID_RCV');
+            if (!rcvID) {
+                rcvID = 'RCV-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                localStorage.setItem('safeZoneID_RCV', rcvID);
+            }
+            document.getElementById('myID').innerText = rcvID;
+            const saved = localStorage.getItem('targetID');
+            if(saved) document.getElementById('targetID').value = saved;
+        }
+
+        window.go = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         };
 
-        // [실시간 감시]
+        window.saveTarget = () => {
+            const val = document.getElementById('targetID').value.trim().toUpperCase();
+            localStorage.setItem('targetID', val);
+            alert(val + " 님 등록 완료!");
+            go('mainScreen');
+        };
+
+        window.unlockSound = () => {
+            audioCtx.resume();
+            speechSynthesis.speak(new SpeechSynthesisUtterance("수신 대기 시작"));
+            document.getElementById('startBtn').innerText = "✅ 스피커 켜짐";
+            document.getElementById('startBtn').style.opacity = "0.5";
+        };
+
         onValue(emergencyRef, (snapshot) => {
             const data = snapshot.val();
-            
             if (data) {
-                // 1. 텍스트 정보 업데이트
-                document.getElementById('statusText').innerText = "🚨 긴급 상황 발생!!";
-                document.getElementById('timeText').innerText = "시간: " + data.time;
-                document.getElementById('msgText').innerText = data.message;
-                
-                // 2. 📍 지번 주소 및 좌표 표시 로직 (새로 추가됨)
-                if(data.address && data.lat && data.lon) {
-                    document.getElementById('addressBox').style.display = "block";
-                    document.getElementById('addressText').innerText = data.address;
-                    document.getElementById('coordText').innerText = `(좌표: ${data.lat.toFixed(4)}, ${data.lon.toFixed(4)})`;
-                    
-                    document.getElementById('mapBtn').style.display = "inline-block";
-                    document.getElementById('mapBtn').href = data.mapUrl;
-                }
-                
-                // 3. 배경색 변경 및 버튼 토글
                 document.getElementById('bg').className = "emergency";
-                document.getElementById('resetBtn').style.display = "block"; 
-                document.getElementById('startSoundBtn').style.display = "none";
+                document.getElementById('statusText').innerText = "🚨 긴급 상황!!";
+                document.getElementById('msgText').innerText = data.message;
+                document.getElementById('addressBox').style.display = "block";
+                document.getElementById('addressText').innerText = data.address;
+                document.getElementById('mapBtn').style.display = "block";
+                document.getElementById('mapBtn').href = data.mapUrl;
+                document.getElementById('resetBtn').style.display = "block";
+                document.getElementById('startBtn').style.display = "none";
 
-                // 🚨 4. 기계음 사이렌
-                if(!window.sirenOscillator) {
-                    window.sirenOscillator = audioCtx.createOscillator();
-                    window.sirenOscillator.type = 'square'; 
-                    window.sirenOscillator.connect(audioCtx.destination);
-                    window.sirenOscillator.start();
-                    
-                    window.sirenInterval = setInterval(() => {
-                        window.sirenOscillator.frequency.value = window.sirenOscillator.frequency.value === 800 ? 1200 : 800;
+                if(!window.sirenOsc) {
+                    window.sirenOsc = audioCtx.createOscillator();
+                    window.sirenOsc.type = 'square';
+                    window.sirenOsc.connect(audioCtx.destination);
+                    window.sirenOsc.start();
+                    window.sirenInt = setInterval(() => {
+                        window.sirenOsc.frequency.value = window.sirenOsc.frequency.value === 800 ? 1200 : 800;
                     }, 500);
                 }
-
-                // 🔊 5. 진지한 상황 안내 목소리
-                const ut = new SpeechSynthesisUtterance("장화님의 긴급 구조 요청입니다. 즉시 위치를 확인하십시오.");
+                const ut = new SpeechSynthesisUtterance("긴급 상황입니다. 위치를 확인하세요.");
                 ut.lang = 'ko-KR';
                 window.speechSynthesis.speak(ut);
-                
             } else {
-                // 평상시 상태로 초기화
-                document.getElementById('statusText').innerText = "✅ 현재 안전합니다";
-                document.getElementById('timeText').innerText = "대기 중...";
-                document.getElementById('msgText').innerText = "수신 대기 중";
-                document.getElementById('bg').className = "safe";
-                
-                // 주소와 지도 버튼 숨기기
-                document.getElementById('addressBox').style.display = "none";
-                document.getElementById('mapBtn').style.display = "none";
-                
-                document.getElementById('resetBtn').style.display = "none"; 
-                document.getElementById('startSoundBtn').style.display = "block"; 
+                resetUI();
             }
         });
 
-        // 상황 종료 버튼
-        window.resetEmergency = function() {
-            if(window.sirenOscillator) {
-                window.sirenOscillator.stop();
-                clearInterval(window.sirenInterval);
-                window.sirenOscillator = null;
+        window.resetEmergency = () => {
+            if(window.sirenOsc) {
+                window.sirenOsc.stop();
+                clearInterval(window.sirenInt);
+                window.sirenOsc = null;
             }
-            remove(emergencyRef); 
+            remove(emergencyRef);
         };
+
+        function resetUI() {
+            document.getElementById('bg').className = "safe";
+            document.getElementById('statusText').innerText = "✅ 현재 안전합니다";
+            document.getElementById('msgText').innerText = "수신 대기 중";
+            document.getElementById('addressBox').style.display = "none";
+            document.getElementById('mapBtn').style.display = "none";
+            document.getElementById('resetBtn').style.display = "none";
+            document.getElementById('startBtn').style.display = "block";
+        }
+
+        init();
     </script>
 </body>
 </html>
