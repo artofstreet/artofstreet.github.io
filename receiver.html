@@ -15,14 +15,12 @@
         h1 { font-size: 40px; margin-bottom: 20px; font-weight: 900; }
         p { font-size: 24px; margin: 10px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; }
         
-        /* 스피커 시동 버튼 */
         #startSoundBtn {
             margin-top: 30px; padding: 20px 40px; font-size: 22px; font-weight: bold;
             color: white; background: rgba(0,0,0,0.5); border: 2px solid white; border-radius: 50px;
             cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
 
-        /* 상황 종료 버튼 */
         #resetBtn {
             display: none; 
             margin-top: 30px; padding: 20px 40px; font-size: 24px; font-weight: bold;
@@ -38,8 +36,7 @@
     <p id="msgText">수신 대기 중</p>
 
     <button id="startSoundBtn" onclick="unlockSound()">🔊 터치해서 스피커 켜기</button>
-
-    <button id="resetBtn" onclick="resetEmergency()">상황 종료 (초기화)</button>
+    <button id="resetBtn" onclick="resetEmergency()">상황 종료 (알람 끄기)</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
@@ -60,19 +57,19 @@
         const database = getDatabase(app);
         const emergencyRef = ref(database, 'emergency_signal');
 
-        // [핵심 마법] 스피커 시동 걸기!
+        // 스피커 시동 걸기
         window.unlockSound = function() {
-            // 빈 소리로 스피커 잠금 해제!
             const ut = new SpeechSynthesisUtterance("수신 대기를 시작합니다.");
             ut.lang = 'ko-KR';
             window.speechSynthesis.speak(ut);
             
-            // 시동 걸리면 버튼 모양 바꾸기
             document.getElementById('startSoundBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
             document.getElementById('startSoundBtn').style.background = "white";
             document.getElementById('startSoundBtn').style.color = "#11998e";
-            document.getElementById('startSoundBtn').onclick = null; // 두 번 안 눌리게 막기
+            document.getElementById('startSoundBtn').onclick = null; 
         };
+
+        window.currentSiren = null; // 현재 울리는 사이렌 기억해둘 변수
 
         // [실시간 감시]
         onValue(emergencyRef, (snapshot) => {
@@ -84,10 +81,16 @@
                 document.getElementById('msgText').innerText = data.message;
                 document.getElementById('bg').className = "emergency";
                 document.getElementById('resetBtn').style.display = "block"; 
-                document.getElementById('startSoundBtn').style.display = "none"; // 시동 버튼 숨기기
+                document.getElementById('startSoundBtn').style.display = "none";
 
-                // 🔊 우렁찬 AI 성우 목소리 발사! (이제 절대 안 막힙니다!)
-                const ut = new SpeechSynthesisUtterance("삐뽀삐뽀! 장화님의 구조 요청이 들어왔습니다!");
+                // 🚨 1. 진짜 사이렌 소리 터뜨리기! (끄기 전까지 무한 반복!)
+                if(window.currentSiren) window.currentSiren.pause(); // 혹시 울리던 거 있으면 끄기
+                window.currentSiren = new Audio("https://www.myinstants.com/media/sounds/siren.mp3");
+                window.currentSiren.loop = true; // 무한 반복
+                window.currentSiren.play();
+
+                // 🔊 2. 사이렌 뚫고 나오는 진지한 상황 안내! (삐뽀삐뽀 삭제 ㅋ)
+                const ut = new SpeechSynthesisUtterance("장화님의 긴급 구조 요청입니다. 즉시 확인하십시오.");
                 ut.lang = 'ko-KR';
                 window.speechSynthesis.speak(ut);
             } else {
@@ -96,12 +99,16 @@
                 document.getElementById('msgText').innerText = "수신 대기 중";
                 document.getElementById('bg').className = "safe";
                 document.getElementById('resetBtn').style.display = "none"; 
-                document.getElementById('startSoundBtn').style.display = "block"; // 시동 버튼 다시 보이기
+                document.getElementById('startSoundBtn').style.display = "block"; 
             }
         });
 
-        // 상황 종료 기능
+        // 끄기 버튼 누르면 사이렌 입 막기!
         window.resetEmergency = function() {
+            if(window.currentSiren) {
+                window.currentSiren.pause(); // 진짜 사이렌 끄기
+                window.currentSiren.currentTime = 0;
+            }
             remove(emergencyRef); 
         };
     </script>
