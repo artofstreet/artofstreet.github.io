@@ -3,37 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 수신소 V2.0</title>
+    <title>안전지대 수신소 V2.1</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* 배경 설정 */
         body { height: 100vh; color: white; transition: background 0.5s; overflow: hidden; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .bg-safe { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
         .bg-set { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%); }
         .bg-emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
-
-        /* 화면 전환 */
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; }
         .active { display: flex; }
         
-        /* 톱니바퀴 */
         .gear { position: absolute; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 100; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-
-        /* 메인 화면 전용 스타일 */
         #mainScreen { justify-content: center; }
         h1.main-title { font-size: 40px; margin-bottom: 30px; font-weight: 900; }
         .status-box { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; margin: 10px 0; font-size: 24px; text-align: center; }
-        .btn-pill { background: white; color: #11998e; padding: 20px; width: 100%; max-width: 350px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; }
+        .btn-pill { background: white; color: #11998e; padding: 20px; width: 100%; max-width: 350px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; transition: 0.2s; }
+        .btn-pill:active { transform: scale(0.95); }
 
-        /* 긴급 상황 요소 */
         .address-box { display: none; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; border: 2px solid #ffd700; margin-top: 20px; text-align: left; }
         .address-box .title { color: #ffd700; font-size: 18px; margin-bottom: 10px; font-weight: bold; }
         .address-box .content { font-size: 22px; line-height: 1.4; }
         .btn-emergency { display: none; background: #ffd700; color: #1e3c72; text-decoration: none; text-align: center; }
         
-        /* 설정 화면 전용 스타일 */
         #setScreen { justify-content: flex-start; padding-top: 60px; overflow-y: auto; text-align: left; }
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
         .id-val { font-size: 36px; color: #ffd700; font-family: monospace; font-weight: 900; text-align: center; margin-top: 10px; letter-spacing: 2px; }
@@ -52,7 +44,7 @@
         <div id="timeText" class="status-box">대기 중...</div>
         <div id="msgText" class="status-box">수신 대기 중</div>
         
-        <button id="startBtn" class="btn-pill" onclick="unlockSound()">✅ 스피커 켜짐 (수신 대기중)</button>
+        <button id="startBtn" class="btn-pill" onclick="unlockSound()">🔊 터치해서 스피커 켜기</button>
 
         <div id="addressBox" class="address-box">
             <div class="title">🚨 구조 위치 (지번/도로명)</div>
@@ -99,11 +91,11 @@
         const db = getDatabase(app);
         const emergencyRef = ref(db, 'emergency_signal');
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // 오디오 엔진을 처음엔 꺼둡니다 (멈춤 방지)
+        let audioCtx = null; 
         window.sirenOsc = null;
         window.sirenInt = null;
 
-        // 아이디 및 친구 목록 초기화
         function initSettings() {
             let rcvID = localStorage.getItem('safeZoneID_RCV');
             if (!rcvID) {
@@ -114,7 +106,6 @@
             loadFriends();
         }
 
-        // 화면 전환 로직 (배경색 변경 포함)
         window.go = (id) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
@@ -127,7 +118,114 @@
             }
         };
 
-        // 친구 등록 기능
         window.addFriend = () => {
             const input = document.getElementById('friendID');
-            const newID = input.value.trim().toUpperCase
+            const newID = input.value.trim().toUpperCase();
+            if (newID.length < 5) { alert("올바른 ID를 입력하세요."); return; }
+            
+            let friends = JSON.parse(localStorage.getItem('rcvFriends') || "[]");
+            if (!friends.includes(newID)) {
+                friends.push(newID);
+                localStorage.setItem('rcvFriends', JSON.stringify(friends));
+                input.value = "";
+                loadFriends();
+            } else { alert("이미 등록된 친구입니다."); }
+        };
+
+        window.removeFriend = (id) => {
+            if(confirm(id + " 님을 삭제하시겠습니까?")) {
+                let friends = JSON.parse(localStorage.getItem('rcvFriends') || "[]");
+                friends = friends.filter(f => f !== id);
+                localStorage.setItem('rcvFriends', JSON.stringify(friends));
+                loadFriends();
+            }
+        };
+
+        function loadFriends() {
+            let friends = JSON.parse(localStorage.getItem('rcvFriends') || "[]");
+            const listDiv = document.getElementById('friendList');
+            if (friends.length > 0) {
+                listDiv.innerHTML = friends.map(f => 
+                    `<div class="friend-item"><span>✅ ${f}</span><button class="btn-del" onclick="removeFriend('${f}')">❌</button></div>`
+                ).join('');
+            } else { listDiv.innerHTML = "등록된 친구가 없습니다."; }
+        }
+
+        // 스피커 켜기 (터치할 때만 엔진을 켜서 오류 완벽 차단!)
+        window.unlockSound = () => {
+            if(!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
+            document.getElementById('startBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
+            document.getElementById('startBtn').style.color = "#ccc";
+            
+            const ut = new SpeechSynthesisUtterance("수신 대기를 시작합니다.");
+            ut.lang = 'ko-KR';
+            window.speechSynthesis.speak(ut);
+        };
+
+        onValue(emergencyRef, (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                document.getElementById('bg').className = "bg-emergency";
+                document.getElementById('mainTitle').innerText = "🚨 긴급 상황 발생!!";
+                document.getElementById('timeText').innerText = "시간: " + data.time;
+                document.getElementById('msgText').innerText = data.message;
+                
+                document.getElementById('addressBox').style.display = "block";
+                document.getElementById('addressText').innerText = data.address;
+                
+                document.getElementById('mapBtn').style.display = "block";
+                document.getElementById('mapBtn').href = data.mapUrl;
+                document.getElementById('resetBtn').style.display = "block";
+                document.getElementById('startBtn').style.display = "none";
+
+                if(audioCtx && !window.sirenOsc) {
+                    window.sirenOsc = audioCtx.createOscillator();
+                    window.sirenOsc.type = 'square';
+                    window.sirenOsc.connect(audioCtx.destination);
+                    window.sirenOsc.start();
+                    window.sirenInt = setInterval(() => {
+                        window.sirenOsc.frequency.value = window.sirenOsc.frequency.value === 800 ? 1200 : 800;
+                    }, 500);
+                }
+                const ut = new SpeechSynthesisUtterance("긴급 상황입니다. 즉시 위치를 확인하십시오.");
+                ut.lang = 'ko-KR';
+                window.speechSynthesis.speak(ut);
+            } else {
+                resetUI();
+            }
+        });
+
+        window.resetEmergency = () => {
+            if(window.sirenOsc) {
+                window.sirenOsc.stop();
+                clearInterval(window.sirenInt);
+                window.sirenOsc = null;
+            }
+            remove(emergencyRef);
+        };
+
+        function resetUI() {
+            if(document.getElementById('setScreen').classList.contains('active')) return;
+            document.getElementById('bg').className = "bg-safe";
+            document.getElementById('mainTitle').innerText = "✅ 현재 안전합니다";
+            document.getElementById('timeText').innerText = "대기 중...";
+            document.getElementById('msgText').innerText = "수신 대기 중";
+            document.getElementById('addressBox').style.display = "none";
+            document.getElementById('mapBtn').style.display = "none";
+            document.getElementById('resetBtn').style.display = "none";
+            document.getElementById('startBtn').style.display = "block";
+            
+            document.getElementById('startBtn').innerText = "🔊 터치해서 스피커 켜기";
+            document.getElementById('startBtn').style.color = "#11998e";
+        }
+
+        initSettings();
+    </script>
+</body>
+</html>
