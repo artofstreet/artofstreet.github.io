@@ -15,6 +15,15 @@
         h1 { font-size: 40px; margin-bottom: 20px; font-weight: 900; }
         p { font-size: 24px; margin: 10px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; }
         
+        /* 주소를 보여주는 특별한 박스 디자인 */
+        #addressBox { display: none; margin: 15px 0; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; border: 2px solid #ffd700; }
+        .addr-title { font-size: 18px; color: #ffd700; margin-bottom: 5px; font-weight: bold; }
+        .addr-text { font-size: 22px; line-height: 1.4; word-break: keep-all; }
+        .coord-text { font-size: 14px; opacity: 0.7; margin-top: 10px; }
+        
+        /* 지도 바로가기 버튼 */
+        #mapBtn { display: none; margin-top: 10px; padding: 15px 30px; font-size: 20px; font-weight: bold; color: #1e3c72; background: #ffd700; border-radius: 50px; text-decoration: none; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
         #startSoundBtn {
             margin-top: 30px; padding: 20px 40px; font-size: 22px; font-weight: bold;
             color: white; background: rgba(0,0,0,0.5); border: 2px solid white; border-radius: 50px;
@@ -34,6 +43,14 @@
     <h1 id="statusText">✅ 현재 안전합니다</h1>
     <p id="timeText">대기 중...</p>
     <p id="msgText">수신 대기 중</p>
+    
+    <div id="addressBox">
+        <div class="addr-title">🚨 구조 위치 (지번/도로명)</div>
+        <div id="addressText" class="addr-text"></div>
+        <div id="coordText" class="coord-text"></div>
+    </div>
+    
+    <a href="#" id="mapBtn" target="_blank">🗺️ 카카오 지도로 길찾기</a>
 
     <button id="startSoundBtn" onclick="unlockSound()">🔊 터치해서 스피커 켜기</button>
     <button id="resetBtn" onclick="resetEmergency()">상황 종료 (알람 끄기)</button>
@@ -64,7 +81,7 @@
 
         // 스피커 시동 걸기
         window.unlockSound = function() {
-            audioCtx.resume(); // 부저 엔진 시동 켬!
+            audioCtx.resume(); 
             
             const ut = new SpeechSynthesisUtterance("수신 대기를 시작합니다.");
             ut.lang = 'ko-KR';
@@ -81,41 +98,60 @@
             const data = snapshot.val();
             
             if (data) {
+                // 1. 텍스트 정보 업데이트
                 document.getElementById('statusText').innerText = "🚨 긴급 상황 발생!!";
                 document.getElementById('timeText').innerText = "시간: " + data.time;
                 document.getElementById('msgText').innerText = data.message;
+                
+                // 2. 📍 지번 주소 및 좌표 표시 로직 (새로 추가됨)
+                if(data.address && data.lat && data.lon) {
+                    document.getElementById('addressBox').style.display = "block";
+                    document.getElementById('addressText').innerText = data.address;
+                    document.getElementById('coordText').innerText = `(좌표: ${data.lat.toFixed(4)}, ${data.lon.toFixed(4)})`;
+                    
+                    document.getElementById('mapBtn').style.display = "inline-block";
+                    document.getElementById('mapBtn').href = data.mapUrl;
+                }
+                
+                // 3. 배경색 변경 및 버튼 토글
                 document.getElementById('bg').className = "emergency";
                 document.getElementById('resetBtn').style.display = "block"; 
                 document.getElementById('startSoundBtn').style.display = "none";
 
-                // 🚨 1. 핸드폰 내장 부저로 기계음 사이렌 터뜨리기! (엄청 시끄러움!)
+                // 🚨 4. 기계음 사이렌
                 if(!window.sirenOscillator) {
                     window.sirenOscillator = audioCtx.createOscillator();
-                    window.sirenOscillator.type = 'square'; // 날카로운 기계음 소리
+                    window.sirenOscillator.type = 'square'; 
                     window.sirenOscillator.connect(audioCtx.destination);
                     window.sirenOscillator.start();
                     
-                    // 0.5초마다 음높이를 바꿔서 사이렌 소리 만들기
                     window.sirenInterval = setInterval(() => {
                         window.sirenOscillator.frequency.value = window.sirenOscillator.frequency.value === 800 ? 1200 : 800;
                     }, 500);
                 }
 
-                // 🔊 2. 진지한 상황 안내 목소리
-                const ut = new SpeechSynthesisUtterance("장화님의 긴급 구조 요청입니다. 즉시 확인하십시오.");
+                // 🔊 5. 진지한 상황 안내 목소리
+                const ut = new SpeechSynthesisUtterance("장화님의 긴급 구조 요청입니다. 즉시 위치를 확인하십시오.");
                 ut.lang = 'ko-KR';
                 window.speechSynthesis.speak(ut);
+                
             } else {
+                // 평상시 상태로 초기화
                 document.getElementById('statusText').innerText = "✅ 현재 안전합니다";
                 document.getElementById('timeText').innerText = "대기 중...";
                 document.getElementById('msgText').innerText = "수신 대기 중";
                 document.getElementById('bg').className = "safe";
+                
+                // 주소와 지도 버튼 숨기기
+                document.getElementById('addressBox').style.display = "none";
+                document.getElementById('mapBtn').style.display = "none";
+                
                 document.getElementById('resetBtn').style.display = "none"; 
                 document.getElementById('startSoundBtn').style.display = "block"; 
             }
         });
 
-        // 끄기 버튼 누르면 기계음 입 막기!
+        // 상황 종료 버튼
         window.resetEmergency = function() {
             if(window.sirenOscillator) {
                 window.sirenOscillator.stop();
