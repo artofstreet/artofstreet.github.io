@@ -15,6 +15,14 @@
         h1 { font-size: 40px; margin-bottom: 20px; font-weight: 900; }
         p { font-size: 24px; margin: 10px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; }
         
+        /* 스피커 시동 버튼 */
+        #startSoundBtn {
+            margin-top: 30px; padding: 20px 40px; font-size: 22px; font-weight: bold;
+            color: white; background: rgba(0,0,0,0.5); border: 2px solid white; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        /* 상황 종료 버튼 */
         #resetBtn {
             display: none; 
             margin-top: 30px; padding: 20px 40px; font-size: 24px; font-weight: bold;
@@ -29,13 +37,14 @@
     <p id="timeText">대기 중...</p>
     <p id="msgText">수신 대기 중</p>
 
+    <button id="startSoundBtn" onclick="unlockSound()">🔊 터치해서 스피커 켜기</button>
+
     <button id="resetBtn" onclick="resetEmergency()">상황 종료 (초기화)</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
         import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-        // 진짜 마스터키!
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
             authDomain: "safezone-2c1b2.firebaseapp.com",
@@ -51,30 +60,43 @@
         const database = getDatabase(app);
         const emergencyRef = ref(database, 'emergency_signal');
 
-        // [실시간 감시] 확인 창(alert) 완전 삭제! 소리만 납니다!
+        // [핵심 마법] 스피커 시동 걸기!
+        window.unlockSound = function() {
+            // 빈 소리로 스피커 잠금 해제!
+            const ut = new SpeechSynthesisUtterance("수신 대기를 시작합니다.");
+            ut.lang = 'ko-KR';
+            window.speechSynthesis.speak(ut);
+            
+            // 시동 걸리면 버튼 모양 바꾸기
+            document.getElementById('startSoundBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
+            document.getElementById('startSoundBtn').style.background = "white";
+            document.getElementById('startSoundBtn').style.color = "#11998e";
+            document.getElementById('startSoundBtn').onclick = null; // 두 번 안 눌리게 막기
+        };
+
+        // [실시간 감시]
         onValue(emergencyRef, (snapshot) => {
             const data = snapshot.val();
             
             if (data) {
-                // 화면 빨갛게 바꾸기
                 document.getElementById('statusText').innerText = "🚨 긴급 상황 발생!!";
                 document.getElementById('timeText').innerText = "시간: " + data.time;
                 document.getElementById('msgText').innerText = data.message;
                 document.getElementById('bg').className = "emergency";
                 document.getElementById('resetBtn').style.display = "block"; 
+                document.getElementById('startSoundBtn').style.display = "none"; // 시동 버튼 숨기기
 
-                // 🔊 우렁찬 AI 성우 목소리만 발사! (확인 창 없음!)
+                // 🔊 우렁찬 AI 성우 목소리 발사! (이제 절대 안 막힙니다!)
                 const ut = new SpeechSynthesisUtterance("삐뽀삐뽀! 장화님의 구조 요청이 들어왔습니다!");
                 ut.lang = 'ko-KR';
                 window.speechSynthesis.speak(ut);
-
             } else {
-                // 초록색 평화 상태로 복귀
                 document.getElementById('statusText').innerText = "✅ 현재 안전합니다";
                 document.getElementById('timeText').innerText = "대기 중...";
                 document.getElementById('msgText').innerText = "수신 대기 중";
                 document.getElementById('bg').className = "safe";
                 document.getElementById('resetBtn').style.display = "none"; 
+                document.getElementById('startSoundBtn').style.display = "block"; // 시동 버튼 다시 보이기
             }
         });
 
