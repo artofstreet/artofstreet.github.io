@@ -8,29 +8,18 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; transition: background 0.5s; padding: 20px; }
         
-        /* 평상시 (초록색 안전지대) */
         .safe { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        
-        /* 긴급상황 (빨간색 비상벨) */
         .emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
 
         h1 { font-size: 40px; margin-bottom: 20px; font-weight: 900; }
         p { font-size: 24px; margin: 10px 0; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; width: 100%; max-width: 400px; }
         
-        /* 상황 종료(리셋) 버튼 - 평소엔 숨겨둠! */
         #resetBtn {
             display: none; 
-            margin-top: 30px;
-            padding: 20px 40px;
-            font-size: 24px;
-            font-weight: bold;
-            color: #ff4757;
-            background: white;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            margin-top: 30px; padding: 20px 40px; font-size: 24px; font-weight: bold;
+            color: #ff4757; background: white; border: none; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
         }
     </style>
 </head>
@@ -44,10 +33,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        // 'remove' 라는 구글 지우개를 새로 가져왔습니다!
         import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-        // 진짜 비밀 열쇠 완벽 장착!
+        // 진짜 마스터키!
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
             authDomain: "safezone-2c1b2.firebaseapp.com",
@@ -63,29 +51,25 @@
         const database = getDatabase(app);
         const emergencyRef = ref(database, 'emergency_signal');
 
-        // 1. 실시간 감시 기능
+        // [실시간 감시] 확인 창(alert) 완전 삭제! 소리만 납니다!
         onValue(emergencyRef, (snapshot) => {
             const data = snapshot.val();
             
             if (data) {
-                // 신호가 들어왔을 때 (빨갛게 변하고 버튼 나타남!)
+                // 화면 빨갛게 바꾸기
                 document.getElementById('statusText').innerText = "🚨 긴급 상황 발생!!";
                 document.getElementById('timeText').innerText = "시간: " + data.time;
                 document.getElementById('msgText').innerText = data.message;
                 document.getElementById('bg').className = "emergency";
                 document.getElementById('resetBtn').style.display = "block"; 
 
-                // 🔊 우렁찬 AI 성우 목소리 발사!
-                const ut = new SpeechSynthesisUtterance("삐뽀삐뽀! 긴급 상황 발생! 장화님의 구조 요청이 들어왔습니다!");
+                // 🔊 우렁찬 AI 성우 목소리만 발사! (확인 창 없음!)
+                const ut = new SpeechSynthesisUtterance("삐뽀삐뽀! 장화님의 구조 요청이 들어왔습니다!");
                 ut.lang = 'ko-KR';
                 window.speechSynthesis.speak(ut);
 
-                // 알림창 띄우기 (방송 묻히지 않게 0.5초 지연)
-                setTimeout(() => {
-                    alert("!!! 장화님이 긴급 신호를 보냈습니다 !!!");
-                }, 500);
             } else {
-                // 신호가 없을 때 (초록색 평화 상태로 복귀!)
+                // 초록색 평화 상태로 복귀
                 document.getElementById('statusText').innerText = "✅ 현재 안전합니다";
                 document.getElementById('timeText').innerText = "대기 중...";
                 document.getElementById('msgText').innerText = "수신 대기 중";
@@ -94,11 +78,9 @@
             }
         });
 
-        // 2. 상황 종료 기능 (구글 서버에서 신호 싹 지우기!)
+        // 상황 종료 기능
         window.resetEmergency = function() {
-            if(confirm("상황이 안전하게 종료되었습니까? 알람을 해제합니다.")) {
-                remove(emergencyRef); 
-            }
+            remove(emergencyRef); 
         };
     </script>
 </body>
