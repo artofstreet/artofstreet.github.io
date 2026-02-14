@@ -110,7 +110,6 @@
             } else { alert("이미 등록된 친구입니다."); }
         }
 
-        // ❌ 친구 삭제 기능 추가
         function removeFriend(idToRemove) {
             if(confirm(idToRemove + " 님을 친구 목록에서 지우시겠습니까?")) {
                 let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
@@ -124,7 +123,6 @@
             let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
             const listDiv = document.getElementById('friendList');
             if (friends.length > 0) {
-                // 삭제 버튼(❌)을 포함한 리스트 디자인 적용
                 listDiv.innerHTML = friends.map(f => 
                     `<div class="friend-item">
                         <span>✅ ${f}</span>
@@ -150,7 +148,6 @@
            timer = setTimeout(() => {
             navigator.vibrate([200, 100, 200, 100, 200]);
             
-            // ⭐ [필수] 구글 서버로 진짜 SOS 신호를 보내는 핵심 명령어!
             if (typeof window.sendSOS === 'function') {
                 window.sendSOS(); 
             }
@@ -159,7 +156,6 @@
                 const ut = new SpeechSynthesisUtterance('구조 신호가 전송되었습니다');
                 ut.lang = 'ko-KR'; 
                 window.speechSynthesis.speak(ut);
-                alert('🚨 구글 서버로 구조 요청 발송 완료!');
             } else { 
                 go('blackout'); 
             }
@@ -176,45 +172,81 @@
             if(tapCount >= 3) { go('mainScreen'); tapCount = 0; }
         }
     </script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
-  import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-    // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g", 
-    authDomain: "safezone-2c1b2.firebaseapp.com",
-    databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-    projectId: "safezone-2c1b2",
-    storageBucket: "safezone-2c1b2.firebasestorage.app",
-    messagingSenderId: "181205095456",
-    appId: "1:181205095456:web:da0a519ff43cc19e7b1845",
-    measurementId: "G-X6QBMSL7DS"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-const database = getDatabase(app);
-// 버튼을 눌렀을 때 실행될 마법의 함수!
-window.sendSOS = function() {
-    const database = getDatabase(app);
-    const now = new Date().toLocaleString(); // 지금 시간 기록
     
-    // 구글 서버에 '긴급 상황' 알리기!
-    set(ref(database, 'emergency_signal'), {
-        status: "도와주세요!",
-        time: now,
-        message: "장화님이 긴급 신호를 보냈습니다!"
-    });
-    
-    alert("구조 신호가 구글 서버로 전송되었습니다!");
-}
-</script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-analytics.js";
+        import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g", 
+            authDomain: "safezone-2c1b2.firebaseapp.com",
+            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
+            projectId: "safezone-2c1b2",
+            storageBucket: "safezone-2c1b2.firebasestorage.app",
+            messagingSenderId: "181205095456",
+            appId: "1:181205095456:web:da0a519ff43cc19e7b1845",
+            measurementId: "G-X6QBMSL7DS"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const database = getDatabase(app);
+
+        // 버튼을 눌렀을 때 실행될 마법의 함수! (카카오 API 지번 변환 적용 완료)
+        window.sendSOS = function() {
+            const now = new Date().toLocaleString(); 
+            
+            // ⭐ 주의: 여기에 발급받으신 카카오 REST API 키를 넣으셔야 합니다! ⭐
+            const KAKAO_API_KEY = "여기에_카카오_REST_API_키를_넣으세요";
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    const mapUrl = `https://map.kakao.com/link/map/긴급구조위치,${lat},${lon}`;
+                    let exactAddress = "위치 확인 중...";
+
+                    try {
+                        const response = await fetch(`https://dapi.kakao.com/v2/local/geo/coord2address.json?x=${lon}&y=${lat}`, {
+                            headers: { "Authorization": `KakaoAK ${KAKAO_API_KEY}` }
+                        });
+                        const data = await response.json();
+                        
+                        if (data.documents && data.documents.length > 0) {
+                            const addressData = data.documents[0];
+                            const roadAddr = addressData.road_address ? addressData.road_address.address_name : "";
+                            const jibunAddr = addressData.address ? addressData.address.address_name : "";
+                            exactAddress = roadAddr ? `[지번] ${jibunAddr} / [도로명] ${roadAddr}` : `[지번] ${jibunAddr}`;
+                        } else {
+                            exactAddress = "상세 주소를 찾을 수 없는 지역입니다.";
+                        }
+                    } catch (error) {
+                        console.error("카카오 주소 변환 실패:", error);
+                        exactAddress = "주소 변환 실패 (API 연결 확인 필요)";
+                    }
+
+                    // 구글 서버에 한글 주소와 함께 '긴급 상황' 알리기!
+                    set(ref(database, 'emergency_signal'), {
+                        status: "도와주세요!",
+                        time: now,
+                        message: "장화님이 긴급 신호를 보냈습니다!",
+                        lat: lat,
+                        lon: lon,
+                        mapUrl: mapUrl,
+                        address: exactAddress 
+                    });
+                    
+                    alert("🚨 구조 신호와 정확한 지번 주소가 발송되었습니다!\n" + exactAddress);
+                    
+                }, (error) => {
+                    alert("위치 정보를 가져올 수 없습니다. 핸드폰의 위치 권한을 켜주세요.");
+                }, { enableHighAccuracy: true });
+            } else {
+                alert("이 기기에서는 위치 추적을 지원하지 않습니다.");
+            }
+        };
+    </script>
 </body>
 </html>
