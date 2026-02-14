@@ -3,60 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 수신소 V1.5</title>
+    <title>안전지대 수신소 V2.0</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; transition: background 0.5s; padding: 20px; overflow: hidden; }
-        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: absolute; }
-        .active { display: flex; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* 배경 색상 */
-        .safe { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
+        /* 배경 설정 */
+        body { height: 100vh; color: white; transition: background 0.5s; overflow: hidden; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .bg-safe { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .bg-set { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%); }
+        .bg-emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
 
-        /* 설정 아이콘 */
-        .gear { position: absolute; top: 30px; right: 30px; font-size: 35px; cursor: pointer; z-index: 100; }
+        /* 화면 전환 */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; }
+        .active { display: flex; }
+        
+        /* 톱니바퀴 */
+        .gear { position: absolute; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 100; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 
-        /* 디자인 요소 */
-        .card { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; width: 100%; max-width: 400px; margin: 10px 0; border: 1px solid rgba(255,255,255,0.1); }
-        .id-val { font-size: 32px; color: #ffd700; font-weight: 900; margin: 10px 0; }
-        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; font-weight: bold; }
-        .btn-ui { width: 100%; padding: 18px; font-size: 20px; border-radius: 50px; border: none; cursor: pointer; font-weight: 800; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        /* 메인 화면 전용 스타일 */
+        #mainScreen { justify-content: center; }
+        h1.main-title { font-size: 40px; margin-bottom: 30px; font-weight: 900; }
+        .status-box { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; width: 100%; max-width: 350px; margin: 10px 0; font-size: 24px; text-align: center; }
+        .btn-pill { background: white; color: #11998e; padding: 20px; width: 100%; max-width: 350px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; }
+
+        /* 긴급 상황 요소 */
+        .address-box { display: none; background: rgba(0,0,0,0.6); padding: 20px; border-radius: 15px; width: 100%; max-width: 350px; border: 2px solid #ffd700; margin-top: 20px; text-align: left; }
+        .address-box .title { color: #ffd700; font-size: 18px; margin-bottom: 10px; font-weight: bold; }
+        .address-box .content { font-size: 22px; line-height: 1.4; }
+        .btn-emergency { display: none; background: #ffd700; color: #1e3c72; text-decoration: none; text-align: center; }
+        
+        /* 설정 화면 전용 스타일 */
+        #setScreen { justify-content: flex-start; padding-top: 60px; overflow-y: auto; text-align: left; }
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(10px); }
+        .id-val { font-size: 36px; color: #ffd700; font-family: monospace; font-weight: 900; text-align: center; margin-top: 10px; letter-spacing: 2px; }
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; font-weight: bold; color: #333; }
+        .btn-add { width: 100%; padding: 18px; font-size: 20px; background: #ffd700; color: #1e3c72; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; }
+        .friend-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px; margin-bottom: 10px; font-size: 20px; }
+        .btn-del { background: transparent; border: none; color: #ff4757; font-size: 24px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
-<body id="bg" class="safe">
+<body id="bg" class="bg-safe">
 
     <div id="mainScreen" class="screen active">
         <div class="gear" onclick="go('setScreen')">⚙️</div>
-        <h1 id="statusText" style="font-size: 36px; margin-bottom: 20px;">✅ 현재 안전합니다</h1>
         
-        <div class="card">
-            <p style="opacity: 0.8;">나의 수신 전용 ID</p>
-            <div id="myID" class="id-val">불러오는 중...</div>
-        </div>
-
-        <p id="msgText" class="card">수신 대기 중</p>
-
-        <div id="addressBox" class="card" style="display: none; border: 2px solid #ffd700; background: rgba(0,0,0,0.6);">
-            <div style="color:#ffd700; font-weight:bold; margin-bottom:5px;">🚨 구조 위치</div>
-            <div id="addressText" style="font-size:20px;"></div>
-        </div>
-
-        <a href="#" id="mapBtn" target="_blank" class="btn-ui" style="display:none; background:#ffd700; color:#1e3c72; text-decoration:none; margin-top:10px;">🗺️ 지도로 길찾기</a>
+        <h1 id="mainTitle" class="main-title">✅ 현재 안전합니다</h1>
+        <div id="timeText" class="status-box">대기 중...</div>
+        <div id="msgText" class="status-box">수신 대기 중</div>
         
-        <button id="startBtn" class="btn-ui" style="margin-top:20px; background:rgba(255,255,255,0.2); color:white;" onclick="unlockSound()">🔊 스피커 켜기</button>
-        <button id="resetBtn" class="btn-ui" style="display:none; margin-top:20px; background:white; color:#ff4757;" onclick="resetEmergency()">상황 종료</button>
+        <button id="startBtn" class="btn-pill" onclick="unlockSound()">✅ 스피커 켜짐 (수신 대기중)</button>
+
+        <div id="addressBox" class="address-box">
+            <div class="title">🚨 구조 위치 (지번/도로명)</div>
+            <div id="addressText" class="content"></div>
+        </div>
+        <a href="#" id="mapBtn" class="btn-pill btn-emergency" target="_blank">🗺️ 카카오 지도로 길찾기</a>
+        <button id="resetBtn" class="btn-pill" style="display:none; background:white; color:#ff4757; margin-top:15px;" onclick="resetEmergency()">상황 종료 (알람 끄기)</button>
     </div>
 
-    <div id="setScreen" class="screen" style="background: #1e293b;">
-        <h1>⚙️ 수신 설정</h1>
-        <div class="card">
-            <p>보호할 친구 ID 등록</p>
-            <input type="text" id="targetID" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-ui" style="background:#ffd700; color:#0f172a;" onclick="saveTarget()">등록 완료</button>
+    <div id="setScreen" class="screen">
+        <h1 style="text-align:center; margin-bottom:30px; font-size:32px;">설정</h1>
+        
+        <div class="card" style="text-align: center;">
+            <p style="font-size: 20px; opacity: 0.9;">내 수신 ID</p>
+            <div id="myID" class="id-val">불러오는 중...</div>
         </div>
-        <button class="btn-ui" style="margin-top:20px; background:rgba(255,255,255,0.1); color:white;" onclick="go('mainScreen')">돌아가기</button>
+        
+        <div class="card">
+            <p style="font-size: 22px; margin-bottom: 5px;">🤝 친구 등록하기</p>
+            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
+            <button class="btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
+        </div>
+
+        <div class="card">
+            <p style="font-size: 20px; margin-bottom: 15px; opacity: 0.9;">연결된 친구 목록</p>
+            <div id="friendList" style="color: #ffd700;">등록된 친구가 없습니다.</div>
+        </div>
+
+        <button class="btn-pill" style="background:rgba(255,255,255,0.2); color:white;" onclick="go('mainScreen')">돌아가기</button>
     </div>
 
     <script type="module">
@@ -78,86 +103,31 @@
         window.sirenOsc = null;
         window.sirenInt = null;
 
-        function init() {
+        // 아이디 및 친구 목록 초기화
+        function initSettings() {
             let rcvID = localStorage.getItem('safeZoneID_RCV');
             if (!rcvID) {
                 rcvID = 'RCV-' + Math.random().toString(36).substr(2, 4).toUpperCase();
                 localStorage.setItem('safeZoneID_RCV', rcvID);
             }
             document.getElementById('myID').innerText = rcvID;
-            const saved = localStorage.getItem('targetID');
-            if(saved) document.getElementById('targetID').value = saved;
+            loadFriends();
         }
 
+        // 화면 전환 로직 (배경색 변경 포함)
         window.go = (id) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-        };
-
-        window.saveTarget = () => {
-            const val = document.getElementById('targetID').value.trim().toUpperCase();
-            localStorage.setItem('targetID', val);
-            alert(val + " 님 등록 완료!");
-            go('mainScreen');
-        };
-
-        window.unlockSound = () => {
-            audioCtx.resume();
-            speechSynthesis.speak(new SpeechSynthesisUtterance("수신 대기 시작"));
-            document.getElementById('startBtn').innerText = "✅ 스피커 켜짐";
-            document.getElementById('startBtn').style.opacity = "0.5";
-        };
-
-        onValue(emergencyRef, (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                document.getElementById('bg').className = "emergency";
-                document.getElementById('statusText').innerText = "🚨 긴급 상황!!";
-                document.getElementById('msgText').innerText = data.message;
-                document.getElementById('addressBox').style.display = "block";
-                document.getElementById('addressText').innerText = data.address;
-                document.getElementById('mapBtn').style.display = "block";
-                document.getElementById('mapBtn').href = data.mapUrl;
-                document.getElementById('resetBtn').style.display = "block";
-                document.getElementById('startBtn').style.display = "none";
-
-                if(!window.sirenOsc) {
-                    window.sirenOsc = audioCtx.createOscillator();
-                    window.sirenOsc.type = 'square';
-                    window.sirenOsc.connect(audioCtx.destination);
-                    window.sirenOsc.start();
-                    window.sirenInt = setInterval(() => {
-                        window.sirenOsc.frequency.value = window.sirenOsc.frequency.value === 800 ? 1200 : 800;
-                    }, 500);
-                }
-                const ut = new SpeechSynthesisUtterance("긴급 상황입니다. 위치를 확인하세요.");
-                ut.lang = 'ko-KR';
-                window.speechSynthesis.speak(ut);
+            
+            const bg = document.getElementById('bg');
+            if(id === 'setScreen') {
+                bg.className = 'bg-set';
             } else {
-                resetUI();
+                bg.className = document.getElementById('mainTitle').innerText.includes('긴급') ? 'bg-emergency' : 'bg-safe';
             }
-        });
-
-        window.resetEmergency = () => {
-            if(window.sirenOsc) {
-                window.sirenOsc.stop();
-                clearInterval(window.sirenInt);
-                window.sirenOsc = null;
-            }
-            remove(emergencyRef);
         };
 
-        function resetUI() {
-            document.getElementById('bg').className = "safe";
-            document.getElementById('statusText').innerText = "✅ 현재 안전합니다";
-            document.getElementById('msgText').innerText = "수신 대기 중";
-            document.getElementById('addressBox').style.display = "none";
-            document.getElementById('mapBtn').style.display = "none";
-            document.getElementById('resetBtn').style.display = "none";
-            document.getElementById('startBtn').style.display = "block";
-        }
-
-        init();
-    </script>
-</body>
-</html>
+        // 친구 등록 기능
+        window.addFriend = () => {
+            const input = document.getElementById('friendID');
+            const newID = input.value.trim().toUpperCase
