@@ -3,34 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 발신소 V4.0</title>
+    <title>안전지대 발신소 V4.1</title>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
-        body { height: 100vh; background: #2b2b85; /* 사진과 똑같은 짙은 파란색 배경 */ color: white; text-align: center; overflow: hidden; }
+        body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; }
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; }
-        .active { display: flex; }
+        .active { display: flex !important; } /* 확실하게 보여주기 */
         
-        /* 우측 상단 톱니바퀴 버튼 */
-        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        /* [수정] 톱니바퀴를 진짜 버튼으로 만들어서 터치가 무조건 먹히게 개선 */
+        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .gear-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.9); }
 
-        /* [핵심] 원형 레이더 버튼 디자인 */
         .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
-        
-        /* 빙글빙글 도는 3색 레이더 테두리 */
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* 중앙 빨간색 긴급구조 버튼 */
         .btn-circle { width: 220px; height: 220px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.5); cursor: pointer; transition: 0.1s; z-index: 10; display: flex; align-items: center; justify-content: center; }
         .btn-circle:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(249, 11, 62, 0.5); background: #d0002f; }
 
-        /* 상태 메시지 텍스트 */
         #statusMsg { position: absolute; bottom: 50px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
 
-        /* 설정창 전용 스타일 */
         .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
         .id-text { font-size: 38px; color: #ffd700; font-weight: 900; margin: 15px 0; letter-spacing: 2px; }
         .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 90%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
@@ -39,13 +34,12 @@
 <body>
 
     <div id="mainScreen" class="screen active">
-        <div class="gear-btn" onclick="go('setScreen')">⚙️</div>
+        <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
         
         <div class="radar-container">
             <div class="radar-ring"></div>
             <button class="btn-circle" onclick="startEmergency()">긴급구조</button>
         </div>
-
         <p id="statusMsg">버튼을 누르면 구조 신호가 전송됩니다.</p>
     </div>
 
@@ -59,11 +53,17 @@
         <button class="btn-pill" onclick="go('mainScreen')">메인으로 돌아가기</button>
     </div>
 
+    <script>
+        function go(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
         import { getDatabase, ref, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
-        // 파이어베이스 설정
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
             databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
@@ -74,13 +74,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
-        // 화면 전환 함수
-        window.go = (id) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        };
-
-        // 내 고유 ID 생성 (설정창에 표시됨)
         let myID = localStorage.getItem('safeZoneID_SND');
         if (!myID) {
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
@@ -91,7 +84,6 @@
         const statusMsg = document.getElementById('statusMsg');
         const geocoder = new kakao.maps.services.Geocoder();
 
-        // 긴급 구조 전송 로직 (카카오 위치 기반)
         window.startEmergency = function() {
             statusMsg.innerText = "📍 현재 위치를 파악 중입니다...";
             
@@ -103,3 +95,37 @@
                     geocoder.coord2Address(lon, lat, function(result, status) {
                         if (status === kakao.maps.services.Status.OK) {
                             const address = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+                            const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
+                            
+                            const myPath = ref(db, 'emergency_signals/' + myID);
+                            
+                            set(myPath, {
+                                sender: myID,
+                                address: address,
+                                lat: lat,
+                                lon: lon,
+                                mapUrl: mapUrl,
+                                time: new Date().toLocaleString(),
+                                timestamp: serverTimestamp()
+                            }).then(() => {
+                                statusMsg.innerText = "✅ 구조 신호 전송 완료!";
+                                alert("실제 위치가 전송되었습니다!\n\n주소: " + address);
+                            });
+                        } else {
+                            statusMsg.innerText = "❌ 카카오 API 키를 확인해주세요.";
+                        }
+                    });
+                }, function(error) {
+                    statusMsg.innerText = "❌ 핸드폰 GPS를 켜주세요.";
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                });
+            } else {
+                statusMsg.innerText = "❌ GPS를 지원하지 않는 브라우저입니다.";
+            }
+        };
+    </script>
+</body>
+</html>
