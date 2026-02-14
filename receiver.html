@@ -11,16 +11,77 @@
         .bg-set { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
         .bg-emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
         @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; overflow-y: auto; }
         .active { display: flex; }
         .gear { position: absolute; top: 20px; right: 20px; font-size: 35px; cursor: pointer; z-index: 100; }
         .btn-pill { background: white; color: #11998e; padding: 20px; width: 100%; max-width: 350px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; }
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); }
         .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; }
+        
+        /* 친구 목록 스타일 */
+        .friend-list {
+            width: 100%;
+            max-width: 350px;
+            margin-top: 10px;
+        }
+        .friend-item {
+            background: rgba(255,255,255,0.15);
+            padding: 15px 20px;
+            border-radius: 50px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .friend-item .id {
+            flex: 1;
+        }
+        .friend-item .delete {
+            background: rgba(255,71,87,0.9);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        /* 내 ID 표시 */
+        .my-id-card {
+            background: rgba(255,215,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 10px 0;
+            width: 100%;
+            max-width: 350px;
+        }
+        .my-id-card .label {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        .my-id-card .id {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .count-badge {
+            background: rgba(255,215,0,0.3);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: inline-block;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body id="bg" class="bg-safe">
 
+    <!-- 메인 화면 -->
     <div id="mainScreen" class="screen active">
         <div class="gear" onclick="go('setScreen')">⚙️</div>
         <h1 id="mainTitle" style="font-size: 40px; margin-bottom: 30px;">✅ 현재 안전합니다</h1>
@@ -29,20 +90,46 @@
         <button id="startBtn" class="btn-pill" onclick="unlockSound()">✅ 스피커 켜짐 (수신 대기중)</button>
         
         <div id="addressBox" style="display:none; margin-top:20px;" class="card">
+            <p style="font-size:16px; opacity:0.8; margin-bottom:5px;">긴급 신호 발신:</p>
+            <p id="friendName" style="font-size:28px; font-weight:bold; margin-bottom:15px;"></p>
             <p id="addressText" style="font-size:20px; font-weight:bold;"></p>
             <a href="#" id="mapBtn" class="btn-pill" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; margin-top:15px; text-align:center;" target="_blank">🗺️ 지도 확인</a>
         </div>
         <button id="resetBtn" class="btn-pill" style="display:none; color:#ff4757;" onclick="resetEmergency()">상황 종료</button>
     </div>
 
+    <!-- 설정 화면 -->
     <div id="setScreen" class="screen">
-        <h1>⚙️ 수신 설정</h1>
-        <div class="card" style="margin-top:30px;">
-            <p>보호할 친구 ID 등록</p>
-            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-pill" style="background:#ffd700; color:#1e3c72;" onclick="saveFriend()">등록 완료</button>
+        <h1 style="margin-top: 50px; margin-bottom: 20px;">⚙️ 설정</h1>
+        
+        <!-- 내 아이디 표시 -->
+        <div id="myIdDisplay" class="my-id-card" style="display:none;">
+            <div class="label">📱 내 아이디</div>
+            <div class="id" id="myIdText"></div>
         </div>
-        <button class="btn-pill" style="background:rgba(255,255,255,0.2); color:white;" onclick="go('mainScreen')">돌아가기</button>
+        
+        <!-- 내 아이디 입력 -->
+        <div id="myIdInput" style="width: 100%; max-width: 350px;">
+            <p style="font-size: 18px; margin-bottom: 10px;">📱 내 고유 아이디</p>
+            <input type="text" id="myID" class="input-box" placeholder="예: SZ-REC01" maxlength="15">
+            <button class="btn-pill" style="background:#ffd700; color:#1e3c72;" onclick="saveMyId()">내 ID 등록</button>
+        </div>
+
+        <!-- 친구 등록 섹션 -->
+        <div style="width: 100%; max-width: 350px; margin-top: 40px;">
+            <p style="font-size: 18px; margin-bottom: 10px;">👥 보호할 친구</p>
+            <div class="count-badge">
+                등록: <span id="friendCount">0</span>/5명
+            </div>
+            <input type="text" id="friendID" class="input-box" placeholder="친구 ID 입력 (예: SZ-A1B2)" maxlength="15">
+            <button class="btn-pill" onclick="addFriend()">친구 추가</button>
+            
+            <div id="friendList" class="friend-list">
+                <!-- 친구 목록 -->
+            </div>
+        </div>
+
+        <button class="btn-pill" style="background:rgba(255,255,255,0.3); color:white; margin-top: 40px;" onclick="go('mainScreen')">← 돌아가기</button>
     </div>
 
     <script type="module">
@@ -59,61 +146,137 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        // 사이렌 소리 준비
         const sirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         sirenAudio.loop = true;
 
-        // [팁] 화면이 예쁘게 보여도, 소리가 실제로 나려면 화면을 한 번은 터치해야 합니다.
+        let activeListeners = [];
+
         window.unlockSound = () => {
             sirenAudio.play().then(() => {
                 sirenAudio.pause();
                 sirenAudio.currentTime = 0;
-                // 이미 버튼 모양은 '켜짐'이라서 굳이 바꿀 필요는 없지만, 혹시 모르니 유지합니다.
                 document.getElementById('startBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
-            }).catch(error => console.log("아직 터치 안 함"));
+            }).catch(error => console.log("소리 활성화 대기"));
         };
 
         window.go = (id) => {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.getElementById('bg').className = (id === 'setScreen') ? 'bg-set' : 'bg-safe';
-            if(id === 'mainScreen') startListening(); 
+            
+            if(id === 'mainScreen') {
+                startListening();
+            } else if(id === 'setScreen') {
+                loadSettings();
+            }
         };
 
-        window.saveFriend = () => {
-            const id = document.getElementById('friendID').value.trim().toUpperCase();
-            localStorage.setItem('targetID', id);
-            alert(id + " 님 등록 완료!");
-            go('mainScreen');
+        window.saveMyId = () => {
+            const myId = document.getElementById('myID').value.trim().toUpperCase();
+            if(!myId) {
+                alert('❌ 아이디를 입력해주세요!');
+                return;
+            }
+            localStorage.setItem('myID', myId);
+            alert('✅ 내 아이디 등록 완료: ' + myId);
+            loadSettings();
         };
+
+        window.addFriend = () => {
+            const friendId = document.getElementById('friendID').value.trim().toUpperCase();
+            if(!friendId) {
+                alert('❌ 친구 ID를 입력해주세요!');
+                return;
+            }
+
+            let friendList = JSON.parse(localStorage.getItem('friendList') || '[]');
+            
+            if(friendList.length >= 5) {
+                alert('❌ 최대 5명까지만 등록 가능합니다!');
+                return;
+            }
+
+            if(friendList.includes(friendId)) {
+                alert('❌ 이미 등록된 친구입니다!');
+                return;
+            }
+
+            friendList.push(friendId);
+            localStorage.setItem('friendList', JSON.stringify(friendList));
+            document.getElementById('friendID').value = '';
+            alert('✅ ' + friendId + ' 등록 완료!');
+            loadSettings();
+        };
+
+        window.deleteFriend = (friendId) => {
+            if(!confirm('⚠️ ' + friendId + ' 님을 삭제하시겠습니까?')) return;
+            
+            let friendList = JSON.parse(localStorage.getItem('friendList') || '[]');
+            friendList = friendList.filter(id => id !== friendId);
+            localStorage.setItem('friendList', JSON.stringify(friendList));
+            alert('✅ 삭제 완료!');
+            loadSettings();
+        };
+
+        function loadSettings() {
+            // 내 아이디
+            const myId = localStorage.getItem('myID');
+            if(myId) {
+                document.getElementById('myIdDisplay').style.display = 'block';
+                document.getElementById('myIdInput').style.display = 'none';
+                document.getElementById('myIdText').innerText = myId;
+            } else {
+                document.getElementById('myIdDisplay').style.display = 'none';
+                document.getElementById('myIdInput').style.display = 'block';
+            }
+
+            // 친구 목록
+            const friendList = JSON.parse(localStorage.getItem('friendList') || '[]');
+            document.getElementById('friendCount').innerText = friendList.length;
+            
+            const listContainer = document.getElementById('friendList');
+            if(friendList.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:20px; font-size:16px;">등록된 친구가 없습니다</p>';
+            } else {
+                listContainer.innerHTML = friendList.map(id => `
+                    <div class="friend-item">
+                        <span class="id">👤 ${id}</span>
+                        <button class="delete" onclick="deleteFriend('${id}')">삭제</button>
+                    </div>
+                `).join('');
+            }
+        }
 
         function startListening() {
-            const targetID = localStorage.getItem('targetID');
-            if (!targetID) return;
+            activeListeners.forEach(unsub => unsub());
+            activeListeners = [];
 
-            const friendPath = ref(db, 'emergency_signals/' + targetID);
-            onValue(friendPath, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    showEmergency(data);
-                } else {
-                    resetUI();
-                }
+            const friendList = JSON.parse(localStorage.getItem('friendList') || '[]');
+            if (friendList.length === 0) return;
+
+            friendList.forEach(friendId => {
+                const friendPath = ref(db, 'emergency_signals/' + friendId);
+                const unsubscribe = onValue(friendPath, (snapshot) => {
+                    const data = snapshot.val();
+                    if (data) {
+                        showEmergency(friendId, data);
+                    }
+                });
+                activeListeners.push(unsubscribe);
             });
         }
 
-        function showEmergency(data) {
-            sirenAudio.play(); // 사이렌 울리기
+        function showEmergency(friendId, data) {
+            sirenAudio.play();
             document.getElementById('bg').className = "bg-emergency";
             document.getElementById('mainTitle').innerText = "🚨 긴급 상황!!";
             document.getElementById('msgText').style.display = "none";
             document.getElementById('startBtn').style.display = "none";
             document.getElementById('addressBox').style.display = "block";
+            document.getElementById('friendName').innerText = friendId;
             document.getElementById('addressText').innerText = data.address;
             document.getElementById('mapBtn').href = data.mapUrl;
             document.getElementById('resetBtn').style.display = "block";
-            
-            // 톱니바퀴 숨기기 (긴급상황 집중)
             document.querySelector('.gear').style.display = 'none';
         }
 
@@ -130,11 +293,15 @@
         }
         
         window.resetEmergency = () => {
-             const targetID = localStorage.getItem('targetID');
-             if(targetID) remove(ref(db, 'emergency_signals/' + targetID));
-        }
+            const friendList = JSON.parse(localStorage.getItem('friendList') || '[]');
+            friendList.forEach(friendId => {
+                remove(ref(db, 'emergency_signals/' + friendId));
+            });
+            resetUI();
+        };
 
         startListening();
+        loadSettings();
     </script>
 </body>
 </html>
