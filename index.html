@@ -42,7 +42,7 @@
         <div class="gear" onclick="go('setScreen')">⚙️</div>
         <div class="btn-wrap">
             <div class="ring ring1"></div><div class="ring ring2"></div>
-           <button class="emergency-btn" id="sosBtn" onclick="sendSOS()">긴급구조</button>
+           <button class="emergency-btn" id="sosBtn">긴급구조</button>
         </div>
     </div>
 
@@ -147,15 +147,24 @@
             isHolding = true;
             navigator.vibrate(100); 
             
-            timer = setTimeout(() => {
-                navigator.vibrate([200, 100, 200, 100, 200]);
-                if(document.getElementById('snd').checked) {
-                    const ut = new SpeechSynthesisUtterance('구조 신호가 친구들에게 발송되었습니다');
-                    ut.lang = 'ko-KR'; window.speechSynthesis.speak(ut);
-                    alert('🚨 등록된 친구들에게 구조 요청 발송 완료!');
-                } else { go('blackout'); }
-                isHolding = false;
-            }, 2000); 
+           timer = setTimeout(() => {
+            navigator.vibrate([200, 100, 200, 100, 200]);
+            
+            // ⭐ [필수] 구글 서버로 진짜 SOS 신호를 보내는 핵심 명령어!
+            if (typeof window.sendSOS === 'function') {
+                window.sendSOS(); 
+            }
+
+            if(document.getElementById('snd').checked) {
+                const ut = new SpeechSynthesisUtterance('구조 신호가 전송되었습니다');
+                ut.lang = 'ko-KR'; 
+                window.speechSynthesis.speak(ut);
+                alert('🚨 구글 서버로 구조 요청 발송 완료!');
+            } else { 
+                go('blackout'); 
+            }
+            isHolding = false;
+        }, 2000);
         };
         
         btn.onpointerup = btn.onpointerleave = () => { clearTimeout(timer); isHolding = false; };
