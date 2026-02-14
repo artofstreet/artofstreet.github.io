@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 V5.1</title>
+    <title>안전지대 V5.4</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%); color: white; height: 100vh; overflow: hidden; font-weight: 900; }
         .screen { display: none; height: 100vh; width: 100%; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; position: absolute; }
         .active { display: flex; }
-
-        /* 메인 SOS 버튼 */
+        
+        /* 메인 버튼 UI */
         .btn-wrap { position: relative; width: 350px; height: 350px; display: flex; align-items: center; justify-content: center; }
         .emergency-btn { width: 280px; height: 280px; border-radius: 50%; background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); border: none; color: white; font-size: 56px; cursor: pointer; z-index: 10; box-shadow: 0 20px 60px rgba(255, 8, 68, 0.4); }
         .ring { position: absolute; border-radius: 50%; border: 8px solid transparent; }
@@ -18,16 +18,17 @@
         .ring2 { width: 350px; height: 350px; border-bottom-color: rgba(255, 255, 255, 0.4); animation: rot-rev 4s linear infinite; }
         @keyframes rot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes rot-rev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
-
-        /* 설정 & 도움말 UI */
+        
+        /* 설정 화면 UI */
         .gear { position: absolute; top: 30px; right: 30px; font-size: 40px; cursor: pointer; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 50%; z-index: 20; border: 1px solid rgba(255,255,255,0.2); }
-        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 24px; width: 100%; margin-bottom: 15px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); }
-        .id-val { font-size: 52px; color: #ffd700; margin: 15px 0; font-family: monospace; }
-        .btn-ui { width: 100%; padding: 22px; font-size: 26px; border-radius: 20px; border: none; cursor: pointer; margin-top: 10px; font-weight: 800; }
-        .btn-help { background: #ffd700; color: #1e3c72; }
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 24px; width: 100%; margin-bottom: 15px; backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); text-align: left; }
+        .id-val { font-size: 42px; color: #ffd700; margin: 10px 0; font-family: monospace; text-align: center; letter-spacing: 2px; }
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin-top: 10px; margin-bottom: 10px; text-align: center; font-weight: bold; color: #333; }
+        .btn-ui { width: 100%; padding: 20px; font-size: 22px; border-radius: 15px; border: none; cursor: pointer; margin-top: 5px; font-weight: 800; }
+        .btn-add { background: #ffd700; color: #1e3c72; }
         .btn-back { background: rgba(255,255,255,0.2); color: white; margin-top: 20px; }
-
-        /* 블랙아웃 */
+        
+        /* 블랙아웃 모드 */
         #blackout { background: #000; z-index: 1000; }
     </style>
 </head>
@@ -36,31 +37,36 @@
     <div id="mainScreen" class="screen active">
         <div class="gear" onclick="go('setScreen')">⚙️</div>
         <div class="btn-wrap">
-            <div class="ring ring1"></div>
-            <div class="ring ring2"></div>
+            <div class="ring ring1"></div><div class="ring ring2"></div>
             <button class="emergency-btn" id="sosBtn">긴급구조</button>
         </div>
     </div>
 
     <div id="setScreen" class="screen" style="justify-content: flex-start; overflow-y: auto;">
-        <h1 style="margin: 50px 0 20px;">설정</h1>
-        <div class="card"><div style="font-size: 22px; opacity: 0.8;">내 안전 ID</div><div class="id-val">SZ-7A3F</div></div>
-        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 26px;">🔊 긴급 구조음</span>
-            <input type="checkbox" id="snd" checked style="width: 40px; height: 40px;">
+        <h1 style="margin: 40px 0 20px;">설정</h1>
+        
+        <div class="card" style="text-align: center;">
+            <p style="opacity: 0.8; font-size: 20px;">내 안전 ID</p>
+            <div id="myID" class="id-val">불러오는 중...</div>
         </div>
-        <button class="btn-ui btn-help" onclick="go('helpScreen')">❓ 도움말 보기</button>
-        <button class="btn-ui btn-back" onclick="go('mainScreen')">돌아가기</button>
-    </div>
+        
+        <div class="card">
+            <p style="font-size: 22px; margin-bottom: 10px;">🤝 친구 등록하기</p>
+            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
+            <button class="btn-ui btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
+        </div>
 
-    <div id="helpScreen" class="screen">
-        <h1 style="margin-bottom: 20px;">도움말</h1>
-        <div class="card" style="text-align: left; font-size: 20px; line-height: 1.6;">
-            <p><strong>📢 안심 모드</strong>: 소리로 알림</p>
-            <p><strong>🤫 비밀 모드</strong>: 화면 암전 + 진동</p>
-            <p><strong>👆 2초 꾹 누르기</strong>: 실수 방지용</p>
+        <div class="card">
+            <p style="opacity: 0.8; margin-bottom: 10px; font-size: 20px;">연결된 친구 목록</p>
+            <div id="friendList" style="font-size: 22px; color: #ffd700; line-height: 1.8;">등록된 친구가 없습니다.</div>
         </div>
-        <button class="btn-ui btn-back" onclick="go('setScreen')">확인</button>
+
+        <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 24px;">🔊 소리 켜기 (안심모드)</span>
+            <input type="checkbox" id="snd" checked style="width: 35px; height: 35px;">
+        </div>
+
+        <button class="btn-ui btn-back" onclick="go('mainScreen')">돌아가기</button>
     </div>
 
     <div id="blackout" class="screen" onclick="handleTap()">
@@ -68,54 +74,102 @@
     </div>
 
     <script>
-        // 화면 전환 함수
+        // 화면 이동 함수
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
         }
 
-        let timer;
-        let isHolding = false;
-        const btn = document.getElementById('sosBtn');
+        // [기능 1] 내 고유 ID 자동 부여 및 불러오기
+        function initID() {
+            let savedID = localStorage.getItem('safeZoneID');
+            if (!savedID) {
+                // 새로운 ID 무작위 생성 (예: SZ-W4X9)
+                savedID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+                localStorage.setItem('safeZoneID', savedID);
+            }
+            document.getElementById('myID').innerText = savedID;
+            loadFriends();
+        }
 
-        // 꾹 누르기 로직 (핵심 수정)
-        function startTimer(e) {
+        // [기능 2] 친구 추가 및 목록 렌더링
+        function addFriend() {
+            const idInput = document.getElementById('friendID');
+            const newFriendID = idInput.value.trim().toUpperCase();
+            
+            // 입력값 확인
+            if (newFriendID.length < 5 || !newFriendID.startsWith('SZ-')) { 
+                alert("올바른 ID 형식이 아닙니다. (예: SZ-XXXX)"); 
+                return; 
+            }
+            
+            // 기존 친구 목록 불러오기
+            let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
+            
+            // 중복 확인 및 저장
+            if (!friends.includes(newFriendID)) {
+                friends.push(newFriendID);
+                localStorage.setItem('myFriends', JSON.stringify(friends));
+                alert(newFriendID + "님이 친구로 등록되었습니다!");
+                idInput.value = ""; // 입력창 비우기
+                loadFriends(); // 목록 새로고침
+            } else {
+                alert("이미 등록된 친구입니다.");
+            }
+        }
+
+        function loadFriends() {
+            let friends = JSON.parse(localStorage.getItem('myFriends') || "[]");
+            const listDiv = document.getElementById('friendList');
+            if (friends.length > 0) {
+                listDiv.innerHTML = friends.map(f => `<div>✅ ${f}</div>`).join('');
+            } else {
+                listDiv.innerHTML = "등록된 친구가 없습니다.";
+            }
+        }
+
+        // 앱 켜질 때 ID 세팅 실행
+        initID();
+
+        // 긴급구조 2초 꾹 누르기 로직
+        let timer, isHolding = false;
+        const btn = document.getElementById('sosBtn');
+        
+        btn.onpointerdown = (e) => {
             e.preventDefault();
             if (isHolding) return;
             isHolding = true;
-            navigator.vibrate(100); // 시작 신호
-
+            navigator.vibrate(100); // 1. 누르기 시작할 때 짧은 진동
+            
             timer = setTimeout(() => {
-                // 2초가 지났을 때만 실행
+                // 2. 2초 도달 시 강력한 진동
                 navigator.vibrate([200, 100, 200, 100, 200]);
-                if(document.getElementById('snd').checked) {
-                    const ut = new SpeechSynthesisUtterance('구조 신호가 발송되었습니다');
-                    ut.lang = 'ko-KR'; 
-                    window.speechSynthesis.speak(ut);
-                    alert('🚨 구조 요청이 완료되었습니다!');
+                
+                // 3. 소리 설정 체크
+                const isSoundOn = document.getElementById('snd').checked;
+                
+                if(isSoundOn) {
+                    // 소리 켜짐: 음성 알림 및 팝업
+                    const ut = new SpeechSynthesisUtterance('구조 신호가 친구들에게 발송되었습니다');
+                    ut.lang = 'ko-KR'; window.speechSynthesis.speak(ut);
+                    alert('🚨 등록된 친구들에게 구조 요청 발송 완료!');
                 } else {
+                    // 소리 꺼짐: 스텔스(블랙아웃) 모드 진입
                     go('blackout');
                 }
                 isHolding = false;
-            }, 2000);
-        }
+            }, 2000); // 2000ms = 2초
+        };
+        
+        btn.onpointerup = btn.onpointerleave = () => { 
+            clearTimeout(timer); 
+            isHolding = false; 
+        };
 
-        function cancelTimer() {
-            clearTimeout(timer);
-            isHolding = false;
-        }
-
-        // 마우스와 터치 모두 대응
-        btn.onpointerdown = startTimer;
-        btn.onpointerup = cancelTimer;
-        btn.onpointerleave = cancelTimer;
-
-        // 블랙아웃 해제 (3번 탭)
-        let tapCount = 0;
-        let tapTimer;
+        // 스텔스 모드 해제 (화면 3번 터치)
+        let tapCount = 0, tapTimer;
         function handleTap() {
-            tapCount++;
-            clearTimeout(tapTimer);
+            tapCount++; clearTimeout(tapTimer);
             tapTimer = setTimeout(() => { tapCount = 0; }, 1000);
             if(tapCount >= 3) { go('mainScreen'); tapCount = 0; }
         }
