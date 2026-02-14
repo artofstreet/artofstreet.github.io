@@ -57,8 +57,15 @@
         const database = getDatabase(app);
         const emergencyRef = ref(database, 'emergency_signal');
 
+        // 핸드폰 내장 부저 엔진 준비!
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        window.sirenOscillator = null;
+        window.sirenInterval = null;
+
         // 스피커 시동 걸기
         window.unlockSound = function() {
+            audioCtx.resume(); // 부저 엔진 시동 켬!
+            
             const ut = new SpeechSynthesisUtterance("수신 대기를 시작합니다.");
             ut.lang = 'ko-KR';
             window.speechSynthesis.speak(ut);
@@ -68,8 +75,6 @@
             document.getElementById('startSoundBtn').style.color = "#11998e";
             document.getElementById('startSoundBtn').onclick = null; 
         };
-
-        window.currentSiren = null; // 현재 울리는 사이렌 기억해둘 변수
 
         // [실시간 감시]
         onValue(emergencyRef, (snapshot) => {
@@ -83,13 +88,20 @@
                 document.getElementById('resetBtn').style.display = "block"; 
                 document.getElementById('startSoundBtn').style.display = "none";
 
-                // 🚨 1. 진짜 사이렌 소리 터뜨리기! (끄기 전까지 무한 반복!)
-                if(window.currentSiren) window.currentSiren.pause(); // 혹시 울리던 거 있으면 끄기
-                window.currentSiren = new Audio("https://www.myinstants.com/media/sounds/siren.mp3");
-                window.currentSiren.loop = true; // 무한 반복
-                window.currentSiren.play();
+                // 🚨 1. 핸드폰 내장 부저로 기계음 사이렌 터뜨리기! (엄청 시끄러움!)
+                if(!window.sirenOscillator) {
+                    window.sirenOscillator = audioCtx.createOscillator();
+                    window.sirenOscillator.type = 'square'; // 날카로운 기계음 소리
+                    window.sirenOscillator.connect(audioCtx.destination);
+                    window.sirenOscillator.start();
+                    
+                    // 0.5초마다 음높이를 바꿔서 사이렌 소리 만들기
+                    window.sirenInterval = setInterval(() => {
+                        window.sirenOscillator.frequency.value = window.sirenOscillator.frequency.value === 800 ? 1200 : 800;
+                    }, 500);
+                }
 
-                // 🔊 2. 사이렌 뚫고 나오는 진지한 상황 안내! (삐뽀삐뽀 삭제 ㅋ)
+                // 🔊 2. 진지한 상황 안내 목소리
                 const ut = new SpeechSynthesisUtterance("장화님의 긴급 구조 요청입니다. 즉시 확인하십시오.");
                 ut.lang = 'ko-KR';
                 window.speechSynthesis.speak(ut);
@@ -103,11 +115,12 @@
             }
         });
 
-        // 끄기 버튼 누르면 사이렌 입 막기!
+        // 끄기 버튼 누르면 기계음 입 막기!
         window.resetEmergency = function() {
-            if(window.currentSiren) {
-                window.currentSiren.pause(); // 진짜 사이렌 끄기
-                window.currentSiren.currentTime = 0;
+            if(window.sirenOscillator) {
+                window.sirenOscillator.stop();
+                clearInterval(window.sirenInterval);
+                window.sirenOscillator = null;
             }
             remove(emergencyRef); 
         };
