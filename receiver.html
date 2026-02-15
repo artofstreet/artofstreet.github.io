@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>블랙아웃 가디언 V16.6 FINAL</title>
-    
-    <link rel="manifest" href="manifest-sender.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>안전지대 V16.7 (안드로이드 완벽 보정)</title>
     
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
@@ -17,43 +13,26 @@
         html, body { width: 100%; height: 100%; overflow: hidden; position: fixed; touch-action: manipulation; }
         body { background: #2b2b85 !important; color: white; }
         
-        /* 모든 버튼 누름 효과 강화 */
-        button:active { transform: scale(0.92) !important; filter: brightness(0.9); transition: all 0.1s; }
+        /* 버튼을 누를 때 쑥 들어가는 입체 효과 */
+        button:active { transform: scale(0.88) !important; filter: brightness(0.8); transition: 0.1s; }
 
         .mode-toggle { position: fixed; top: 0; left: 0; right: 0; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; cursor: pointer; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: none; }
         .mode-toggle.sender { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #2b2b85; }
         .mode-toggle.receiver { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
         
-        .app-screen { display: none; width: 100%; height: calc(100% - 100px); position: absolute; top: 100px; left: 0; overflow-y: auto; flex-direction: column; align-items: center; }
+        .app-screen { display: none; width: 100%; height: calc(100% - 100px); position: absolute; top: 100px; flex-direction: column; align-items: center; justify-content: center; }
         .app-screen.active { display: flex; }
         
-        #senderScreen { background: #2b2b85 !important; justify-content: center; padding: 20px; }
-        .radar-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
-        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 5px solid transparent; border-top-color: #ffd700; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        
-        .btn-emergency { width: 240px; height: 240px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 42px; font-weight: 900; letter-spacing: 3px; box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6); cursor: pointer; z-index: 10; transition: all 0.1s; }
-        .btn-emergency:active { background: #d00835 !important; box-shadow: 0 5px 15px rgba(0,0,0,0.4) !important; }
-        .btn-emergency.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .btn-emergency { width: 260px; height: 260px; background: #f90b3e; border-radius: 50%; border: 10px solid rgba(255,255,255,0.2); color: white; font-size: 46px; font-weight: 900; box-shadow: 0 20px 50px rgba(249, 11, 62, 0.6); cursor: pointer; transition: 0.1s; }
+        .btn-emergency.tracking { background: #ff6b6b; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
-        #receiverScreen { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; padding: 20px; }
-        #receiverScreen.emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%) !important; animation: blink-bg 1s infinite alternate; }
-        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.8; } }
+        /* 상태 확인창 */
+        #statusPanel { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); color: #00ff00; font-family: monospace; font-size: 14px; padding: 15px; max-height: 200px; overflow-y: auto; z-index: 99999; display: none; border-top: 3px solid #00ff00; }
+        .status-header { background: #00ff00; color: black; padding: 5px 10px; font-weight: bold; border-radius: 4px; margin-bottom: 8px; }
 
-        .btn-box, .btn-white { padding: 22px; width: 90%; max-width: 400px; font-size: 26px; font-weight: bold; border: none; cursor: pointer; margin: 10px 0; border-radius: 18px; }
-        .btn-box { background: rgba(0,0,0,0.2); color: white; }
-        .btn-white { background: white; color: #11998e; border-radius: 50px; font-weight: 900; }
-        
-        #map { width: 100%; max-width: 500px; height: 350px; border-radius: 20px; margin: 20px 0; border: 3px solid rgba(255,255,255,0.3); }
-        .settings-screen { display: none; position: absolute; top: 100px; left: 0; width: 100%; height: calc(100% - 100px); padding: 20px; overflow-y: auto; z-index: 8888; background: inherit; }
-        .settings-screen.active { display: block; }
-        .card { background: rgba(255,255,255,0.1); padding: 28px; border-radius: 22px; width: 100%; max-width: 450px; margin: 0 auto 25px; border: 1px solid rgba(255,255,255,0.2); }
-        .id-display { background: rgba(255,215,0,0.2); padding: 18px; border-radius: 18px; text-align: center; font-size: 38px; color: #ffd700; font-weight: 900; }
-
-        /* 연결 확인창 스타일 */
-        #checkPanel { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.95); color: #00ff00; font-family: monospace; font-size: 14px; padding: 15px; max-height: 220px; overflow-y: auto; z-index: 99999; display: none; border-top: 3px solid #00ff00; }
-        .check-header { background: #00ff00; color: black; padding: 5px 10px; font-weight: bold; border-radius: 4px; margin-bottom: 8px; }
+        #map { width: 90%; height: 300px; border-radius: 20px; margin-top: 20px; border: 3px solid white; }
+        .btn-white { background: white; color: #11998e; padding: 20px; width: 90%; border-radius: 50px; font-size: 24px; font-weight: 900; margin-top: 15px; border: none; }
     </style>
 </head>
 <body>
@@ -61,54 +40,29 @@
     <div id="modeToggle" class="mode-toggle sender">🔄 현재: 구조 요청 모드</div>
 
     <div id="senderScreen" class="app-screen active">
-        <button class="gear-btn" style="position:absolute; top:20px; right:20px; width:50px; height:50px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); font-size:26px;" onclick="showSettings('sender')">⚙️</button>
-        <div class="radar-container">
-            <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">긴급구조</button>
-        </div>
-        <p id="statusMsg" style="margin-top:35px; font-size:26px; color:#ffd700; font-weight:bold;">버튼을 눌러주세요</p>
-        <div id="trackingBadge" style="display:none; background:rgba(255,107,107,0.9); padding:12px 25px; border-radius:25px; font-size:24px; margin-top:20px; animation:blink 1s infinite;">📍 실시간 추적 중...</div>
+        <button id="emergencyBtn" class="btn-emergency">긴급구조</button>
+        <p id="msg" style="margin-top:30px; font-size:24px; color:#ffd700;">버튼을 누르면 진동이 옵니다</p>
+        <button class="btn-white" style="background:#00c8ff; color:white;" onclick="toggleStatus()">🔍 시스템 상태 확인</button>
     </div>
 
     <div id="receiverScreen" class="app-screen">
-        <button class="gear-btn" style="position:absolute; top:20px; right:20px; width:50px; height:50px; border-radius:50%; border:none; background:rgba(255,255,255,0.2); font-size:26px;" onclick="showSettings('receiver')">⚙️</button>
-        <h1 id="receiverTitle" style="font-size:36px; margin:25px 0; font-weight:900;">✅ 현재 안전합니다</h1>
+        <h1 id="receiverTitle" style="font-size:32px; margin-bottom:20px;">✅ 수신 대기 중</h1>
         <div id="map"></div>
-        <button id="soundBtn" class="btn-white">🔊 소리 켜기 (대기 중)</button>
-        <div id="emergencyCard" style="display:none; background:rgba(255,255,255,0.15); padding:25px; border-radius:25px; width:90%;">
-            <p id="friendName" style="font-size:28px; font-weight:bold;"></p>
-            <p id="address" style="font-size:24px; margin:10px 0;"></p>
-            <a href="#" id="mapLink" class="btn-white" style="display:block; text-align:center; background:#ffd700; color:#2b2b85; text-decoration:none;">🗺️ 지도 보기</a>
+        <button id="soundBtn" class="btn-white">🔊 소리 켜기 (준비 필수)</button>
+        <div id="infoCard" style="display:none; margin-top:20px; background:rgba(255,255,255,0.2); padding:20px; border-radius:20px; width:90%;">
+            <p id="addrText" style="font-size:22px; font-weight:bold;"></p>
         </div>
-        <button id="resetBtn" class="btn-white" style="display:none; background:#ff4757; color:white;">상황 종료</button>
+        <button class="btn-white" style="background:#00c8ff; color:white;" onclick="toggleStatus()">🔍 시스템 상태 확인</button>
     </div>
 
-    <div id="senderSettings" class="settings-screen" style="background:#2b2b85;">
-        <div class="card">
-            <p style="font-size:26px; font-weight:bold; margin-bottom:15px;">내 안전 ID</p>
-            <div class="id-display" id="senderId"></div>
-        </div>
-        <button class="btn-white" style="background:#00c8ff; color:white;" onclick="toggleCheck()">🔍 연결 상태 확인창</button>
-        <button class="btn-white" style="background:rgba(255,255,255,0.3); color:white;" onclick="hideSettings()">← 돌아가기</button>
-    </div>
-
-    <div id="receiverSettings" class="settings-screen" style="background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-        <div class="card">
-            <p style="font-size:26px; font-weight:bold; margin-bottom:15px;">내 고유 ID</p>
-            <div class="id-display" id="receiverId"></div>
-        </div>
-        <button class="btn-white" style="background:#00c8ff; color:white;" onclick="toggleCheck()">🔍 연결 상태 확인창</button>
-        <button class="btn-white" onclick="hideSettings()">← 돌아가기</button>
-    </div>
-
-    <div id="checkPanel">
-        <div class="check-header">📡 시스템 연결 상태 확인</div>
-        <div id="checkContent"></div>
+    <div id="statusPanel">
+        <div class="status-header">📡 시스템 연결 및 작동 상태</div>
+        <div id="statusContent"></div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, serverTimestamp, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
@@ -121,153 +75,95 @@
         const db = getDatabase(app);
         const geocoder = new kakao.maps.services.Geocoder();
 
-        // 로그 함수
-        window.log = (msg) => {
-            const content = document.getElementById('checkContent');
-            content.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-            document.getElementById('checkPanel').scrollTop = 9999;
+        window.log = (m) => {
+            const c = document.getElementById('statusContent');
+            c.innerHTML += `<div>[${new Date().toLocaleTimeString()}] ${m}</div>`;
+            document.getElementById('statusPanel').scrollTop = 9999;
         };
 
-        log("✅ 시스템 시작됨");
+        // 발신 ID 고정
+        const myId = "SZ-BKPX"; 
+        log("내 고유 발신 ID: " + myId);
 
-        // ID 설정
-        let sId = localStorage.getItem('safeZoneID_SND') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        localStorage.setItem('safeZoneID_SND', sId);
-        document.getElementById('senderId').innerText = sId;
-
-        let rId = localStorage.getItem('safeZoneID_RCV') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        localStorage.setItem('safeZoneID_RCV', rId);
-        document.getElementById('receiverId').innerText = rId;
-
-        // 버튼 반응성 핵심 로직
-        const emergencyBtn = document.getElementById('emergencyBtn');
-        let touchStarted = false;
-
-        emergencyBtn.addEventListener('touchstart', (e) => {
-            touchStarted = true;
-            if (navigator.vibrate) navigator.vibrate(500);
-            log("👆 버튼 터치 감지 (진동)");
+        const btn = document.getElementById('emergencyBtn');
+        
+        // 안드로이드 진동 및 터치 완벽 보정
+        btn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (navigator.vibrate) navigator.vibrate([300, 100, 300]); // 징-징-징
+            log("👆 버튼 터치! 진동 발생");
         });
 
-        emergencyBtn.addEventListener('touchend', (e) => {
-            if (!touchStarted) return;
-            touchStarted = false;
-            log("🔴 긴급 신호 명령 실행");
-            toggleTracking();
+        btn.addEventListener('click', () => {
+            if(!window.isTracking) start(); else stop();
         });
 
         window.isTracking = false;
-        let watchId = null;
-
-        function toggleTracking() {
-            if (!window.isTracking) {
-                startTracking();
-            } else {
-                stopTracking();
-            }
-        }
-
-        function startTracking() {
+        function start() {
             window.isTracking = true;
-            emergencyBtn.classList.add('tracking');
-            emergencyBtn.innerText = "중지";
-            document.getElementById('trackingBadge').style.display = 'inline-block';
+            btn.classList.add('tracking');
+            btn.innerText = "중지";
+            log("🚨 신호 발송 시작!");
             
-            log("🚨 GPS 추적 시작...");
-            const emergencyRef = ref(db, 'emergency_signals/' + sId);
-            
-            watchId = navigator.geolocation.watchPosition((pos) => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                log(`📍 좌표 획득: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
-                
-                geocoder.coord2Address(lon, lat, (result, status) => {
-                    let addr = status === kakao.maps.services.Status.OK ? result[0].address.address_name : "위치 확인 중";
-                    set(emergencyRef, {
-                        sender: sId, address: addr, lat: lat, lon: lon,
-                        time: new Date().toLocaleString(), timestamp: serverTimestamp()
-                    });
-                    log("✅ 서버 전송 완료: " + addr);
+            navigator.geolocation.watchPosition((pos) => {
+                const lat = pos.coords.latitude, lon = pos.coords.longitude;
+                geocoder.coord2Address(lon, lat, (res, stat) => {
+                    const addr = stat === kakao.maps.services.Status.OK ? res[0].address.address_name : "위치 파악 중";
+                    set(ref(db, 'emergency_signals/' + myId), { lat, lon, address: addr, time: new Date().toLocaleString() });
+                    log("📍 위치 전송: " + addr);
                 });
             }, null, { enableHighAccuracy: true });
         }
 
-        function stopTracking() {
+        function stop() {
             window.isTracking = false;
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            remove(ref(db, 'emergency_signals/' + sId));
-            emergencyBtn.classList.remove('tracking');
-            emergencyBtn.innerText = "긴급구조";
-            document.getElementById('trackingBadge').style.display = 'none';
-            log("🛑 추적 종료");
+            btn.classList.remove('tracking');
+            btn.innerText = "긴급구조";
+            remove(ref(db, 'emergency_signals/' + myId));
+            log("🛑 신호 종료");
+            location.reload();
         }
 
-        // 수신 모드 소리 설정
+        // 수신 로직
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         siren.loop = true;
-        
-        window.soundBtn = document.getElementById('soundBtn');
-        soundBtn.onclick = () => {
-            siren.play().then(() => {
+        document.getElementById('soundBtn').onclick = () => {
+            siren.play().then(() => { siren.pause(); log("🔊 소리 준비 완료!"); document.getElementById('soundBtn').style.background = "#00ff00"; });
+        };
+
+        // 수신 확인 (가족 핸드폰용)
+        // 수신 모드일 때 스르사마의 ID(SZ-BKPX)를 감시합니다.
+        onValue(ref(db, 'emergency_signals/SZ-BKPX'), (snap) => {
+            const data = snap.val();
+            if (data) {
+                log("🚨 스르사마의 긴급 신호 수신!");
+                siren.play();
+                document.getElementById('receiverScreen').style.background = "red";
+                document.getElementById('infoCard').style.display = "block";
+                document.getElementById('addrText').innerText = "위치: " + data.address;
+                // 지도 표시 로직...
+            } else {
                 siren.pause();
-                siren.currentTime = 0;
-                soundBtn.innerText = "✅ 소리 준비완료";
-                soundBtn.style.background = "#00ff00";
-                soundBtn.style.color = "#000";
-                log("🔊 사이렌 대기 상태 완료");
-            });
+                document.getElementById('receiverScreen').style.background = "";
+            }
+        });
+
+        window.toggleStatus = () => {
+            const p = document.getElementById('statusPanel');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
         };
 
         // 모드 전환
-        window.currentMode = localStorage.getItem('currentMode') || 'sender';
         document.getElementById('modeToggle').onclick = () => {
-            window.currentMode = window.currentMode === 'sender' ? 'receiver' : 'sender';
-            localStorage.setItem('currentMode', window.currentMode);
-            location.reload(); // 전체 리로드가 가장 확실함
+            const s = document.getElementById('senderScreen'), r = document.getElementById('receiverScreen');
+            if(s.classList.contains('active')) {
+                s.classList.remove('active'); r.classList.add('active');
+                document.getElementById('modeToggle').innerText = "🔄 현재: 가족 보호 모드";
+            } else {
+                r.classList.remove('active'); s.classList.add('active');
+                document.getElementById('modeToggle').innerText = "🔄 현재: 구조 요청 모드";
+            }
         };
-
-        // 수신 리스너 (Receiver Mode)
-        if (window.currentMode === 'receiver') {
-            document.getElementById('modeToggle').className = 'mode-toggle receiver';
-            document.getElementById('modeToggle').innerText = '🔄 현재: 가족 보호 모드';
-            document.getElementById('senderScreen').classList.remove('active');
-            document.getElementById('receiverScreen').classList.add('active');
-            
-            // 등록된 친구(발신자) ID를 여기에 수동 혹은 로컬스토리지에서 가져와 연결
-            const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            friendList.forEach(fid => {
-                onValue(ref(db, 'emergency_signals/' + fid), (snap) => {
-                    const data = snap.val();
-                    if (data) {
-                        log("🚨 신호 수신!!: " + fid);
-                        siren.play();
-                        document.getElementById('receiverScreen').classList.add('emergency');
-                        document.getElementById('emergencyCard').style.display = 'block';
-                        document.getElementById('friendName').innerText = fid + " 님의 긴급상황!";
-                        document.getElementById('address').innerText = data.address;
-                    } else {
-                        siren.pause();
-                        document.getElementById('receiverScreen').classList.remove('emergency');
-                    }
-                });
-            });
-        }
-    </script>
-
-    <script>
-        // 전역 함수들
-        function showSettings(type) { 
-            if(type === 'sender') document.getElementById('senderSettings').classList.add('active');
-            else document.getElementById('receiverSettings').classList.add('active');
-        }
-        function hideSettings() { 
-            document.getElementById('senderSettings').classList.remove('active');
-            document.getElementById('receiverSettings').classList.remove('active');
-        }
-        function toggleCheck() {
-            const panel = document.getElementById('checkPanel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
     </script>
 </body>
 </html>
