@@ -22,6 +22,18 @@
             -moz-user-select: none;
             user-select: none;
             -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            outline: none !important;
+        }
+        
+        button, input, a {
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+        }
+        
+        button:focus, input:focus, a:focus {
+            outline: none !important;
+            box-shadow: none !important;
         }
         
         html, body { 
@@ -53,6 +65,8 @@
             z-index: 9999;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
             transition: background 0.3s;
+            outline: none !important;
+            border: none;
         }
         
         .mode-toggle.sender {
@@ -106,6 +120,8 @@
             font-size: 26px;
             cursor: pointer;
             z-index: 999;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .radar-container {
@@ -146,6 +162,21 @@
             box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6);
             cursor: pointer;
             z-index: 10;
+            transition: transform 0.2s ease;
+            outline: none !important;
+            -webkit-tap-highlight-color: rgba(0,0,0,0) !important;
+        }
+        
+        .btn-emergency:focus {
+            outline: none !important;
+            box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6) !important;
+            border: none !important;
+        }
+        
+        .btn-emergency:active {
+            outline: none !important;
+            box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6) !important;
+            transform: scale(0.95);
         }
         
         .btn-emergency.tracking {
@@ -216,6 +247,8 @@
             border: none;
             border-radius: 18px;
             cursor: pointer;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .btn-white {
@@ -230,6 +263,8 @@
             border-radius: 50px;
             margin-top: 25px;
             cursor: pointer;
+            outline: none !important;
+            -webkit-tap-highlight-color: transparent;
         }
         
         #map {
@@ -467,6 +502,34 @@
             lastTouch = now;
         }, false);
 
+        // ========== 진동 준비 ==========
+        let vibrationReady = false;
+        
+        // 페이지 로드 시 진동 테스트
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔊 진동 API 체크...');
+            if ('vibrate' in navigator) {
+                console.log('✅ 진동 API 사용 가능');
+                vibrationReady = true;
+            } else {
+                console.log('❌ 진동 API 미지원');
+            }
+        });
+        
+        // 진동 헬퍼 함수
+        function doVibrate(pattern) {
+            try {
+                if (navigator.vibrate) {
+                    const result = navigator.vibrate(pattern);
+                    console.log('진동 실행:', pattern, '결과:', result);
+                    return result;
+                }
+            } catch (e) {
+                console.error('진동 오류:', e);
+            }
+            return false;
+        }
+
         // ========== ID 생성 ==========
         let senderId = localStorage.getItem('safeZoneID_SND');
         if (!senderId) {
@@ -657,11 +720,32 @@
         const statusMsg = document.getElementById('statusMsg');
         const trackingBadge = document.getElementById('trackingBadge');
         
-        emergencyBtn.addEventListener('click', function() {
-            // 햅틱 진동 500ms
-            if (navigator.vibrate) {
-                navigator.vibrate(500);
-            }
+        emergencyBtn.addEventListener('click', function(e) {
+            e.preventDefault(); // 기본 동작 차단
+            
+            console.log('🔴 긴급 버튼 클릭!');
+            
+            // 즉시 시각적 피드백
+            this.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                this.style.transform = 'scale(1)';
+            }, 150);
+            
+            // 강화된 햅틱 진동 - 여러 방법 시도
+            console.log('🔊 진동 시도...');
+            
+            // 방법 1: 500ms 긴 진동
+            doVibrate(500);
+            
+            // 방법 2: 100ms 후 패턴 진동 (백업)
+            setTimeout(() => {
+                doVibrate([200, 100, 200]);
+            }, 100);
+            
+            // 방법 3: 200ms 후 다시 한번 (안드로이드용)
+            setTimeout(() => {
+                doVibrate(300);
+            }, 200);
             
             if (!isTracking) {
                 startTracking();
@@ -782,10 +866,16 @@
                 siren.play();
                 currentEmergency = fid;
                 
-                // 햅틱 진동
-                if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200, 100, 200]);
-                }
+                console.log('🚨 긴급 신호 수신! 진동 시작...');
+                
+                // 강화된 햅틱 진동 - 긴급 패턴
+                // 패턴: 짧게-짧게-길게-짧게-짧게-아주길게
+                doVibrate([200, 100, 200, 100, 500, 100, 1000]);
+                
+                // 3초 후 한번 더 (놓칠 경우 대비)
+                setTimeout(() => {
+                    doVibrate([300, 100, 300]);
+                }, 3000);
             }
             
             const screen = document.getElementById('receiverScreen');
