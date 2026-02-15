@@ -13,62 +13,31 @@
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif;
-            -webkit-user-select: none; -moz-user-select: none; user-select: none;
-            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none !important;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-user-select: none; -moz-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none !important; }
         button, input, a { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
-        button:focus, input:focus, a:focus { outline: none !important; box-shadow: none !important; }
-        
         html, body { width: 100%; height: 100%; overflow: hidden; position: fixed; touch-action: manipulation; }
         body { background: #2b2b85 !important; color: white; }
         
-        .mode-toggle {
-            position: fixed; top: 0; left: 0; right: 0; height: 100px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 28px; font-weight: 900; cursor: pointer; z-index: 9999;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: background 0.3s;
-            outline: none !important; border: none;
-        }
+        .mode-toggle { position: fixed; top: 0; left: 0; right: 0; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; cursor: pointer; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: background 0.3s; border: none; }
         .mode-toggle.sender { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #2b2b85; }
         .mode-toggle.receiver { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
         .mode-toggle:active { transform: scale(0.98); }
         
-        .app-screen {
-            display: none; width: 100%; height: calc(100% - 100px);
-            position: absolute; top: 100px; left: 0; overflow-y: auto; touch-action: pan-y;
-        }
+        .app-screen { display: none; width: 100%; height: calc(100% - 100px); position: absolute; top: 100px; left: 0; overflow-y: auto; touch-action: pan-y; }
         .app-screen.active { display: flex; }
         
         #senderScreen { background: #2b2b85 !important; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .gear-btn {
-            position: absolute; top: 20px; right: 20px; width: 50px; height: 50px;
-            background: rgba(255,255,255,0.2); border: none; border-radius: 50%;
-            font-size: 26px; cursor: pointer; z-index: 999;
-        }
+        .gear-btn { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; font-size: 26px; cursor: pointer; z-index: 999; }
         .radar-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
-        .radar-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            border: 5px solid transparent; border-top-color: #ffd700; border-bottom-color: #b82bf2; border-left-color: #ff4757;
-            animation: spin 2s linear infinite; pointer-events: none;
-        }
+        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 5px solid transparent; border-top-color: #ffd700; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        .btn-emergency {
-            width: 240px; height: 240px; background: #f90b3e; border-radius: 50%;
-            border: none; color: white; font-size: 42px; font-weight: 900; letter-spacing: 3px;
-            box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6); cursor: pointer; z-index: 10;
-            transition: transform 0.2s ease;
-        }
+        .btn-emergency { width: 240px; height: 240px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 42px; font-weight: 900; letter-spacing: 3px; box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6); cursor: pointer; z-index: 10; transition: transform 0.2s ease; }
         .btn-emergency.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         
         #statusMsg { margin-top: 35px; font-size: 26px; color: #ffd700; font-weight: bold; }
-        .tracking-badge {
-            background: rgba(255,107,107,0.9); padding: 12px 25px; border-radius: 25px;
-            font-size: 24px; margin-top: 20px; display: inline-block; animation: blink 1s infinite;
-        }
+        .tracking-badge { background: rgba(255,107,107,0.9); padding: 12px 25px; border-radius: 25px; font-size: 24px; margin-top: 20px; display: inline-block; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
         #receiverScreen { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; flex-direction: column; align-items: center; padding: 20px; }
@@ -86,79 +55,4 @@
         
         .settings-screen { display: none; position: absolute; top: 100px; left: 0; width: 100%; height: calc(100% - 100px); padding: 20px; overflow-y: auto; z-index: 8888; }
         .settings-screen.active { display: block; }
-        .card { background: rgba(255,255,255,0.1); padding: 28px; border-radius: 22px; width: 100%; max-width: 450px; margin: 0 auto 25px; border: 1px solid rgba(255,255,255,0.2); }
-        .section-title { font-size: 26px; margin-bottom: 15px; font-weight: bold; }
-        .id-display { background: rgba(255,215,0,0.2); padding: 18px; border-radius: 18px; margin: 15px 0; text-align: center; }
-        .id-text { font-size: 38px; color: #ffd700; font-weight: 900; letter-spacing: 3px; }
-        .input-box { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 26px; margin: 15px 0; text-align: center; }
-        .btn-add { background: #ffd700; color: #2b2b85; padding: 18px; width: 100%; font-size: 26px; font-weight: bold; border-radius: 15px; border: none; cursor: pointer; }
-        .friend-item { background: rgba(255,255,255,0.2); padding: 18px 25px; border-radius: 18px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
-        .btn-delete { background: #ff4757; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 22px; font-weight: bold; }
-    </style>
-</head>
-<body>
-
-    <div id="modeToggle" class="mode-toggle sender" onclick="toggleMode()">🔄 현재: 구조 요청 모드</div>
-
-    <div id="senderScreen" class="app-screen active">
-        <button class="gear-btn" onclick="showSettings('sender')">⚙️</button>
-        <div class="radar-container">
-            <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">긴급구조</button>
-        </div>
-        <p id="statusMsg">버튼을 눌러주세요</p>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
-    </div>
-
-    <div id="receiverScreen" class="app-screen">
-        <button class="gear-btn" onclick="showSettings('receiver')">⚙️</button>
-        <h1 id="receiverTitle" class="receiver-title">✅ 현재 안전합니다</h1>
-        <button id="btn1" class="btn-box">대기 중...</button>
-        <button id="btn2" class="btn-box">수신 대기 중</button>
-        <div id="map"></div>
-        <button id="soundBtn" class="btn-white" onclick="unlockSound()">📱 스마트 카메라 (수신 대기중)</button>
-        <div id="emergencyCard" class="emergency-card" style="display:none;">
-            <span class="live-badge">🔴 LIVE</span>
-            <p id="friendName" style="font-size:28px; font-weight:bold; margin:15px 0;"></p>
-            <p id="address" style="font-size:24px; margin:12px 0;"></p>
-            <p id="time" style="font-size:20px; opacity:0.8;"></p>
-            <a href="#" id="mapLink" class="btn-white" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; text-align:center; margin-top:20px;" target="_blank">🗺️ 실시간 위치 확인</a>
-        </div>
-        <button id="resetBtn" class="btn-white" style="display:none; background:#ff4757; color:white;" onclick="resetEmergency()">상황 종료</button>
-    </div>
-
-    <div id="senderSettings" class="settings-screen" style="background:#2b2b85;">
-        <h1 style="font-size:36px; margin-bottom:25px; text-align:center; color:white;">발신소 설정</h1>
-        <div class="card">
-            <p class="section-title" style="color:white;">내 안전 ID</p>
-            <div class="id-display"><div class="id-text" id="senderId">로딩중...</div></div>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">👥 친구 등록하기</p>
-            <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addSenderFriend()">친구 추가</button>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">등록된 친구 목록</p>
-            <p style="background:rgba(255,215,0,0.3); padding:8px 18px; border-radius:18px; font-size:22px; display:inline-block; margin:12px 0; color:white;">
-                <span id="senderCount">0</span>/5명
-            </p>
-            <div id="senderFriendList"></div>
-        </div>
-        <button class="btn-white" style="background:rgba(255,255,255,0.3); color:white;" onclick="hideSettings()">← 돌아가기</button>
-    </div>
-
-    <div id="receiverSettings" class="settings-screen" style="background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-        <h1 style="font-size:36px; margin-bottom:25px; text-align:center; color:white;">수신소 설정</h1>
-        <div class="card">
-            <p class="section-title" style="color:white;">내 고유 ID</p>
-            <div class="id-display"><div class="id-text" id="receiverId">로딩중...</div></div>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">👥 친구 등록하기</p>
-            <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addReceiverFriend()">친구 추가</button>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">등록된 친구 목록</p>
-            <p style="background:rgba(255,215,0,0.3); padding:8px 18px; border-radius:18px; font-size:22px; display:inline-block; margin:12px 0; color:white
+        .card { background: rgba(255,255,255,0.1); padding: 28px; border-radius: 22px; width: 100%; max-width: 450px; margin: 0 auto 25px; border: 1px solid rgba(255,255,2
