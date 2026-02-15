@@ -175,123 +175,139 @@
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
             localStorage.setItem('safeZoneID_SND', myID);
         }
-        document.getElementById('myIdText').innerText = myID;
 
-        const statusMsg = document.getElementById('statusMsg');
-        const emergencyBtn = document.getElementById('emergencyBtn');
-        const trackingBadge = document.getElementById('trackingBadge');
         const geocoder = new kakao.maps.services.Geocoder();
-        
         let isTracking = false;
         let watchId = null;
 
-        // 긴급 버튼 이벤트 리스너 연결 (확실하게!)
-        emergencyBtn.addEventListener('click', function() {
-            console.log('버튼 클릭됨! isTracking:', isTracking);
-            if (!isTracking) {
-                startTracking();
-            } else {
+        // DOM이 완전히 로드된 후 실행
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM 로드 완료!');
+            
+            const statusMsg = document.getElementById('statusMsg');
+            const emergencyBtn = document.getElementById('emergencyBtn');
+            const trackingBadge = document.getElementById('trackingBadge');
+            const myIdText = document.getElementById('myIdText');
+            
+            // 요소 확인
+            if (!emergencyBtn) {
+                console.error('❌ 긴급 버튼을 찾을 수 없습니다!');
+                return;
+            }
+            
+            console.log('✅ 긴급 버튼 찾음:', emergencyBtn);
+            myIdText.innerText = myID;
+
+            // 긴급 버튼 이벤트 리스너 연결
+            emergencyBtn.addEventListener('click', function() {
+                console.log('🔴 버튼 클릭됨! isTracking:', isTracking);
+                if (!isTracking) {
+                    startTracking();
+                } else {
+                    stopTracking();
+                }
+            });
+
+            console.log('✅ 이벤트 리스너 연결 완료!');
+
+            function startTracking() {
+                console.log('🚀 추적 시작!');
+                statusMsg.innerText = "📍 실시간 위치 추적을 시작합니다...";
+                
+                if (!navigator.geolocation) {
+                    statusMsg.innerText = "❌ GPS를 지원하지 않는 브라우저입니다.";
+                    alert("❌ 이 브라우저는 GPS를 지원하지 않습니다!");
+                    return;
+                }
+
+                // watchPosition으로 실시간 위치 추적
+                watchId = navigator.geolocation.watchPosition(
+                    updatePosition,
+                    handleError,
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+
+                isTracking = true;
+                emergencyBtn.classList.add('tracking');
+                emergencyBtn.innerText = "추적중지";
+                trackingBadge.style.display = 'inline-block';
+            }
+
+            function stopTracking() {
+                console.log('⏹️ 추적 중지!');
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                    watchId = null;
+                }
+
+                // Firebase에서 긴급 신호 삭제
+                const myPath = ref(db, 'emergency_signals/' + myID);
+                remove(myPath);
+
+                isTracking = false;
+                emergencyBtn.classList.remove('tracking');
+                emergencyBtn.innerText = "긴급구조";
+                trackingBadge.style.display = 'none';
+                statusMsg.innerText = "✅ 위치 추적이 종료되었습니다.";
+            }
+
+            function updatePosition(position) {
+                const lat = position.coords.latitude;
+                const lon = position.coords.longitude;
+                
+                console.log('📍 위치 업데이트:', lat, lon);
+
+                geocoder.coord2Address(lon, lat, function(result, status) {
+                    if (status === kakao.maps.services.Status.OK) {
+                        const address = result[0].road_address ? 
+                            result[0].road_address.address_name : 
+                            result[0].address.address_name;
+                        const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
+                        
+                        const myPath = ref(db, 'emergency_signals/' + myID);
+                        
+                        set(myPath, {
+                            sender: myID,
+                            address: address,
+                            lat: lat,
+                            lon: lon,
+                            mapUrl: mapUrl,
+                            time: new Date().toLocaleString(),
+                            timestamp: serverTimestamp()
+                        });
+
+                        statusMsg.innerText = "✅ 위치 업데이트: " + address.substring(0, 30) + "...";
+                        console.log('🔥 Firebase 업데이트 완료:', address);
+                    }
+                });
+            }
+
+            function handleError(error) {
+                console.log('❌ GPS 에러:', error);
+                let errorMsg = '';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMsg = "❌ 위치 권한이 거부되었습니다.";
+                        alert("❌ 위치 권한을 허용해주세요!\n\n브라우저 설정 → 사이트 설정 → 위치 → 허용");
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMsg = "❌ 위치 정보를 사용할 수 없습니다.";
+                        alert("❌ GPS를 켜주세요!");
+                        break;
+                    case error.TIMEOUT:
+                        errorMsg = "⚠️ 위치 요청 시간 초과. 재시도 중...";
+                        return; // 타임아웃은 재시도
+                    default:
+                        errorMsg = "❌ 알 수 없는 오류가 발생했습니다.";
+                }
+                statusMsg.innerText = errorMsg;
                 stopTracking();
             }
         });
-
-        function startTracking() {
-            console.log('추적 시작!');
-            statusMsg.innerText = "📍 실시간 위치 추적을 시작합니다...";
-            
-            if (!navigator.geolocation) {
-                statusMsg.innerText = "❌ GPS를 지원하지 않는 브라우저입니다.";
-                alert("❌ 이 브라우저는 GPS를 지원하지 않습니다!");
-                return;
-            }
-
-            // watchPosition으로 실시간 위치 추적
-            watchId = navigator.geolocation.watchPosition(
-                updatePosition,
-                handleError,
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 0
-                }
-            );
-
-            isTracking = true;
-            emergencyBtn.classList.add('tracking');
-            emergencyBtn.innerText = "추적중지";
-            trackingBadge.style.display = 'inline-block';
-        }
-
-        function stopTracking() {
-            console.log('추적 중지!');
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
-
-            // Firebase에서 긴급 신호 삭제
-            const myPath = ref(db, 'emergency_signals/' + myID);
-            remove(myPath);
-
-            isTracking = false;
-            emergencyBtn.classList.remove('tracking');
-            emergencyBtn.innerText = "긴급구조";
-            trackingBadge.style.display = 'none';
-            statusMsg.innerText = "✅ 위치 추적이 종료되었습니다.";
-        }
-
-        function updatePosition(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            
-            console.log('위치 업데이트:', lat, lon);
-
-            geocoder.coord2Address(lon, lat, function(result, status) {
-                if (status === kakao.maps.services.Status.OK) {
-                    const address = result[0].road_address ? 
-                        result[0].road_address.address_name : 
-                        result[0].address.address_name;
-                    const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
-                    
-                    const myPath = ref(db, 'emergency_signals/' + myID);
-                    
-                    set(myPath, {
-                        sender: myID,
-                        address: address,
-                        lat: lat,
-                        lon: lon,
-                        mapUrl: mapUrl,
-                        time: new Date().toLocaleString(),
-                        timestamp: serverTimestamp()
-                    });
-
-                    statusMsg.innerText = "✅ 위치 업데이트: " + address.substring(0, 30) + "...";
-                    console.log('Firebase 업데이트 완료:', address);
-                }
-            });
-        }
-
-        function handleError(error) {
-            console.log('GPS 에러:', error);
-            let errorMsg = '';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMsg = "❌ 위치 권한이 거부되었습니다.";
-                    alert("❌ 위치 권한을 허용해주세요!\n\n브라우저 설정 → 사이트 설정 → 위치 → 허용");
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMsg = "❌ 위치 정보를 사용할 수 없습니다.";
-                    alert("❌ GPS를 켜주세요!");
-                    break;
-                case error.TIMEOUT:
-                    errorMsg = "⚠️ 위치 요청 시간 초과. 재시도 중...";
-                    return; // 타임아웃은 재시도
-                default:
-                    errorMsg = "❌ 알 수 없는 오류가 발생했습니다.";
-            }
-            statusMsg.innerText = errorMsg;
-            stopTracking();
-        }
 
         // PWA Service Worker 등록
         if ('serviceWorker' in navigator) {
@@ -302,7 +318,7 @@
             });
         }
 
-        console.log('✅ 모든 스크립트 로드 완료!');
+        console.log('✅ Firebase 초기화 완료! DOM 로드 대기 중...');
     </script>
 </body>
 </html>
