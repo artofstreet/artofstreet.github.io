@@ -4,74 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2b2b85">
-    <title>안전지대 발신소 V8.0</title>
+    <title>안전지대 발신소 V9.0</title>
     
     <link rel="manifest" href="manifest-sender.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; 
-            -webkit-font-smoothing: antialiased;
-            /* [중요] 모든 요소에서 텍스트 선택 기능을 물리적으로 차단합니다 */
-            -webkit-user-select: none; 
-            user-select: none; 
-            -webkit-touch-callout: none; 
-        }
-        body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; overflow-y: auto; padding: 20px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+        body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; touch-action: manipulation; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; padding: 20px; }
         .active { display: flex !important; }
         
         #mainScreen { justify-content: center; }
-        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; }
+        /* 설정 버튼: 크기를 키우고 z-index를 최고로 높였습니다 */
+        .gear-btn { 
+            position: absolute; top: 30px; right: 30px; 
+            width: 60px; height: 60px; 
+            background: rgba(255,255,255,0.3); border: none; border-radius: 50%; 
+            font-size: 30px; display: flex; align-items: center; justify-content: center;
+            z-index: 9999; cursor: pointer;
+        }
         
-        .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
-        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
+        .radar-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
+        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* V8.0: 그림자 없는 순수 레드 원형 버튼 */
+        /* V9.0: 버튼 클릭감을 위해 active 효과를 더 줬습니다 */
         .btn-circle { 
-            width: 220px; height: 220px; 
-            background-color: #ff0000; /* 선명한 단색 레드 */
-            border-radius: 50%; border: 8px solid white; /* 흰색 테두리로 강조 */
-            color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; 
-            cursor: pointer; z-index: 10; 
-            outline: none; box-shadow: none; /* 그림자 완전 제거 */
-            -webkit-tap-highlight-color: transparent; /* 누를 때 생기는 네모 박스 방지 */
-            transition: transform 0.1s;
+            width: 220px; height: 220px; background-color: #ff0000; 
+            border-radius: 50%; border: 10px solid white; 
+            color: white; font-size: 40px; font-weight: 900;
+            cursor: pointer; outline: none; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            -webkit-tap-highlight-color: transparent;
+            user-select: none; -webkit-user-select: none;
         }
-        .btn-circle:active { transform: scale(0.92); background-color: #cc0000; } /* 누를 때 반응 강화 */
-        .btn-circle.tracking { background-color: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .btn-circle:active { transform: scale(0.9); background-color: #aa0000; }
 
-        #statusMsg { margin-top: 30px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .id-display { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; }
-        .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
-        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
+        #statusMsg { margin-top: 40px; font-size: 18px; color: #ffd700; font-weight: bold; }
+        .btn-pill { background: white; color: #2b2b85; padding: 20px; width: 80%; font-size: 20px; font-weight: bold; border-radius: 50px; border: none; margin-top: 30px; }
     </style>
 </head>
 <body>
 
     <div id="mainScreen" class="screen active">
-        <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
+        <button id="gearBtn" class="gear-btn">⚙️</button>
         <div class="radar-container">
             <div class="radar-ring"></div>
             <button id="emergencyBtn" class="btn-circle">긴급구조</button>
         </div>
-        <p id="statusMsg">버튼을 눌러주세요</p>
+        <p id="statusMsg">버튼을 눌러주세요 (V9.0)</p>
     </div>
 
     <div id="setScreen" class="screen">
-        <h1>설정 (V8.0)</h1>
-        <div class="card">
-            <p>내 안전 ID</p>
-            <div class="id-display"><div class="id-text" id="myIdText">...</div></div>
-        </div>
-        <button class="btn-pill" onclick="go('mainScreen')">← 돌아가기</button>
+        <h1 style="margin-top: 50px;">설정 화면</h1>
+        <p style="margin: 20px;">내 ID: <span id="myIdText">...</span></p>
+        <button class="btn-pill" onclick="location.reload()">🔄 앱 새로고침</button>
+        <button class="btn-pill" id="backBtn">← 돌아가기</button>
     </div>
 
     <script type="module">
@@ -80,4 +68,43 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb
+            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
+            projectId: "safezone-2c1b2",
+            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
+        };
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        let myID = localStorage.getItem('safeZoneID_SND') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+        localStorage.setItem('safeZoneID_SND', myID);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('myIdText').innerText = myID;
+            
+            // 화면 전환 함수
+            const go = (id) => {
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            };
+
+            // [설정 버튼 클릭] 확실하게 연결
+            document.getElementById('gearBtn').addEventListener('click', () => go('setScreen'));
+            document.getElementById('backBtn').addEventListener('click', () => go('mainScreen'));
+
+            // [긴급구조 버튼] 진동 우선 실행 패턴
+            document.getElementById('emergencyBtn').addEventListener('click', function() {
+                // 어떤 코드보다 먼저 진동부터 울립니다!
+                if (navigator.vibrate) {
+                    navigator.vibrate([400, 200, 400]); // 징~ 징~
+                }
+                document.getElementById('statusMsg').innerText = "🚨 신호 발송 중...";
+                // 이후 Firebase 및 위치 로직 실행...
+            });
+        });
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-sender.js?v=9').then(() => console.log('V9.0 준비완료'));
+        }
+    </script>
+</body>
+</html>
