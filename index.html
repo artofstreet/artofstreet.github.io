@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>블랙아웃 가디언 V16.2 (클릭 버그 완전 해결)</title>
+    <title>블랙아웃 가디언 V16.2 FINAL</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -63,11 +63,14 @@
         .btn-add { background: #ffd700; color: #2b2b85; padding: 18px; width: 100%; font-size: 26px; font-weight: bold; border-radius: 15px; border: none; cursor: pointer; }
         .friend-item { background: rgba(255,255,255,0.2); padding: 18px 25px; border-radius: 18px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
         .btn-delete { background: #ff4757; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 22px; font-weight: bold; }
+        
+        /* 디버그 패널 */
+        #debugPanel { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.9); color: #00ff00; font-family: monospace; font-size: 14px; padding: 10px; max-height: 150px; overflow-y: auto; z-index: 99999; display: none; }
     </style>
 </head>
 <body>
 
-    <div id="modeToggle" class="mode-toggle sender" onclick="toggleMode()">🔄 현재: 구조 요청 모드</div>
+    <div id="modeToggle" class="mode-toggle sender">🔄 현재: 구조 요청 모드</div>
 
     <div id="senderScreen" class="app-screen active">
         <button class="gear-btn" onclick="showSettings('sender')">⚙️</button>
@@ -85,7 +88,7 @@
         <button id="btn1" class="btn-box">대기 중...</button>
         <button id="btn2" class="btn-box">수신 대기 중</button>
         <div id="map"></div>
-        <button id="soundBtn" class="btn-white" onclick="unlockSound()">📱 스마트 카메라 (수신 대기중)</button>
+        <button id="soundBtn" class="btn-white">📱 스마트 카메라 (수신 대기중)</button>
         <div id="emergencyCard" class="emergency-card" style="display:none;">
             <span class="live-badge">🔴 LIVE</span>
             <p id="friendName" style="font-size:28px; font-weight:bold; margin:15px 0;"></p>
@@ -93,7 +96,7 @@
             <p id="time" style="font-size:20px; opacity:0.8;"></p>
             <a href="#" id="mapLink" class="btn-white" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; text-align:center; margin-top:20px;" target="_blank">🗺️ 실시간 위치 확인</a>
         </div>
-        <button id="resetBtn" class="btn-white" style="display:none; background:#ff4757; color:white;" onclick="resetEmergency()">상황 종료</button>
+        <button id="resetBtn" class="btn-white" style="display:none; background:#ff4757; color:white;">상황 종료</button>
     </div>
 
     <div id="senderSettings" class="settings-screen" style="background:#2b2b85;">
@@ -115,6 +118,7 @@
             <div id="senderFriendList"></div>
         </div>
         <button class="btn-white" style="background:rgba(255,255,255,0.3); color:white;" onclick="hideSettings()">← 돌아가기</button>
+        <button class="btn-white" style="background:rgba(0,255,0,0.3); color:white; margin-top:10px;" onclick="toggleDebug()">🐛 디버그 ON/OFF</button>
     </div>
 
     <div id="receiverSettings" class="settings-screen" style="background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
@@ -136,9 +140,28 @@
             <div id="receiverFriendList"></div>
         </div>
         <button class="btn-white" onclick="hideSettings()">← 돌아가기</button>
+        <button class="btn-white" style="background:rgba(0,255,0,0.3); color:white; margin-top:10px;" onclick="toggleDebug()">🐛 디버그 ON/OFF</button>
     </div>
 
+    <!-- 디버그 패널 -->
+    <div id="debugPanel"></div>
+
     <script>
+        // ========== 디버그 로그 시스템 ==========
+        const debugLog = (msg) => {
+            console.log(msg);
+            const panel = document.getElementById('debugPanel');
+            const timestamp = new Date().toLocaleTimeString();
+            panel.innerHTML += `[${timestamp}] ${msg}<br>`;
+            panel.scrollTop = panel.scrollHeight;
+        };
+        
+        window.toggleDebug = () => {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        };
+
+        // ========== 제스처 차단 ==========
         document.addEventListener('gesturestart', e => e.preventDefault());
         document.addEventListener('gesturechange', e => e.preventDefault());
         document.addEventListener('gestureend', e => e.preventDefault());
@@ -149,32 +172,50 @@
             lastTouch = now;
         }, false);
 
+        // ========== ID 생성 ==========
         let senderId = localStorage.getItem('safeZoneID_SND');
-        if (!senderId) { senderId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); localStorage.setItem('safeZoneID_SND', senderId); }
+        if (!senderId) { 
+            senderId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); 
+            localStorage.setItem('safeZoneID_SND', senderId); 
+        }
         document.getElementById('senderId').innerText = senderId;
+        debugLog('발신 ID: ' + senderId);
 
         let receiverId = localStorage.getItem('safeZoneID_RCV');
-        if (!receiverId) { receiverId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); localStorage.setItem('safeZoneID_RCV', receiverId); }
+        if (!receiverId) { 
+            receiverId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); 
+            localStorage.setItem('safeZoneID_RCV', receiverId); 
+        }
         document.getElementById('receiverId').innerText = receiverId;
+        debugLog('수신 ID: ' + receiverId);
 
+        // ========== 모드 전환 ==========
         let currentMode = localStorage.getItem('currentMode') || 'sender';
-        function toggleMode() {
+        
+        document.getElementById('modeToggle').onclick = function() {
             const toggle = document.getElementById('modeToggle');
             const senderScreen = document.getElementById('senderScreen');
             const receiverScreen = document.getElementById('receiverScreen');
+            
             if (currentMode === 'sender') {
                 currentMode = 'receiver';
-                toggle.className = 'mode-toggle receiver'; toggle.innerText = '🔄 현재: 가족 보호 모드';
-                senderScreen.classList.remove('active'); receiverScreen.classList.add('active');
+                toggle.className = 'mode-toggle receiver'; 
+                toggle.innerText = '🔄 현재: 가족 보호 모드';
+                senderScreen.classList.remove('active'); 
+                receiverScreen.classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
-                startListening();
+                if (window.startListening) window.startListening();
+                debugLog('모드 전환: 수신 모드');
             } else {
                 currentMode = 'sender';
-                toggle.className = 'mode-toggle sender'; toggle.innerText = '🔄 현재: 구조 요청 모드';
-                receiverScreen.classList.remove('active'); senderScreen.classList.add('active');
+                toggle.className = 'mode-toggle sender'; 
+                toggle.innerText = '🔄 현재: 구조 요청 모드';
+                receiverScreen.classList.remove('active'); 
+                senderScreen.classList.add('active');
+                debugLog('모드 전환: 발신 모드');
             }
             localStorage.setItem('currentMode', currentMode);
-        }
+        };
         
         window.addEventListener('load', () => {
             if (currentMode === 'receiver') {
@@ -183,64 +224,108 @@
                 document.getElementById('senderScreen').classList.remove('active');
                 document.getElementById('receiverScreen').classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
-                startListening();
+                if (window.startListening) window.startListening();
             }
         });
 
-        function showSettings(type) {
-            if (type === 'sender') { document.getElementById('senderSettings').classList.add('active'); loadSenderFriends(); } 
-            else { document.getElementById('receiverSettings').classList.add('active'); loadReceiverFriends(); }
-        }
-        function hideSettings() {
+        // ========== 설정 화면 ==========
+        window.showSettings = function(type) {
+            if (type === 'sender') { 
+                document.getElementById('senderSettings').classList.add('active'); 
+                loadSenderFriends(); 
+            } else { 
+                document.getElementById('receiverSettings').classList.add('active'); 
+                loadReceiverFriends(); 
+            }
+        };
+        
+        window.hideSettings = function() {
             document.getElementById('senderSettings').classList.remove('active');
             document.getElementById('receiverSettings').classList.remove('active');
-        }
+        };
 
-        function addSenderFriend() {
+        // ========== 친구 관리 (발신) ==========
+        window.addSenderFriend = function() {
             const input = document.getElementById('senderFriendInput');
-            const id = input.value.trim().toUpperCase();
+            let id = input.value.trim().toUpperCase();
             if (!id) { alert('❌ ID를 입력해주세요!'); return; }
-            const normalizedId = id.startsWith('SZ-') ? id : 'SZ-' + id;
+            
+            if (!id.startsWith('SZ-')) id = 'SZ-' + id;
+            
             let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
             if (list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
-            if (list.includes(normalizedId)) { alert('❌ 이미 등록됨!'); return; }
-            list.push(normalizedId); localStorage.setItem('friendList_SND', JSON.stringify(list));
-            input.value = ''; alert('✅ 등록 완료!'); loadSenderFriends();
-        }
-        function deleteSenderFriend(id) {
+            if (list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
+            
+            list.push(id); 
+            localStorage.setItem('friendList_SND', JSON.stringify(list));
+            input.value = ''; 
+            alert('✅ 등록: ' + id); 
+            loadSenderFriends();
+            debugLog('친구 추가: ' + id);
+        };
+        
+        window.deleteSenderFriend = function(id) {
             if (!confirm('⚠️ 삭제하시겠습니까?')) return;
             let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            list = list.filter(f => f !== id); localStorage.setItem('friendList_SND', JSON.stringify(list)); loadSenderFriends();
-        }
+            list = list.filter(f => f !== id); 
+            localStorage.setItem('friendList_SND', JSON.stringify(list)); 
+            loadSenderFriends();
+            debugLog('친구 삭제: ' + id);
+        };
+        
         function loadSenderFriends() {
             const list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
             document.getElementById('senderCount').innerText = list.length;
             const cont = document.getElementById('senderFriendList');
-            if (list.length === 0) { cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; color:white;">등록된 친구가 없습니다</p>'; return; }
+            if (list.length === 0) { 
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; color:white;">등록된 친구가 없습니다</p>'; 
+                return; 
+            }
             cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');
         }
 
-        function addReceiverFriend() {
+        // ========== 친구 관리 (수신) ==========
+        window.addReceiverFriend = function() {
             const input = document.getElementById('receiverFriendInput');
-            const id = input.value.trim().toUpperCase();
+            let id = input.value.trim().toUpperCase();
             if (!id) { alert('❌ ID를 입력해주세요!'); return; }
-            const normalizedId = id.startsWith('SZ-') ? id : 'SZ-' + id;
+            
+            if (!id.startsWith('SZ-')) id = 'SZ-' + id;
+            
             let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
             if (list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
-            if (list.includes(normalizedId)) { alert('❌ 이미 등록됨!'); return; }
-            list.push(normalizedId); localStorage.setItem('friendList_RCV', JSON.stringify(list));
-            input.value = ''; alert('✅ 등록 완료!'); loadReceiverFriends();
-        }
-        function deleteReceiverFriend(id) {
+            if (list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
+            
+            list.push(id); 
+            localStorage.setItem('friendList_RCV', JSON.stringify(list));
+            input.value = ''; 
+            alert('✅ 등록: ' + id); 
+            loadReceiverFriends();
+            debugLog('수신 친구 추가: ' + id);
+            
+            // 즉시 리스닝 시작
+            if (currentMode === 'receiver' && window.startListening) {
+                window.startListening();
+            }
+        };
+        
+        window.deleteReceiverFriend = function(id) {
             if (!confirm('⚠️ 삭제하시겠습니까?')) return;
             let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            list = list.filter(f => f !== id); localStorage.setItem('friendList_RCV', JSON.stringify(list)); loadReceiverFriends();
-        }
+            list = list.filter(f => f !== id); 
+            localStorage.setItem('friendList_RCV', JSON.stringify(list)); 
+            loadReceiverFriends();
+            debugLog('수신 친구 삭제: ' + id);
+        };
+        
         function loadReceiverFriends() {
             const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
             document.getElementById('receiverCount').innerText = list.length;
             const cont = document.getElementById('receiverFriendList');
-            if (list.length === 0) { cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; color:white;">등록된 친구가 없습니다</p>'; return; }
+            if (list.length === 0) { 
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; color:white;">등록된 친구가 없습니다</p>'; 
+                return; 
+            }
             cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');
         }
     </script>
@@ -260,47 +345,60 @@
         const db = getDatabase(app);
         const geocoder = new kakao.maps.services.Geocoder();
 
+        debugLog('✅ Firebase 초기화 완료');
+
+        // ========== 긴급 버튼 이벤트 (수정판) ==========
         window.isTracking = false;
         let watchId = null;
         const statusMsg = document.getElementById('statusMsg');
         const trackingBadge = document.getElementById('trackingBadge');
+        const emergencyBtn = document.getElementById('emergencyBtn');
 
-        // ========== 긴급 버튼 이벤트 통합 (클릭 오류 완전 제거) ==========
-        document.addEventListener('DOMContentLoaded', () => {
-            const emergencyBtn = document.getElementById('emergencyBtn');
+        // 즉시 실행 (DOMContentLoaded 안 씀)
+        emergencyBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            debugLog('👆 터치 이벤트');
             
-            // 모든 동작을 click 하나로 통합하여 터치/마우스 모두 정상 작동하도록 수정
-            emergencyBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('🔴 긴급 버튼 클릭 작동!');
-                
-                // 1. 진동 실행
-                if (navigator.vibrate) {
-                    navigator.vibrate([400, 100, 400, 100, 800]);
-                } else {
-                    emergencyBtn.style.background = '#ff0000';
-                    setTimeout(() => { emergencyBtn.style.background = window.isTracking ? '#ff6b6b' : '#f90b3e'; }, 200);
-                }
-                
-                // 2. 애니메이션
-                emergencyBtn.style.transform = 'scale(0.9)';
-                setTimeout(() => { emergencyBtn.style.transform = 'scale(1)'; }, 150);
-                
-                // 3. 통신 실행
-                if (!window.isTracking) { startTracking(); } 
-                else { stopTracking(); }
-            });
+            if (navigator.vibrate) {
+                const result = navigator.vibrate([400, 100, 400, 100, 800]);
+                debugLog('🔊 진동: ' + (result ? '성공' : '실패'));
+            } else {
+                debugLog('❌ 진동 API 없음 (iOS)');
+                emergencyBtn.style.background = '#ff0000';
+                setTimeout(() => { 
+                    emergencyBtn.style.background = window.isTracking ? '#ff6b6b' : '#f90b3e'; 
+                }, 200);
+            }
+        }, { passive: false });
+        
+        emergencyBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            debugLog('🔴 클릭 이벤트');
+            
+            emergencyBtn.style.transform = 'scale(0.9)';
+            setTimeout(() => { emergencyBtn.style.transform = 'scale(1)'; }, 150);
+            
+            if (!window.isTracking) { 
+                startTracking(); 
+            } else { 
+                stopTracking(); 
+            }
         });
 
-        // ========== 1단계/2단계 분리형 통신 ==========
-        window.startTracking = function() {
+        // ========== 발신 기능 (완전 수정) ==========
+        function startTracking() {
             const myID = localStorage.getItem('safeZoneID_SND')?.trim().toUpperCase();
-            if (!myID) { alert('❌ ID가 설정되지 않았습니다'); return; }
+            if (!myID) { 
+                alert('❌ ID 없음'); 
+                debugLog('❌ ID 없음');
+                return; 
+            }
             
-            const emergencyBtn = document.getElementById('emergencyBtn');
+            debugLog('🚨 긴급 신호 전송 시작: ' + myID);
+            
             const emergencyRef = ref(db, 'emergency_signals/' + myID);
             
-            // 1단계: 위치 없이 무조건 긴급 신호부터 쏘기
+            // 1단계: 즉시 긴급 신호 전송
             set(emergencyRef, {
                 sender: myID,
                 address: '위치 확인 중...',
@@ -312,23 +410,34 @@
                 status: 'emergency'
             }).then(() => {
                 statusMsg.innerText = "✅ 긴급 신호 전송 완료!";
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                debugLog('✅ Firebase 전송 성공!');
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200]);
+                    debugLog('✅ 확인 진동');
+                }
             }).catch(err => {
-                alert('❌ 신호 전송 실패: 연결을 확인하세요.');
+                debugLog('❌ Firebase 오류: ' + err.message);
+                alert('❌ 전송 실패!\n\n오류: ' + err.message + '\n\nFirebase Rules를 확인하세요!');
                 return;
             });
             
-            // 2단계: GPS 위치 잡히면 업데이트
-            statusMsg.innerText = "📍 상세 위치 확인 중...";
+            // 2단계: GPS 위치
+            statusMsg.innerText = "📍 위치 확인 중...";
+            debugLog('📍 GPS 시작');
+            
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
+                    debugLog(`📍 좌표: ${lat}, ${lon}`);
                     
                     geocoder.coord2Address(lon, lat, (result, status) => {
                         let addr = '주소 변환 실패';
                         if (status === kakao.maps.services.Status.OK && result[0]) {
-                            addr = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+                            addr = result[0].road_address ? 
+                                result[0].road_address.address_name : 
+                                result[0].address.address_name;
                         }
                         
                         set(emergencyRef, {
@@ -341,10 +450,15 @@
                             timestamp: serverTimestamp(),
                             status: 'emergency'
                         });
-                        statusMsg.innerText = "✅ 실시간 위치: " + addr.substring(0, 25) + "...";
+                        
+                        statusMsg.innerText = "✅ 위치: " + addr.substring(0, 25) + "...";
+                        debugLog('✅ 주소: ' + addr);
                     });
                 },
-                (error) => { statusMsg.innerText = "⚠️ 위치 확인 불가 (신호는 전송됨)"; },
+                (error) => { 
+                    debugLog('⚠️ GPS 오류: ' + error.message);
+                    statusMsg.innerText = "⚠️ 위치 불가 (신호는 전송됨)"; 
+                },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
             
@@ -352,20 +466,30 @@
             emergencyBtn.classList.add('tracking');
             emergencyBtn.innerText = "추적중지";
             trackingBadge.style.display = 'inline-block';
-        };
+        }
         
-        window.stopTracking = function() {
-            if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
+        function stopTracking() {
+            if (watchId) { 
+                navigator.geolocation.clearWatch(watchId); 
+                watchId = null; 
+            }
+            
             const myID = localStorage.getItem('safeZoneID_SND');
-            if(myID) remove(ref(db, 'emergency_signals/' + myID));
+            if(myID) {
+                remove(ref(db, 'emergency_signals/' + myID));
+                debugLog('🛑 신호 제거: ' + myID);
+            }
             
             window.isTracking = false;
-            const emergencyBtn = document.getElementById('emergencyBtn');
             emergencyBtn.classList.remove('tracking');
             emergencyBtn.innerText = "긴급구조";
             trackingBadge.style.display = 'none';
             statusMsg.innerText = "✅ 추적 종료";
-        };
+            debugLog('✅ 추적 종료');
+        }
+
+        window.startTracking = startTracking;
+        window.stopTracking = stopTracking;
 
         // ========== 수신 기능 ==========
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
@@ -383,36 +507,68 @@
         marker = new kakao.maps.Marker({ position: kakaoMap.getCenter() });
         marker.setMap(kakaoMap);
         
-        window.unlockSound = () => {
-            if (navigator.vibrate) navigator.vibrate(100);
+        document.getElementById('soundBtn').onclick = function() {
+            debugLog('🔊 사이렌 활성화');
+            if (navigator.vibrate) {
+                navigator.vibrate(100);
+            }
             siren.play().then(() => {
-                siren.pause(); siren.currentTime = 0;
-                document.getElementById('soundBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
-            }).catch(() => { console.log('사이렌 대기 중'); });
+                siren.pause(); 
+                siren.currentTime = 0;
+                document.getElementById('soundBtn').innerText = "✅ 스피커 켜짐";
+                debugLog('✅ 사이렌 준비됨');
+            }).catch(e => {
+                debugLog('사이렌 대기: ' + e.message);
+            });
         };
         
         window.startListening = function() {
-            listeners.forEach(u => u()); listeners = [];
+            listeners.forEach(u => u()); 
+            listeners = [];
+            
             const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            if (list.length === 0) return;
+            debugLog('👂 리스닝 시작: ' + list.join(', '));
+            
+            if (list.length === 0) {
+                debugLog('⚠️ 등록된 친구 없음');
+                return;
+            }
             
             list.forEach(fid => {
                 const path = ref(db, 'emergency_signals/' + fid);
+                debugLog('📡 리스너 등록: ' + fid);
+                
                 const unsub = onValue(path, snap => {
                     const data = snap.val();
-                    if (data) { showEmergency(fid, data); } 
-                    else { if (currentEmergency === fid) hideEmergency(); }
+                    if (data) { 
+                        debugLog('🚨 신호 수신! ' + fid);
+                        showEmergency(fid, data); 
+                    } else { 
+                        if (currentEmergency === fid) {
+                            debugLog('✅ 신호 종료: ' + fid);
+                            hideEmergency(); 
+                        }
+                    }
+                }, (error) => {
+                    debugLog('❌ 리스너 오류: ' + error.message);
                 });
+                
                 listeners.push(unsub);
             });
         };
         
         function showEmergency(fid, data) {
             if (currentEmergency !== fid) {
-                siren.play(); currentEmergency = fid;
+                siren.play(); 
+                currentEmergency = fid;
+                debugLog('🚨🚨🚨 긴급 상황! ' + fid);
+                
                 if(navigator.vibrate) {
                     navigator.vibrate([200, 100, 200, 100, 500, 100, 1000]);
-                    setTimeout(() => navigator.vibrate([300, 100, 300]), 3000);
+                    debugLog('🔊🔊🔊 긴급 진동!');
+                    setTimeout(() => {
+                        navigator.vibrate([300, 100, 300]);
+                    }, 3000);
                 }
             }
             
@@ -432,11 +588,15 @@
             document.getElementById('resetBtn').style.display = "block";
             
             const pos = new kakao.maps.LatLng(data.lat, data.lon);
-            kakaoMap.setCenter(pos); marker.setPosition(pos);
+            kakaoMap.setCenter(pos); 
+            marker.setPosition(pos);
         }
         
         function hideEmergency() {
-            siren.pause(); siren.currentTime = 0; currentEmergency = null;
+            siren.pause(); 
+            siren.currentTime = 0; 
+            currentEmergency = null;
+            
             const screen = document.getElementById('receiverScreen');
             screen.classList.remove('emergency');
             
@@ -448,11 +608,14 @@
             document.getElementById('resetBtn').style.display = "none";
         }
         
-        window.resetEmergency = () => {
+        document.getElementById('resetBtn').onclick = function() {
             const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
             list.forEach(fid => remove(ref(db, 'emergency_signals/' + fid)));
             hideEmergency();
+            debugLog('🛑 수동 종료');
         };
+        
+        debugLog('✅ 시스템 준비 완료!');
     </script>
 </body>
 </html>
