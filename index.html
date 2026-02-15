@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2b2b85">
-    <title>안전지대 발신소 V9.0</title>
+    <title>안전지대 발신소 V9.1</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
@@ -12,36 +12,37 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; touch-action: manipulation; }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; padding: 20px; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; padding: 20px; overflow-y: auto; }
         .active { display: flex !important; }
         
         #mainScreen { justify-content: center; }
-        /* 설정 버튼: 크기를 키우고 z-index를 최고로 높였습니다 */
-        .gear-btn { 
-            position: absolute; top: 30px; right: 30px; 
-            width: 60px; height: 60px; 
-            background: rgba(255,255,255,0.3); border: none; border-radius: 50%; 
-            font-size: 30px; display: flex; align-items: center; justify-content: center;
-            z-index: 9999; cursor: pointer;
-        }
+        .gear-btn { position: absolute; top: 25px; right: 25px; width: 55px; height: 55px; background: rgba(255,255,255,0.25); border: none; border-radius: 50%; font-size: 28px; display: flex; align-items: center; justify-content: center; z-index: 9999; cursor: pointer; }
         
-        .radar-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
+        .radar-container { position: relative; width: 270px; height: 270px; display: flex; align-items: center; justify-content: center; }
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* V9.0: 버튼 클릭감을 위해 active 효과를 더 줬습니다 */
+        /* 버튼 디자인 복구: 깔끔하면서도 강력한 원형 */
         .btn-circle { 
-            width: 220px; height: 220px; background-color: #ff0000; 
-            border-radius: 50%; border: 10px solid white; 
+            width: 220px; height: 220px; background-color: #f90b3e; 
+            border-radius: 50%; border: 8px solid white; 
             color: white; font-size: 40px; font-weight: 900;
-            cursor: pointer; outline: none; box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            cursor: pointer; outline: none; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.4);
             -webkit-tap-highlight-color: transparent;
             user-select: none; -webkit-user-select: none;
         }
-        .btn-circle:active { transform: scale(0.9); background-color: #aa0000; }
+        .btn-circle:active { transform: scale(0.92); }
 
-        #statusMsg { margin-top: 40px; font-size: 18px; color: #ffd700; font-weight: bold; }
-        .btn-pill { background: white; color: #2b2b85; padding: 20px; width: 80%; font-size: 20px; font-weight: bold; border-radius: 50px; border: none; margin-top: 30px; }
+        #statusMsg { margin-top: 35px; font-size: 17px; color: #ffd700; font-weight: bold; }
+        
+        /* [복구] 기존 목록 및 카드 디자인 */
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .id-display { background: rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; margin: 10px 0; }
+        .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; background: rgba(255,255,255,0.9); color: #2b2b85; font-weight: bold; }
+        .btn-yellow { background: #ffd700; color: #2b2b85; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; }
+        .friend-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 20px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -52,14 +53,26 @@
             <div class="radar-ring"></div>
             <button id="emergencyBtn" class="btn-circle">긴급구조</button>
         </div>
-        <p id="statusMsg">버튼을 눌러주세요 (V9.0)</p>
+        <p id="statusMsg">버튼을 눌러주세요</p>
     </div>
 
     <div id="setScreen" class="screen">
-        <h1 style="margin-top: 50px;">설정 화면</h1>
-        <p style="margin: 20px;">내 ID: <span id="myIdText">...</span></p>
-        <button class="btn-pill" onclick="location.reload()">🔄 앱 새로고침</button>
+        <h1 style="margin-bottom: 25px;">설정 (V9.1)</h1>
+        <div class="card">
+            <p>내 안전 ID</p>
+            <div class="id-display"><div class="id-text" id="myIdText">...</div></div>
+        </div>
+        <div class="card">
+            <p>🤝 친구 등록하기</p>
+            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
+            <button class="btn-yellow" id="addFriendBtn">이 ID를 친구로 추가</button>
+        </div>
+        <div class="card">
+            <p>연결된 친구 목록</p>
+            <div id="friendList" style="margin-top: 15px;"></div>
+        </div>
         <button class="btn-pill" id="backBtn">← 돌아가기</button>
+        <button class="btn-pill" onclick="location.reload()" style="font-size: 14px; opacity: 0.7;">🔄 앱 새로고침</button>
     </div>
 
     <script type="module">
@@ -81,30 +94,39 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('myIdText').innerText = myID;
             
-            // 화면 전환 함수
             const go = (id) => {
                 document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
                 document.getElementById(id).classList.add('active');
+                if(id === 'setScreen') loadFriends();
             };
 
-            // [설정 버튼 클릭] 확실하게 연결
             document.getElementById('gearBtn').addEventListener('click', () => go('setScreen'));
             document.getElementById('backBtn').addEventListener('click', () => go('mainScreen'));
 
-            // [긴급구조 버튼] 진동 우선 실행 패턴
+            // 긴급 버튼 진동 및 신호 로직
             document.getElementById('emergencyBtn').addEventListener('click', function() {
-                // 어떤 코드보다 먼저 진동부터 울립니다!
-                if (navigator.vibrate) {
-                    navigator.vibrate([400, 200, 400]); // 징~ 징~
-                }
-                document.getElementById('statusMsg').innerText = "🚨 신호 발송 중...";
-                // 이후 Firebase 및 위치 로직 실행...
+                if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
+                document.getElementById('statusMsg').innerText = "🚨 긴급 신호 발송 중...";
+            });
+
+            // [복구] 친구 추가 기능
+            document.getElementById('addFriendBtn').addEventListener('click', function() {
+                const id = document.getElementById('friendID').value.trim().toUpperCase();
+                if(!id) return;
+                let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+                if(!list.includes(id)) list.push(id);
+                localStorage.setItem('friendList_SND', JSON.stringify(list));
+                document.getElementById('friendID').value = "";
+                loadFriends();
             });
         });
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw-sender.js?v=9').then(() => console.log('V9.0 준비완료'));
-        }
+        window.loadFriends = function() {
+            const list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            const cont = document.getElementById('friendList');
+            if(list.length === 0) { cont.innerHTML = '<p style="opacity:0.6;">등록된 친구가 없습니다.</p>'; return; }
+            cont.innerHTML = list.map(f => `<div class="friend-item"><span>✅ ${f}</span></div>`).join('');
+        };
     </script>
 </body>
 </html>
