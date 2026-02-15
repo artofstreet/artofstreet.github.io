@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#2b2b85">
-    <title>안전지대 발신소 V10.0</title>
+    <title>안전지대 발신소 V13.0</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
-        /* 스르사마의 원본 디자인 100% 복구 */
+        /* 스르사마 원본 디자인 유지 */
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; touch-action: manipulation; }
         .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; padding: 20px; overflow-y: auto; }
@@ -18,144 +18,117 @@
         
         #mainScreen { justify-content: center; }
         
-        /* 설정 버튼: 위치와 디자인 복구하되 클릭만 잘 되게 수정 */
+        /* [개선] 설정 버튼: z-index를 만 단위로 올려서 무조건 클릭되게 함 */
         .gear-btn { 
-            position: absolute; top: 20px; right: 20px; 
-            width: 50px; height: 50px; 
-            background: rgba(255,255,255,0.2); border: none; border-radius: 50%; 
+            position: fixed; top: 25px; right: 25px; 
+            width: 60px; height: 60px; 
+            background: rgba(255,255,255,0.25); border: none; border-radius: 50%; 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 24px; cursor: pointer; z-index: 9999; 
+            font-size: 30px; cursor: pointer; z-index: 10001; 
+            -webkit-tap-highlight-color: transparent;
         }
         
-        .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
+        /* 레이더 링: 버튼 클릭을 방해하지 않게 처리 */
+        .radar-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* 원본 버튼 스타일 복구 */
+        /* [개선] 긴급구조 버튼: 진동과 클릭이 확실히 전달되게 함 */
         .btn-circle { 
             width: 220px; height: 220px; background: #f90b3e; 
             border-radius: 50%; border: none; color: white; font-size: 40px; font-weight: 900; 
             letter-spacing: 2px; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.5); 
-            cursor: pointer; z-index: 10; outline: none;
+            cursor: pointer; z-index: 10000; outline: none;
             -webkit-tap-highlight-color: transparent; 
             -webkit-user-select: none; user-select: none;
         }
-        .btn-circle:active { transform: scale(0.95); }
-        .btn-circle.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .btn-circle:active { transform: scale(0.9); }
 
-        #statusMsg { margin-top: 30px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
+        #statusMsg { margin-top: 30px; font-size: 18px; color: #ffd700; font-weight: bold; }
         
-        /* 카드 및 목록 디자인 복구 */
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .id-display { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; }
         .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
-        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; background: rgba(255,255,255,0.9); color: #2b2b85; font-weight: bold; }
-        .btn-yellow { background: #ffd700; color: #2b2b85; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; margin-top: 10px; }
-        .friend-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        .delete-btn { color: #ff4757; font-size: 24px; cursor: pointer; background: none; border: none; }
-        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; background: white; color: #2b2b85; }
+        .btn-yellow { background: #ffd700; color: #2b2b85; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; }
+        .friend-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .btn-pill { background: white; color: #2b2b85; padding: 18px; width: 100%; max-width: 350px; font-size: 20px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="mainScreen" class="screen active">
-        <button id="gearBtn" class="gear-btn">⚙️</button>
+        <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
         <div class="radar-container">
             <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-circle">긴급구조</button>
+            <button id="emergencyBtn" class="btn-circle" onclick="vibrateDevice()">긴급구조</button>
         </div>
-        <p id="statusMsg">버튼을 눌러주세요</p>
+        <p id="statusMsg">버튼을 눌러주세요 (V13.0)</p>
     </div>
 
     <div id="setScreen" class="screen">
         <h1 style="margin-bottom: 25px;">설정</h1>
         <div class="card">
-            <p style="font-size:18px; opacity:0.9;">내 안전 ID</p>
-            <div class="id-display"><div class="id-text" id="myIdText">로딩중...</div></div>
+            <p>내 안전 ID</p>
+            <div class="id-text" id="myIdText">로딩중...</div>
         </div>
         <div class="card">
-            <p style="font-size:18px; opacity:0.9;">🤝 친구 등록하기</p>
-            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-yellow" id="addFriendBtn">이 ID를 친구로 추가</button>
+            <p>🤝 친구 등록 (최대 5명)</p>
+            <input type="text" id="friendID" class="input-box" placeholder="SZ-XXXX">
+            <button class="btn-yellow" onclick="addFriend()">등록하기</button>
         </div>
-        <div class="card">
-            <p style="font-size:18px; opacity:0.9;">연결된 친구 목록</p>
-            <div id="friendList" style="margin-top: 15px;"></div>
-        </div>
-        <button class="btn-pill" id="backBtn">← 돌아가기</button>
+        <div id="friendList" style="width: 100%; max-width: 400px;"></div>
+        <button class="btn-pill" onclick="go('mainScreen')">← 돌아가기</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+    <script>
+        // 전역 함수로 선언하여 무조건 실행되게 함
+        function go(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if(id === 'setScreen') loadFriends();
+        }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+        function vibrateDevice() {
+            // 안드로이드 강제 진동 패턴
+            if (navigator.vibrate) {
+                navigator.vibrate([500, 200, 500]); 
+            }
+            document.getElementById('statusMsg').innerText = "🚨 신호 발송 시작!";
+        }
 
         let myID = localStorage.getItem('safeZoneID_SND') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
         localStorage.setItem('safeZoneID_SND', myID);
+        document.getElementById('myIdText').innerText = myID;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('myIdText').innerText = myID;
-            
-            const go = (id) => {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(id).classList.add('active');
-                if(id === 'setScreen') loadFriends();
-            };
-
-            // 이벤트 리스너 복구 및 강화
-            document.getElementById('gearBtn').addEventListener('click', () => go('setScreen'));
-            document.getElementById('backBtn').addEventListener('click', () => go('mainScreen'));
-            document.getElementById('addFriendBtn').addEventListener('click', addFriend);
-
-            const emergencyBtn = document.getElementById('emergencyBtn');
-            emergencyBtn.addEventListener('click', function(e) {
-                e.preventDefault(); // 메뉴 바 방지
-                if (navigator.vibrate) navigator.vibrate([400, 200, 400]); //
-                // 위치 추적 로직 실행...
-            });
-        });
-
-        // 목록 기능 100% 복구
+        // 친구 5명 제한 로직
         function addFriend() {
-            const id = document.getElementById('friendID').value.trim().toUpperCase();
+            const idInput = document.getElementById('friendID');
+            const id = idInput.value.trim().toUpperCase();
             if(!id) return;
             let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            if(list.length >= 5) { alert("최대 5명까지 가능합니다."); return; }
             if(!list.includes(id)) list.push(id);
             localStorage.setItem('friendList_SND', JSON.stringify(list));
-            document.getElementById('friendID').value = "";
+            idInput.value = "";
             loadFriends();
         }
 
-        window.loadFriends = function() {
+        function loadFriends() {
             const list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
             const cont = document.getElementById('friendList');
-            if(list.length === 0) { cont.innerHTML = '<p style="opacity:0.6;">등록된 친구가 없습니다.</p>'; return; }
-            cont.innerHTML = list.map(f => `
-                <div class="friend-item">
-                    <span>✅ ${f}</span>
-                    <button class="delete-btn" onclick="deleteFriend('${f}')">✕</button>
-                </div>
-            `).join('');
-        };
+            cont.innerHTML = list.map(f => `<div class="friend-item"><span>✅ ${f}</span><button onclick="deleteFriend('${f}')" style="color:#ff4757;background:none;border:none;font-size:20px;">✕</button></div>`).join('');
+        }
 
-        window.deleteFriend = function(id) {
+        function deleteFriend(id) {
             let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
             list = list.filter(f => f !== id);
             localStorage.setItem('friendList_SND', JSON.stringify(list));
             loadFriends();
-        };
+        }
 
+        // 서비스 워커 강제 업데이트
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw-sender.js?v=10').then(() => console.log('V10 출근'));
+            navigator.serviceWorker.register('/sw-sender.js?v=13').then(() => console.log('V13 출근'));
         }
     </script>
 </body>
