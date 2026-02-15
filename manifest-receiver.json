@@ -1,0 +1,24 @@
+{
+  "name": "안전지대 수신소",
+  "short_name": "수신소",
+  "description": "친구의 긴급 신호를 수신하는 안전지대 수신 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#11998e",
+  "theme_color": "#11998e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icons/receiver-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/receiver-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
