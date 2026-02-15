@@ -2,7 +2,7 @@
   "name": "안전지대 수신소",
   "short_name": "수신소",
   "description": "친구의 긴급 신호를 수신하는 안전지대 수신 앱",
-  "start_url": "/",
+  "start_url": "/receiver.html",
   "display": "standalone",
   "background_color": "#11998e",
   "theme_color": "#11998e",
