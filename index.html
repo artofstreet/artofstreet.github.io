@@ -3,21 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>안전지대 발신소 V4.1</title>
+    <title>안전지대 발신소</title>
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: absolute; top: 0; left: 0; }
-        .active { display: flex !important; } /* 확실하게 보여주기 */
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; overflow-y: auto; }
+        .active { display: flex !important; }
         
-        /* [수정] 톱니바퀴를 진짜 버튼으로 만들어서 터치가 무조건 먹히게 개선 */
         .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
         .gear-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.9); }
 
-        .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
+        .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; margin-top: 80px; }
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -26,13 +25,99 @@
 
         #statusMsg { position: absolute; bottom: 50px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
 
-        .card { background: rgba(255,255,255,0.1); padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        .id-text { font-size: 38px; color: #ffd700; font-weight: 900; margin: 15px 0; letter-spacing: 2px; }
-        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 90%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        
+        .id-display {
+            background: rgba(255,215,0,0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin: 15px 0;
+        }
+        .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
+        
+        .input-box { 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            font-size: 18px; 
+            margin: 15px 0; 
+            text-align: center;
+            background: rgba(255,255,255,0.9);
+            color: #2b2b85;
+            font-weight: bold;
+        }
+        
+        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
+        .btn-pill:active { background: rgba(255,255,255,0.3); }
+        
+        .btn-add {
+            background: #ffd700;
+            color: #2b2b85;
+            padding: 15px;
+            width: 100%;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            margin-top: 15px;
+            cursor: pointer;
+        }
+        .btn-add:active {
+            background: #ffed4e;
+            transform: scale(0.98);
+        }
+        
+        .friend-item {
+            background: rgba(56,239,125,0.2);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .friend-item .id {
+            flex: 1;
+            text-align: left;
+        }
+        .friend-item .delete {
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .friend-item .delete:active {
+            background: #ff3838;
+            transform: scale(0.95);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            text-align: left;
+        }
+        
+        .friend-count {
+            background: rgba(255,215,0,0.3);
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            display: inline-block;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
 
+    <!-- 메인 화면 -->
     <div id="mainScreen" class="screen active">
         <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
         
@@ -43,20 +128,102 @@
         <p id="statusMsg">버튼을 누르면 구조 신호가 전송됩니다.</p>
     </div>
 
+    <!-- 설정 화면 -->
     <div id="setScreen" class="screen">
-        <h1 style="margin-bottom: 30px;">⚙️ 설정</h1>
+        <h1 style="margin-top: 30px; margin-bottom: 20px;">설정</h1>
+        
+        <!-- 내 안전 ID -->
         <div class="card">
-            <p style="opacity: 0.8; font-size: 20px;">내 안전 ID (발신용)</p>
-            <div id="myIDDisplay" class="id-text">로딩중...</div>
-            <p style="font-size: 14px; opacity: 0.6; margin-top: 10px;">이 번호를 친구의 수신소에 등록하세요</p>
+            <p class="section-title">내 안전 ID</p>
+            <div class="id-display">
+                <div class="id-text" id="myIdText">로딩중...</div>
+            </div>
         </div>
-        <button class="btn-pill" onclick="go('mainScreen')">메인으로 돌아가기</button>
+
+        <!-- 친구 등록 -->
+        <div class="card">
+            <p class="section-title">👥 친구 등록하기</p>
+            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
+            <button class="btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
+        </div>
+
+        <!-- 등록된 친구 목록 -->
+        <div class="card">
+            <p class="section-title">등록된 친구 목록</p>
+            <div class="friend-count">
+                <span id="friendCount">0</span>/5명
+            </div>
+            
+            <div id="friendList" style="margin-top: 15px;">
+                <!-- 친구 목록 -->
+            </div>
+        </div>
+
+        <button class="btn-pill" style="background:rgba(255,255,255,0.3);" onclick="go('mainScreen')">← 돌아가기</button>
     </div>
 
     <script>
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'setScreen') loadSettings();
+        }
+        
+        // 친구 추가
+        function addFriend() {
+            const friendId = document.getElementById('friendID').value.trim().toUpperCase();
+            if(!friendId) {
+                alert('❌ 친구 ID를 입력해주세요!');
+                return;
+            }
+
+            let friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            
+            if(friendList.length >= 5) {
+                alert('❌ 최대 5명까지만 등록 가능합니다!');
+                return;
+            }
+
+            if(friendList.includes(friendId)) {
+                alert('❌ 이미 등록된 친구입니다!');
+                return;
+            }
+
+            friendList.push(friendId);
+            localStorage.setItem('friendList_SND', JSON.stringify(friendList));
+            document.getElementById('friendID').value = '';
+            alert('✅ ' + friendId + ' 등록 완료!');
+            loadSettings();
+        }
+        
+        // 친구 삭제
+        function deleteFriend(friendId) {
+            if(!confirm('⚠️ ' + friendId + ' 님을 삭제하시겠습니까?')) return;
+            
+            let friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            friendList = friendList.filter(id => id !== friendId);
+            localStorage.setItem('friendList_SND', JSON.stringify(friendList));
+            alert('✅ 삭제 완료!');
+            loadSettings();
+        }
+        
+        // 설정 불러오기
+        function loadSettings() {
+            // 친구 목록
+            const friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            document.getElementById('friendCount').innerText = friendList.length;
+            
+            const listContainer = document.getElementById('friendList');
+            if(friendList.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:15px; font-size:16px;">등록된 친구가 없습니다</p>';
+            } else {
+                listContainer.innerHTML = friendList.map(id => `
+                    <div class="friend-item">
+                        <span class="id">✅ ${id}</span>
+                        <button class="delete" onclick="deleteFriend('${id}')">✕</button>
+                    </div>
+                `).join('');
+            }
         }
     </script>
 
@@ -74,12 +241,13 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
+        // 내 ID 자동 생성 (변경 불가)
         let myID = localStorage.getItem('safeZoneID_SND');
         if (!myID) {
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
             localStorage.setItem('safeZoneID_SND', myID);
         }
-        document.getElementById('myIDDisplay').innerText = myID;
+        document.getElementById('myIdText').innerText = myID;
 
         const statusMsg = document.getElementById('statusMsg');
         const geocoder = new kakao.maps.services.Geocoder();
@@ -109,14 +277,15 @@
                                 timestamp: serverTimestamp()
                             }).then(() => {
                                 statusMsg.innerText = "✅ 구조 신호 전송 완료!";
-                                alert("실제 위치가 전송되었습니다!\n\n주소: " + address);
+                                alert("✅ 긴급 신호가 전송되었습니다!\n\n발신 ID: " + myID + "\n주소: " + address);
                             });
                         } else {
-                            statusMsg.innerText = "❌ 카카오 API 키를 확인해주세요.";
+                            statusMsg.innerText = "❌ 주소 변환 실패. 다시 시도하세요.";
                         }
                     });
                 }, function(error) {
                     statusMsg.innerText = "❌ 핸드폰 GPS를 켜주세요.";
+                    alert("❌ 위치 권한이 필요합니다!\n설정에서 위치 권한을 허용해주세요.");
                 }, {
                     enableHighAccuracy: true,
                     timeout: 10000,
