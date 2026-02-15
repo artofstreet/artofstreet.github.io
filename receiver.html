@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#11998e">
     <title>안전지대 수신소</title>
     
@@ -11,58 +11,262 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-        html, body { width: 100%; height: 100%; overflow: hidden; position: fixed; touch-action: pan-y; }
-        body { color: white; transition: background 0.5s; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
         
-        .bg-safe { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
-        .bg-emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%); animation: blink 1s infinite alternate; }
-        @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
+        html { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden;
+            position: fixed;
+            touch-action: manipulation;
+        }
         
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; overflow-y: auto; }
-        .active { display: flex; }
+        body { 
+            width: 100%;
+            height: 100%; 
+            overflow: hidden;
+            position: fixed;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.5s;
+        }
         
-        #mainScreen { justify-content: center; }
-        #setScreen { justify-content: flex-start; padding-top: 60px; }
+        body.bg-emergency { 
+            background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%);
+            animation: blink 1s infinite alternate;
+        }
         
-        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .gear-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.9); }
+        @keyframes blink { 
+            from { opacity: 1; } 
+            to { opacity: 0.8; } 
+        }
         
-        .main-title { font-size: 32px; margin-bottom: 40px; font-weight: bold; }
+        .screen { 
+            display: none; 
+            width: 100%; 
+            height: 100%; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            overflow-y: auto;
+            touch-action: pan-y;
+        }
         
-        .btn-box { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; width: 90%; max-width: 350px; font-size: 20px; font-weight: bold; margin: 10px 0; border: none; color: white; cursor: pointer; }
-        .btn-box:active { background: rgba(0,0,0,0.3); transform: scale(0.98); }
+        .active { display: flex !important; }
         
-        .btn-white { background: white; color: #11998e; padding: 20px; width: 90%; max-width: 350px; font-size: 18px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; }
-        .btn-white:active { background: #f0f0f0; transform: scale(0.98); }
+        #mainScreen { 
+            justify-content: center;
+            overflow: hidden;
+        }
         
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        #setScreen { 
+            justify-content: flex-start; 
+            padding-top: 60px;
+        }
         
-        .id-display { background: rgba(255,215,0,0.2); padding: 15px; border-radius: 15px; margin: 15px 0; text-align: center; }
-        .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
+        .gear-btn { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            width: 45px; 
+            height: 45px; 
+            background: rgba(255,255,255,0.2); 
+            border: none; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px; 
+            cursor: pointer; 
+            z-index: 999;
+        }
         
-        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); font-size: 18px; margin: 15px 0; text-align: center; background: rgba(255,255,255,0.9); color: #11998e; font-weight: bold; }
-        .btn-add { background: #ffd700; color: #11998e; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; margin-top: 15px; cursor: pointer; }
-        .btn-add:active { background: #ffed4e; transform: scale(0.98); }
+        .main-title { 
+            font-size: 32px; 
+            margin-bottom: 40px; 
+            font-weight: bold;
+        }
         
-        .friend-item { background: rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; }
-        .delete-btn { background: #ff4757; color: white; border: none; padding: 8px 15px; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .delete-btn:active { background: #ff3838; transform: scale(0.95); }
+        .btn-box { 
+            background: rgba(0,0,0,0.2); 
+            padding: 20px; 
+            border-radius: 15px; 
+            width: 90%; 
+            max-width: 350px; 
+            font-size: 20px; 
+            font-weight: bold; 
+            margin: 10px 0; 
+            border: none; 
+            color: white; 
+            cursor: pointer;
+        }
         
-        .friend-count { background: rgba(255,215,0,0.3); padding: 5px 15px; border-radius: 15px; font-size: 14px; display: inline-block; margin: 10px 0; }
-        .section-title { font-size: 18px; opacity: 0.9; margin-bottom: 5px; text-align: left; }
+        .btn-white { 
+            background: white; 
+            color: #11998e; 
+            padding: 20px; 
+            width: 90%; 
+            max-width: 350px; 
+            font-size: 18px; 
+            font-weight: 900; 
+            border-radius: 50px; 
+            border: none; 
+            margin-top: 30px;
+            cursor: pointer;
+        }
         
-        .emergency-card { background: rgba(255,255,255,0.15); padding: 20px; border-radius: 20px; width: 90%; max-width: 350px; margin-top: 20px; backdrop-filter: blur(10px); }
-        .live-indicator { background: rgba(255,107,107,0.9); padding: 5px 12px; border-radius: 15px; font-size: 12px; display: inline-block; animation: pulse 1.5s ease-in-out infinite; margin-bottom: 10px; }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+        .card { 
+            background: rgba(255,255,255,0.1); 
+            padding: 25px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
         
-        .btn-pill { background: white; color: #11998e; padding: 20px; width: 90%; max-width: 350px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; cursor: pointer; }
-        .btn-reset { background: #ff4757; color: white; }
+        .id-display { 
+            background: rgba(255,215,0,0.2); 
+            padding: 15px; 
+            border-radius: 15px; 
+            margin: 15px 0; 
+            text-align: center;
+        }
+        
+        .id-text { 
+            font-size: 32px; 
+            color: #ffd700; 
+            font-weight: 900; 
+            letter-spacing: 2px;
+        }
+        
+        .input-box { 
+            width: 100%; 
+            padding: 15px; 
+            border-radius: 12px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            font-size: 18px; 
+            margin: 15px 0; 
+            text-align: center; 
+            background: rgba(255,255,255,0.9); 
+            color: #11998e; 
+            font-weight: bold;
+        }
+        
+        .btn-add { 
+            background: #ffd700; 
+            color: #11998e; 
+            padding: 15px; 
+            width: 100%; 
+            font-size: 18px; 
+            font-weight: bold; 
+            border-radius: 12px; 
+            border: none; 
+            margin-top: 15px; 
+            cursor: pointer;
+        }
+        
+        .friend-item { 
+            background: rgba(255,255,255,0.2); 
+            padding: 15px 20px; 
+            border-radius: 15px; 
+            margin: 10px 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 18px; 
+            font-weight: bold;
+        }
+        
+        .delete-btn { 
+            background: #ff4757; 
+            color: white; 
+            border: none; 
+            padding: 8px 15px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-size: 14px; 
+            font-weight: bold;
+        }
+        
+        .friend-count { 
+            background: rgba(255,215,0,0.3); 
+            padding: 5px 15px; 
+            border-radius: 15px; 
+            font-size: 14px; 
+            display: inline-block; 
+            margin: 10px 0;
+        }
+        
+        .section-title { 
+            font-size: 18px; 
+            opacity: 0.9; 
+            margin-bottom: 5px; 
+            text-align: left;
+        }
+        
+        .emergency-card { 
+            background: rgba(255,255,255,0.15); 
+            padding: 20px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 350px; 
+            margin-top: 20px;
+        }
+        
+        .live-indicator { 
+            background: rgba(255,107,107,0.9); 
+            padding: 5px 12px; 
+            border-radius: 15px; 
+            font-size: 12px; 
+            display: inline-block; 
+            animation: pulse 1.5s ease-in-out infinite; 
+            margin-bottom: 10px;
+        }
+        
+        @keyframes pulse { 
+            0%, 100% { opacity: 1; } 
+            50% { opacity: 0.6; } 
+        }
+        
+        .btn-pill { 
+            background: white; 
+            color: #11998e; 
+            padding: 20px; 
+            width: 90%; 
+            max-width: 350px; 
+            font-size: 22px; 
+            font-weight: 900; 
+            border-radius: 50px; 
+            border: none; 
+            margin-top: 30px; 
+            cursor: pointer;
+        }
+        
+        .btn-reset { 
+            background: #ff4757; 
+            color: white;
+        }
     </style>
 </head>
-<body id="bg" class="bg-safe">
+<body id="bg">
 
-    <!-- 메인 화면 -->
     <div id="mainScreen" class="screen active">
         <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
         
@@ -73,7 +277,6 @@
         
         <button id="soundBtn" class="btn-white" onclick="unlockSound()">📱 스마트 카메라 (수신 대기중)</button>
         
-        <!-- 긴급 상황 정보 -->
         <div id="emergencyCard" class="emergency-card" style="display:none;">
             <span class="live-indicator">🔴 LIVE</span>
             <p id="friendName" style="font-size:24px; font-weight:bold; margin-bottom:10px;"></p>
@@ -85,11 +288,9 @@
         <button id="resetBtn" class="btn-pill btn-reset" style="display:none;" onclick="resetEmergency()">상황 종료</button>
     </div>
 
-    <!-- 설정 화면 -->
     <div id="setScreen" class="screen">
         <h1 style="margin-bottom: 20px;">설정</h1>
         
-        <!-- 내 고유 아이디 -->
         <div class="card">
             <p class="section-title">내 고유 아이디</p>
             <div class="id-display">
@@ -100,14 +301,12 @@
             </p>
         </div>
 
-        <!-- 친구 등록 -->
         <div class="card">
             <p class="section-title">👥 친구 등록하기</p>
             <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
             <button class="btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
         </div>
 
-        <!-- 등록된 친구 목록 -->
         <div class="card">
             <p class="section-title">등록된 친구 목록</p>
             <div class="friend-count">
@@ -120,6 +319,28 @@
     </div>
 
     <script>
+        // 줌 완전 차단
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gesturechange', function(e) {
+            e.preventDefault();
+        });
+        
+        document.addEventListener('gestureend', function(e) {
+            e.preventDefault();
+        });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', function(e) {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+
         // 내 ID 생성
         let myID = localStorage.getItem('safeZoneID_RCV');
         if (!myID) {
@@ -236,7 +457,6 @@
         };
 
         function updateEmergency(friendId, data) {
-            // 처음 긴급 신호만 사이렌
             if (currentEmergency !== friendId) {
                 console.log('🔊 사이렌 울림!');
                 sirenAudio.play();
@@ -264,7 +484,8 @@
             sirenAudio.currentTime = 0;
             currentEmergency = null;
             
-            document.getElementById('bg').className = "bg-safe";
+            document.getElementById('bg').className = "";
+            document.getElementById('bg').style.background = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
             document.getElementById('mainTitle').innerText = "✅ 현재 안전합니다";
             
             document.getElementById('btn1').style.display = "block";
