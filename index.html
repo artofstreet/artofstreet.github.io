@@ -4,9 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>안전지대 발신소 V6.0</title>
+    <title>안전지대 발신소 V6.0 (수리완료)</title>
     
-    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,61 +34,42 @@
         #statusMsg { position: absolute; bottom: 50px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
 
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        
         .id-display { background: rgba(255,215,0,0.2); padding: 15px; border-radius: 15px; margin: 15px 0; }
         .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
-        
         .input-box { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); font-size: 18px; margin: 15px 0; text-align: center; background: rgba(255,255,255,0.9); color: #2b2b85; font-weight: bold; }
-        
         .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
-        .btn-pill:active { background: rgba(255,255,255,0.3); }
-        
         .btn-add { background: #ffd700; color: #2b2b85; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; margin-top: 15px; cursor: pointer; }
-        .btn-add:active { background: #ffed4e; transform: scale(0.98); }
-        
         .friend-item { background: rgba(56,239,125,0.2); padding: 15px 20px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; }
-        .friend-item .id { flex: 1; text-align: left; }
-        .friend-item .delete { background: #ff4757; color: white; border: none; padding: 8px 15px; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .friend-item .delete:active { background: #ff3838; transform: scale(0.95); }
-        
-        .section-title { font-size: 18px; opacity: 0.9; margin-bottom: 5px; text-align: left; }
         .friend-count { background: rgba(255,215,0,0.3); padding: 5px 15px; border-radius: 15px; font-size: 14px; display: inline-block; margin: 10px 0; }
-        
         .tracking-badge { background: rgba(255,107,107,0.9); padding: 10px 20px; border-radius: 20px; font-size: 14px; margin-top: 15px; display: inline-block; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     </style>
 </head>
 <body>
 
-    <!-- 메인 화면 -->
     <div id="mainScreen" class="screen active">
         <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
-        
         <div class="radar-container">
             <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-circle" onclick="toggleEmergency()">긴급구조</button>
+            <button id="emergencyBtn" class="btn-circle">긴급구조</button>
         </div>
         <p id="statusMsg">버튼을 누르면 구조 신호가 전송됩니다.</p>
         <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
     </div>
 
-    <!-- 설정 화면 -->
     <div id="setScreen" class="screen">
         <h1 style="margin-top: 30px; margin-bottom: 20px;">설정</h1>
-        
         <div class="card">
             <p class="section-title">내 안전 ID</p>
             <div class="id-display">
                 <div class="id-text" id="myIdText">로딩중...</div>
             </div>
         </div>
-
         <div class="card">
             <p class="section-title">👥 친구 등록하기</p>
             <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
             <button class="btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
         </div>
-
         <div class="card">
             <p class="section-title">등록된 친구 목록</p>
             <div class="friend-count">
@@ -97,17 +77,16 @@
             </div>
             <div id="friendList" style="margin-top: 15px;"></div>
         </div>
-
         <button class="btn-pill" style="background:rgba(255,255,255,0.3);" onclick="go('mainScreen')">← 메인으로</button>
     </div>
 
     <script>
+        // 전역 스코프 함수들 (onclick에서 접근 가능)
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'setScreen') loadSettings();
         }
-        
         function addFriend() {
             const friendId = document.getElementById('friendID').value.trim().toUpperCase();
             if(!friendId) { alert('❌ 친구 ID를 입력해주세요!'); return; }
@@ -120,7 +99,6 @@
             alert('✅ ' + friendId + ' 등록 완료!');
             loadSettings();
         }
-        
         function deleteFriend(friendId) {
             if(!confirm('⚠️ ' + friendId + ' 님을 삭제하시겠습니까?')) return;
             let friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
@@ -129,7 +107,6 @@
             alert('✅ 삭제 완료!');
             loadSettings();
         }
-        
         function loadSettings() {
             const friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
             document.getElementById('friendCount').innerText = friendList.length;
@@ -176,34 +153,26 @@
         let isTracking = false;
         let watchId = null;
 
-        // 실시간 위치 추적 시작/종료
-        window.toggleEmergency = function() {
+        // [수리 핵심] 버튼에 이벤트를 직접 연결하여 '모듈 스코프' 문제를 해결합니다.
+        emergencyBtn.addEventListener('click', function() {
             if (!isTracking) {
                 startTracking();
             } else {
                 stopTracking();
             }
-        };
+        });
 
         function startTracking() {
             statusMsg.innerText = "📍 실시간 위치 추적을 시작합니다...";
-            
             if (!navigator.geolocation) {
                 statusMsg.innerText = "❌ GPS를 지원하지 않는 브라우저입니다.";
                 return;
             }
-
-            // watchPosition으로 실시간 위치 추적
-            watchId = navigator.geolocation.watchPosition(
-                updatePosition,
-                handleError,
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
-                }
-            );
-
+            watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            });
             isTracking = true;
             emergencyBtn.classList.add('tracking');
             emergencyBtn.innerText = "추적중지";
@@ -215,11 +184,7 @@
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
             }
-
-            // Firebase에서 긴급 신호 삭제
-            const myPath = ref(db, 'emergency_signals/' + myID);
-            remove(myPath);
-
+            remove(ref(db, 'emergency_signals/' + myID));
             isTracking = false;
             emergencyBtn.classList.remove('tracking');
             emergencyBtn.innerText = "긴급구조";
@@ -230,57 +195,31 @@
         function updatePosition(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-
             geocoder.coord2Address(lon, lat, function(result, status) {
                 if (status === kakao.maps.services.Status.OK) {
-                    const address = result[0].road_address ? 
-                        result[0].road_address.address_name : 
-                        result[0].address.address_name;
-                    const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
-                    
-                    const myPath = ref(db, 'emergency_signals/' + myID);
-                    
-                    set(myPath, {
+                    const address = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+                    set(ref(db, 'emergency_signals/' + myID), {
                         sender: myID,
                         address: address,
                         lat: lat,
                         lon: lon,
-                        mapUrl: mapUrl,
+                        mapUrl: `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`,
                         time: new Date().toLocaleString(),
                         timestamp: serverTimestamp()
                     });
-
                     statusMsg.innerText = "✅ 위치 업데이트: " + address.substring(0, 30) + "...";
                 }
             });
         }
 
         function handleError(error) {
-            let errorMsg = '';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMsg = "❌ 위치 권한이 거부되었습니다. 설정에서 권한을 허용해주세요.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMsg = "❌ 위치 정보를 사용할 수 없습니다.";
-                    break;
-                case error.TIMEOUT:
-                    errorMsg = "⚠️ 위치 요청 시간 초과. 재시도 중...";
-                    return; // 타임아웃은 재시도 가능
-                default:
-                    errorMsg = "❌ 알 수 없는 오류가 발생했습니다.";
-            }
+            let errorMsg = error.code === error.PERMISSION_DENIED ? "❌ 위치 권한 거부됨" : "❌ 위치 오류 발생";
             statusMsg.innerText = errorMsg;
             stopTracking();
         }
 
-        // PWA Service Worker 등록
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw-sender.js')
-                    .then(reg => console.log('✅ Service Worker 등록 성공:', reg))
-                    .catch(err => console.log('❌ Service Worker 등록 실패:', err));
-            });
+            navigator.serviceWorker.register('/sw-sender.js');
         }
     </script>
 </body>
