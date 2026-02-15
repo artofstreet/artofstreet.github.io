@@ -1,58 +1,40 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" style="background: #11998e;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#11998e">
     <title>안전지대 수신소</title>
     
-    <link rel="manifest" href="manifest-receiver.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: sans-serif;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            user-select: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         html { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden;
-            position: fixed;
-            touch-action: manipulation;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+            min-height: 100vh;
         }
         
         body { 
-            width: 100%;
-            height: 100%; 
-            overflow: hidden;
-            position: fixed;
             background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
-            color: white;
+            color: white !important;
+            min-height: 100vh;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: background 0.5s;
+            font-family: sans-serif;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            touch-action: manipulation;
         }
         
-        body.bg-emergency { 
-            background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%);
+        body.emergency { 
+            background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%) !important;
             animation: blink 1s infinite alternate;
         }
         
-        @keyframes blink { 
-            from { opacity: 1; } 
-            to { opacity: 0.8; } 
-        }
+        @keyframes blink { from { opacity: 1; } to { opacity: 0.8; } }
         
         .screen { 
             display: none; 
@@ -60,26 +42,16 @@
             height: 100%; 
             flex-direction: column; 
             align-items: center; 
-            padding: 20px; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
+            padding: 20px;
+            position: absolute;
+            top: 0;
+            left: 0;
             overflow-y: auto;
-            touch-action: pan-y;
-            background: transparent;
         }
         
         .active { display: flex !important; }
-        
-        #mainScreen { 
-            justify-content: center;
-            overflow: hidden;
-        }
-        
-        #setScreen { 
-            justify-content: flex-start; 
-            padding-top: 60px;
-        }
+        #mainScreen { justify-content: center; overflow: hidden; }
+        #setScreen { justify-content: flex-start; padding-top: 60px; }
         
         .gear-btn { 
             position: absolute; 
@@ -90,86 +62,71 @@
             background: rgba(255,255,255,0.2); 
             border: none; 
             border-radius: 50%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
             font-size: 24px; 
             cursor: pointer; 
             z-index: 999;
         }
         
-        .main-title { 
-            font-size: 32px; 
-            margin-bottom: 40px; 
-            font-weight: bold;
-            color: white !important;
-        }
+        h1 { font-size: 32px; margin-bottom: 40px; color: white !important; }
         
-        .btn-box { 
+        .btn-dark { 
             background: rgba(0,0,0,0.2) !important; 
+            color: white !important;
             padding: 20px; 
-            border-radius: 15px; 
             width: 90%; 
             max-width: 350px; 
             font-size: 20px; 
             font-weight: bold; 
             margin: 10px 0; 
             border: none; 
-            color: white !important; 
+            border-radius: 15px;
             cursor: pointer;
         }
         
         .btn-white { 
             background: white !important; 
-            color: #11998e !important; 
+            color: #11998e !important;
             padding: 20px; 
             width: 90%; 
             max-width: 350px; 
             font-size: 18px; 
-            font-weight: 900; 
-            border-radius: 50px; 
+            font-weight: bold; 
             border: none; 
+            border-radius: 50px;
             margin-top: 30px;
             cursor: pointer;
         }
         
         .card { 
-            background: rgba(255,255,255,0.1) !important; 
+            background: rgba(255,255,255,0.1); 
             padding: 25px; 
             border-radius: 20px; 
             width: 90%; 
             max-width: 400px; 
             margin-bottom: 20px;
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(10px);
         }
         
-        .id-display { 
+        .id-box { 
             background: rgba(255,215,0,0.2); 
             padding: 15px; 
             border-radius: 15px; 
-            margin: 15px 0; 
-            text-align: center;
+            margin: 15px 0;
         }
         
         .id-text { 
             font-size: 32px; 
             color: #ffd700; 
-            font-weight: 900; 
-            letter-spacing: 2px;
+            font-weight: bold;
         }
         
-        .input-box { 
+        input { 
             width: 100%; 
             padding: 15px; 
+            border: none; 
             border-radius: 12px; 
-            border: 2px solid rgba(255,255,255,0.3); 
             font-size: 18px; 
-            margin: 15px 0; 
-            text-align: center; 
-            background: rgba(255,255,255,0.9); 
-            color: #11998e; 
-            font-weight: bold;
+            margin: 15px 0;
+            text-align: center;
         }
         
         .btn-add { 
@@ -179,52 +136,30 @@
             width: 100%; 
             font-size: 18px; 
             font-weight: bold; 
-            border-radius: 12px; 
             border: none; 
-            margin-top: 15px; 
+            border-radius: 12px;
             cursor: pointer;
         }
         
         .friend-item { 
             background: rgba(255,255,255,0.2); 
-            padding: 15px 20px; 
+            padding: 15px; 
             border-radius: 15px; 
             margin: 10px 0; 
             display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            font-size: 18px; 
-            font-weight: bold;
+            justify-content: space-between;
         }
         
-        .delete-btn { 
+        .btn-del { 
             background: #ff4757; 
             color: white; 
             border: none; 
             padding: 8px 15px; 
-            border-radius: 25px; 
-            cursor: pointer; 
-            font-size: 14px; 
-            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
         }
         
-        .friend-count { 
-            background: rgba(255,215,0,0.3); 
-            padding: 5px 15px; 
-            border-radius: 15px; 
-            font-size: 14px; 
-            display: inline-block; 
-            margin: 10px 0;
-        }
-        
-        .section-title { 
-            font-size: 18px; 
-            opacity: 0.9; 
-            margin-bottom: 5px; 
-            text-align: left;
-        }
-        
-        .emergency-card { 
+        .emergency-box { 
             background: rgba(255,255,255,0.15); 
             padding: 20px; 
             border-radius: 20px; 
@@ -233,124 +168,85 @@
             margin-top: 20px;
         }
         
-        .live-indicator { 
-            background: rgba(255,107,107,0.9); 
+        .live { 
+            background: #ff4757; 
             padding: 5px 12px; 
             border-radius: 15px; 
             font-size: 12px; 
-            display: inline-block; 
-            animation: pulse 1.5s ease-in-out infinite; 
-            margin-bottom: 10px;
-        }
-        
-        @keyframes pulse { 
-            0%, 100% { opacity: 1; } 
-            50% { opacity: 0.6; } 
-        }
-        
-        .btn-pill { 
-            background: white; 
-            color: #11998e; 
-            padding: 20px; 
-            width: 90%; 
-            max-width: 350px; 
-            font-size: 22px; 
-            font-weight: 900; 
-            border-radius: 50px; 
-            border: none; 
-            margin-top: 30px; 
-            cursor: pointer;
-        }
-        
-        .btn-reset { 
-            background: #ff4757; 
-            color: white;
+            display: inline-block;
         }
     </style>
 </head>
-<body id="bg">
+<body id="bg" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
 
     <div id="mainScreen" class="screen active">
         <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
         
-        <h1 id="mainTitle" class="main-title">✅ 현재 안전합니다</h1>
+        <h1 id="title">✅ 현재 안전합니다</h1>
         
-        <button id="btn1" class="btn-box">대기 중...</button>
-        <button id="btn2" class="btn-box">수신 대기 중</button>
+        <button id="btn1" class="btn-dark">대기 중...</button>
+        <button id="btn2" class="btn-dark">수신 대기 중</button>
         
         <button id="soundBtn" class="btn-white" onclick="unlockSound()">📱 스마트 카메라 (수신 대기중)</button>
         
-        <div id="emergencyCard" class="emergency-card" style="display:none;">
-            <span class="live-indicator">🔴 LIVE</span>
-            <p id="friendName" style="font-size:24px; font-weight:bold; margin-bottom:10px;"></p>
-            <p id="addressText" style="font-size:18px; font-weight:bold; margin-bottom: 8px;"></p>
-            <p id="lastUpdate" style="font-size:14px; opacity:0.7;"></p>
-            <a href="#" id="mapBtn" class="btn-pill" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; text-align:center; margin-top:15px;" target="_blank">🗺️ 실시간 위치 확인</a>
+        <div id="emergencyBox" class="emergency-box" style="display:none;">
+            <span class="live">🔴 LIVE</span>
+            <p id="friendName" style="font-size:24px; font-weight:bold; margin:10px 0;"></p>
+            <p id="address" style="font-size:18px; margin:10px 0;"></p>
+            <p id="time" style="font-size:14px; opacity:0.7;"></p>
+            <a href="#" id="mapLink" class="btn-white" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; text-align:center; margin-top:15px;" target="_blank">🗺️ 실시간 위치 확인</a>
         </div>
         
-        <button id="resetBtn" class="btn-pill btn-reset" style="display:none;" onclick="resetEmergency()">상황 종료</button>
+        <button id="resetBtn" class="btn-white" style="display:none; background:#ff4757; color:white;" onclick="resetEmergency()">상황 종료</button>
     </div>
 
     <div id="setScreen" class="screen">
-        <h1 style="margin-bottom: 20px;">설정</h1>
+        <h1>설정</h1>
         
         <div class="card">
-            <p class="section-title">내 고유 아이디</p>
-            <div class="id-display">
-                <div class="id-text" id="myIdText">로딩중...</div>
+            <p style="font-size:18px; margin-bottom:10px;">내 고유 아이디</p>
+            <div class="id-box">
+                <div class="id-text" id="myId">로딩중...</div>
             </div>
-            <p style="font-size: 14px; opacity: 0.7; margin-top: 10px; text-align: center;">
-                발신자에게 이 ID를 알려주세요
-            </p>
         </div>
 
         <div class="card">
-            <p class="section-title">👥 친구 등록하기</p>
-            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
+            <p style="font-size:18px; margin-bottom:10px;">👥 친구 등록하기</p>
+            <input type="text" id="friendInput" placeholder="예: SZ-A1B2" maxlength="15">
             <button class="btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
         </div>
 
         <div class="card">
-            <p class="section-title">등록된 친구 목록</p>
-            <div class="friend-count">
-                <span id="friendCount">0</span>/5명
-            </div>
-            <div id="friendList" style="margin-top: 15px;"></div>
+            <p style="font-size:18px; margin-bottom:10px;">등록된 친구 목록</p>
+            <p style="background:rgba(255,215,0,0.3); padding:5px 15px; border-radius:15px; font-size:14px; display:inline-block; margin:10px 0;">
+                <span id="count">0</span>/5명
+            </p>
+            <div id="friendList" style="margin-top:15px;"></div>
         </div>
 
-        <button class="btn-pill" onclick="go('mainScreen')">← 돌아가기</button>
+        <button class="btn-white" onclick="go('mainScreen')">← 돌아가기</button>
     </div>
 
     <script>
-        // 줌 완전 차단
-        document.addEventListener('gesturestart', function(e) {
-            e.preventDefault();
-        });
+        // 줌 차단
+        document.addEventListener('gesturestart', e => e.preventDefault());
+        document.addEventListener('gesturechange', e => e.preventDefault());
+        document.addEventListener('gestureend', e => e.preventDefault());
         
-        document.addEventListener('gesturechange', function(e) {
-            e.preventDefault();
-        });
-        
-        document.addEventListener('gestureend', function(e) {
-            e.preventDefault();
-        });
-        
-        let lastTouchEnd = 0;
-        document.addEventListener('touchend', function(e) {
+        let lastTouch = 0;
+        document.addEventListener('touchend', e => {
             const now = Date.now();
-            if (now - lastTouchEnd <= 300) {
-                e.preventDefault();
-            }
-            lastTouchEnd = now;
+            if (now - lastTouch <= 300) e.preventDefault();
+            lastTouch = now;
         }, false);
 
-        // 내 ID 생성
+        // ID 생성
         let myID = localStorage.getItem('safeZoneID_RCV');
         if (!myID) {
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
             localStorage.setItem('safeZoneID_RCV', myID);
         }
-        document.getElementById('myIdText').innerText = myID;
+        document.getElementById('myId').innerText = myID;
 
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -360,20 +256,23 @@
         }
 
         function addFriend() {
-            const id = document.getElementById('friendID').value.trim().toUpperCase();
-            if(!id) { alert('❌ 친구 ID를 입력해주세요!'); return; }
+            const input = document.getElementById('friendInput');
+            const id = input.value.trim().toUpperCase();
+            if(!id) { alert('❌ ID를 입력해주세요!'); return; }
+            
             let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            if(list.length >= 5) { alert('❌ 최대 5명까지만 등록 가능합니다!'); return; }
-            if(list.includes(id)) { alert('❌ 이미 등록된 친구입니다!'); return; }
+            if(list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
+            if(list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
+            
             list.push(id);
             localStorage.setItem('friendList_RCV', JSON.stringify(list));
-            document.getElementById('friendID').value = '';
-            alert('✅ ' + id + ' 등록 완료!');
+            input.value = '';
+            alert('✅ 등록 완료!');
             loadFriends();
         }
 
         function deleteFriend(id) {
-            if(!confirm('⚠️ ' + id + ' 님을 삭제하시겠습니까?')) return;
+            if(!confirm('⚠️ 삭제하시겠습니까?')) return;
             let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
             list = list.filter(f => f !== id);
             localStorage.setItem('friendList_RCV', JSON.stringify(list));
@@ -383,16 +282,18 @@
 
         function loadFriends() {
             const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            document.getElementById('friendCount').innerText = list.length;
+            document.getElementById('count').innerText = list.length;
             const cont = document.getElementById('friendList');
+            
             if(list.length === 0) {
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:15px; font-size:16px;">등록된 친구가 없습니다</p>';
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:15px;">등록된 친구가 없습니다</p>';
                 return;
             }
+            
             cont.innerHTML = list.map(f => `
                 <div class="friend-item">
                     <span>✅ ${f}</span>
-                    <button class="delete-btn" onclick="deleteFriend('${f}')">✕</button>
+                    <button class="btn-del" onclick="deleteFriend('${f}')">✕</button>
                 </div>
             `).join('');
         }
@@ -412,107 +313,89 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         
-        const sirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
-        sirenAudio.loop = true;
+        const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
+        siren.loop = true;
 
-        let activeListeners = [];
-        let currentEmergency = null;
+        let listeners = [];
+        let current = null;
 
         window.unlockSound = () => {
-            sirenAudio.play().then(() => {
-                sirenAudio.pause();
-                sirenAudio.currentTime = 0;
-                document.getElementById('soundBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
-                console.log('✅ 사이렌 활성화!');
-            }).catch(error => console.log("소리 활성화 대기"));
+            siren.play().then(() => {
+                siren.pause();
+                siren.currentTime = 0;
+                document.getElementById('soundBtn').innerText = "✅ 스피커 켜짐";
+            }).catch(() => {});
         };
 
         window.startListening = function() {
-            console.log('👂 수신 시작!');
-            
-            activeListeners.forEach(unsub => unsub());
-            activeListeners = [];
+            listeners.forEach(u => u());
+            listeners = [];
 
-            const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            if (friendList.length === 0) {
-                console.log('⚠️ 등록된 친구가 없습니다');
-                return;
-            }
+            const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
+            if (list.length === 0) return;
 
-            console.log('📡 감지 대상:', friendList);
-
-            friendList.forEach(friendId => {
-                const friendPath = ref(db, 'emergency_signals/' + friendId);
-                const unsubscribe = onValue(friendPath, (snapshot) => {
-                    const data = snapshot.val();
+            list.forEach(fid => {
+                const path = ref(db, 'emergency_signals/' + fid);
+                const unsub = onValue(path, snap => {
+                    const data = snap.val();
                     if (data) {
-                        console.log('🚨 긴급 신호 수신!', friendId, data);
-                        updateEmergency(friendId, data);
+                        showEmergency(fid, data);
                     } else {
-                        if (currentEmergency === friendId) {
-                            console.log('✅ 긴급 상황 종료:', friendId);
-                            resetUI();
-                        }
+                        if (current === fid) hideEmergency();
                     }
                 });
-                activeListeners.push(unsubscribe);
+                listeners.push(unsub);
             });
         };
 
-        function updateEmergency(friendId, data) {
-            if (currentEmergency !== friendId) {
-                console.log('🔊 사이렌 울림!');
-                sirenAudio.play();
-                currentEmergency = friendId;
+        function showEmergency(fid, data) {
+            if (current !== fid) {
+                siren.play();
+                current = fid;
             }
 
-            document.getElementById('bg').className = "bg-emergency";
-            document.getElementById('mainTitle').innerText = "🚨 긴급 상황!!";
+            const body = document.getElementById('bg');
+            body.className = "emergency";
+            body.style.background = "linear-gradient(135deg, #ff0844 0%, #ff4757 100%)";
             
+            document.getElementById('title').innerText = "🚨 긴급 상황!!";
             document.getElementById('btn1').style.display = "none";
             document.getElementById('btn2').style.display = "none";
             document.getElementById('soundBtn').style.display = "none";
             
-            document.getElementById('emergencyCard').style.display = "block";
-            document.getElementById('friendName').innerText = friendId;
-            document.getElementById('addressText').innerText = data.address;
-            document.getElementById('lastUpdate').innerText = "마지막 업데이트: " + data.time;
-            document.getElementById('mapBtn').href = data.mapUrl;
+            document.getElementById('emergencyBox').style.display = "block";
+            document.getElementById('friendName').innerText = fid;
+            document.getElementById('address').innerText = data.address;
+            document.getElementById('time').innerText = "업데이트: " + data.time;
+            document.getElementById('mapLink').href = data.mapUrl;
             document.getElementById('resetBtn').style.display = "block";
             document.querySelector('.gear-btn').style.display = 'none';
         }
 
-        function resetUI() {
-            sirenAudio.pause();
-            sirenAudio.currentTime = 0;
-            currentEmergency = null;
+        function hideEmergency() {
+            siren.pause();
+            siren.currentTime = 0;
+            current = null;
             
-            // 배경 녹색으로 복원
             const body = document.getElementById('bg');
             body.className = "";
             body.style.background = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
             
-            document.getElementById('mainTitle').innerText = "✅ 현재 안전합니다";
-            
+            document.getElementById('title').innerText = "✅ 현재 안전합니다";
             document.getElementById('btn1').style.display = "block";
             document.getElementById('btn2').style.display = "block";
             document.getElementById('soundBtn').style.display = "block";
-            
-            document.getElementById('emergencyCard').style.display = "none";
+            document.getElementById('emergencyBox').style.display = "none";
             document.getElementById('resetBtn').style.display = "none";
             document.querySelector('.gear-btn').style.display = 'block';
         }
         
         window.resetEmergency = () => {
-            console.log('🛑 상황 종료!');
-            const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            friendList.forEach(friendId => {
-                remove(ref(db, 'emergency_signals/' + friendId));
-            });
-            resetUI();
+            const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
+            list.forEach(fid => remove(ref(db, 'emergency_signals/' + fid)));
+            hideEmergency();
         };
 
-        console.log('✅ 수신소 초기화 완료!');
         startListening();
         loadFriends();
     </script>
