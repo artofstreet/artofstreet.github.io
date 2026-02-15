@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#11998e">
-    <title>안전지대 수신소 V6.0</title>
+    <title>안전지대 수신소 V6.1</title>
     
     <link rel="manifest" href="manifest-receiver.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="수신소">
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
@@ -22,15 +21,18 @@
         .active { display: flex; }
         
         .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; }
-        .gear-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.9); }
-
         .btn-pill { background: white; color: #11998e; padding: 20px; width: 100%; max-width: 350px; font-size: 22px; font-weight: 900; border-radius: 50px; border: none; margin-top: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; }
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
         
         .id-display { background: rgba(255,215,0,0.2); padding: 15px; border-radius: 15px; margin: 15px 0; text-align: center; }
         .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
         
-        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; }
+        /* 친구 목록 스타일 */
+        .friend-count-badge { background: rgba(255,215,0,0.3); padding: 5px 15px; border-radius: 20px; font-size: 14px; margin-bottom: 10px; display: inline-block; }
+        .friend-item { background: white; color: #1e3c72; padding: 15px 20px; border-radius: 50px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; font-weight: bold; font-size: 18px; }
+        .delete-x { background: #ff4757; color: white; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer; }
+
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; color: #11998e; font-weight: bold; }
         .live-badge { background: #ff4757; color: white; padding: 5px 12px; border-radius: 50px; font-size: 12px; font-weight: bold; animation: pulse 1s infinite; margin-bottom: 10px; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
@@ -39,8 +41,8 @@
 
     <div id="mainScreen" class="screen active">
         <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
-        <h1 id="mainTitle" style="font-size: 40px; margin-bottom: 30px;">✅ 현재 안전합니다</h1>
-        <p id="msgText" style="font-size: 24px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">수신 대기 중</p>
+        <h1 id="mainTitle" style="font-size: 35px; margin-bottom: 30px; text-align:center;">✅ 현재 안전합니다</h1>
+        <p id="msgText" style="font-size: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px;">신호 대기 중</p>
         
         <button id="startBtn" class="btn-pill" onclick="unlockSound()">✅ 스피커 켜짐 (수신 대기중)</button>
         
@@ -51,147 +53,25 @@
             <p id="timeText" style="font-size:14px; opacity:0.8; margin-top:10px;"></p>
             <a href="#" id="mapBtn" class="btn-pill" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; margin-top:15px; text-align:center;" target="_blank">🗺️ 지도 확인</a>
         </div>
-        <button id="resetBtn" class="btn-pill" style="display:none; color:#ff4757;" onclick="resetEmergency()">상황 종료</button>
+        <button id="resetBtn" class="btn-pill" style="display:none; color:#ff4757; margin-top:20px;" onclick="resetEmergency()">상황 종료</button>
     </div>
 
     <div id="setScreen" class="screen">
-        <h1 style="margin-top: 30px; margin-bottom: 20px;">⚙️ 수신 설정</h1>
+        <h1 style="margin-top: 30px; margin-bottom: 20px;">⚙️ 설정</h1>
         
         <div class="card">
-            <p style="font-size:18px; opacity:0.9;">📱 내 고유 아이디</p>
+            <p style="font-size:16px; opacity:0.9;">📱 내 고유 아이디</p>
             <div class="id-display">
                 <div class="id-text" id="myIdText">로딩중...</div>
             </div>
-            <p style="font-size:14px; opacity:0.7; text-align:center;">발신자에게 이 ID를 알려주세요</p>
+            <p style="font-size:13px; opacity:0.7; text-align:center;">발신자에게 이 ID를 알려주세요</p>
         </div>
 
         <div class="card">
-            <p style="font-size:18px; opacity:0.9;">👥 보호할 친구 등록</p>
-            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-pill" style="background:#ffd700; color:#1e3c72; margin-top:15px;" onclick="addFriend()">친구 추가</button>
-            <div id="friendList" style="margin-top:20px;"></div>
-        </div>
-        <button class="btn-pill" style="background:rgba(255,255,255,0.2); color:white;" onclick="go('mainScreen')">돌아가기</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, onValue, remove } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const sirenAudio = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
-        sirenAudio.loop = true;
-
-        // 내 ID 생성 및 표시 로직
-        let myID = localStorage.getItem('safeZoneID_RCV');
-        if (!myID) {
-            myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-            localStorage.setItem('safeZoneID_RCV', myID);
-        }
-        
-        window.onload = () => {
-            const idElement = document.getElementById('myIdText');
-            if(idElement) idElement.innerText = myID;
-        };
-
-        let activeListeners = [];
-
-        window.unlockSound = () => {
-            sirenAudio.play().then(() => {
-                sirenAudio.pause();
-                sirenAudio.currentTime = 0;
-                document.getElementById('startBtn').innerText = "✅ 스피커 켜짐 (수신 대기중)";
-            });
-        };
-
-        window.go = (id) => {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            document.getElementById('bg').className = (id === 'setScreen') ? 'bg-set' : 'bg-safe';
-            if(id === 'mainScreen') startListening();
-            if(id === 'setScreen') {
-                document.getElementById('myIdText').innerText = myID;
-                loadFriends();
-            }
-        };
-
-        window.addFriend = () => {
-            const id = document.getElementById('friendID').value.trim().toUpperCase();
-            if(!id) return;
-            let list = JSON.parse(localStorage.getItem('friendList') || '[]');
-            if(list.length >= 5) { alert("최대 5명까지 가능합니다."); return; }
-            if(!list.includes(id)) list.push(id);
-            localStorage.setItem('friendList', JSON.stringify(list));
-            document.getElementById('friendID').value = "";
-            loadFriends();
-        };
-
-        window.deleteFriend = (id) => {
-            let list = JSON.parse(localStorage.getItem('friendList') || '[]');
-            list = list.filter(f => f !== id);
-            localStorage.setItem('friendList', JSON.stringify(list));
-            loadFriends();
-        };
-
-        function loadFriends() {
-            const list = JSON.parse(localStorage.getItem('friendList') || '[]');
-            const cont = document.getElementById('friendList');
-            cont.innerHTML = list.map(f => `
-                <div style="background:rgba(255,255,255,0.2); padding:10px; border-radius:10px; margin-bottom:5px; display:flex; justify-content:space-between;">
-                    <span>👤 ${f}</span>
-                    <span onclick="deleteFriend('${f}')" style="cursor:pointer;">❌</span>
-                </div>
-            `).join('');
-        }
-
-        function startListening() {
-            activeListeners.forEach(off => off());
-            activeListeners = [];
-            const list = JSON.parse(localStorage.getItem('friendList') || '[]');
-            list.forEach(id => {
-                const p = ref(db, 'emergency_signals/' + id);
-                const unsub = onValue(p, (snap) => {
-                    const data = snap.val();
-                    if(data) showEmergency(id, data);
-                });
-                activeListeners.push(unsub);
-            });
-        }
-
-        function showEmergency(id, data) {
-            sirenAudio.play();
-            document.getElementById('bg').className = "bg-emergency";
-            document.getElementById('mainTitle').innerText = "🚨 긴급 상황!!";
-            document.getElementById('msgText').style.display = "none";
-            document.getElementById('startBtn').style.display = "none";
-            document.getElementById('addressBox').style.display = "block";
-            document.getElementById('friendName').innerText = "발신자: " + id;
-            document.getElementById('addressText').innerText = data.address;
-            document.getElementById('timeText').innerText = "업데이트: " + data.time;
-            document.getElementById('mapBtn').href = data.mapUrl;
-            document.getElementById('resetBtn').style.display = "block";
-        }
-
-        window.resetEmergency = () => {
-            const list = JSON.parse(localStorage.getItem('friendList') || '[]');
-            list.forEach(id => remove(ref(db, 'emergency_signals/' + id)));
-            location.reload();
-        };
-
-        // PWA 서비스 워커 등록
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw-receiver.js').then(() => console.log("비서 등록 완료!"));
-        }
-
-        startListening();
-    </script>
-</body>
-</html>
+            <p style="font-size:18px; opacity:0.9; margin-bottom:10px;">👥 보호할 친구 등록</p>
+            <div class="friend-count-badge">등록 현황: <span id="friendCount">0</span> / 5명</div>
+            
+            <input type="text" id="friendID" class="input-box" placeholder="친구 ID 입력 (예: SZ-A1B2)">
+            <button class="btn-pill" style="background:#ffd700; color:#1e3c72; margin-top:10px;" onclick="addFriend()">+ 친구 추가</button>
+            
+            <div id
