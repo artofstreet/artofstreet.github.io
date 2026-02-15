@@ -35,7 +35,7 @@
             height: 100%; 
             overflow: hidden;
             position: fixed;
-            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
             color: white;
             display: flex;
             flex-direction: column;
@@ -66,6 +66,7 @@
             left: 0; 
             overflow-y: auto;
             touch-action: pan-y;
+            background: transparent;
         }
         
         .active { display: flex !important; }
@@ -101,10 +102,11 @@
             font-size: 32px; 
             margin-bottom: 40px; 
             font-weight: bold;
+            color: white !important;
         }
         
         .btn-box { 
-            background: rgba(0,0,0,0.2); 
+            background: rgba(0,0,0,0.2) !important; 
             padding: 20px; 
             border-radius: 15px; 
             width: 90%; 
@@ -113,13 +115,13 @@
             font-weight: bold; 
             margin: 10px 0; 
             border: none; 
-            color: white; 
+            color: white !important; 
             cursor: pointer;
         }
         
         .btn-white { 
-            background: white; 
-            color: #11998e; 
+            background: white !important; 
+            color: #11998e !important; 
             padding: 20px; 
             width: 90%; 
             max-width: 350px; 
@@ -132,13 +134,14 @@
         }
         
         .card { 
-            background: rgba(255,255,255,0.1); 
+            background: rgba(255,255,255,0.1) !important; 
             padding: 25px; 
             border-radius: 20px; 
             width: 90%; 
             max-width: 400px; 
             margin-bottom: 20px;
             border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
         }
         
         .id-display { 
@@ -484,8 +487,11 @@
             sirenAudio.currentTime = 0;
             currentEmergency = null;
             
-            document.getElementById('bg').className = "";
-            document.getElementById('bg').style.background = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
+            // 배경 녹색으로 복원
+            const body = document.getElementById('bg');
+            body.className = "";
+            body.style.background = "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)";
+            
             document.getElementById('mainTitle').innerText = "✅ 현재 안전합니다";
             
             document.getElementById('btn1').style.display = "block";
