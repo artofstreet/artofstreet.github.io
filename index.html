@@ -402,7 +402,7 @@
         
         <div class="radar-container">
             <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">긴급구조</button>
+            <button id="emergencyBtn" class="btn-emergency" ontouchstart="handleEmergencyTouch(event)" onclick="handleEmergencyClick()">긴급구조</button>
         </div>
         
         <p id="statusMsg">버튼을 눌러주세요</p>
@@ -436,15 +436,6 @@
     <!-- ========== 발신 설정 화면 ========== -->
     <div id="senderSettings" class="settings-screen" style="background:#2b2b85;">
         <h1 style="font-size:36px; margin-bottom:25px; text-align:center; color:white;">발신소 설정</h1>
-        
-        <div class="card">
-            <p class="section-title" style="color:white;">🔊 진동 테스트</p>
-            <button class="btn-add" style="background:#ff4757; color:white; margin-top:10px;" onclick="testVibration()">진동 테스트 (터치하세요)</button>
-            <p style="font-size:18px; opacity:0.7; margin-top:12px; text-align:center; color:white;">
-                진동이 느껴지면 ✅<br>
-                진동이 없으면 설정 확인
-            </p>
-        </div>
         
         <div class="card">
             <p class="section-title" style="color:white;">내 안전 ID</p>
@@ -641,44 +632,6 @@
             document.getElementById('senderSettings').classList.remove('active');
             document.getElementById('receiverSettings').classList.remove('active');
         }
-        
-        // 진동 테스트
-        function testVibration() {
-            console.log('=== 진동 테스트 시작 ===');
-            
-            if (!navigator.vibrate) {
-                alert('❌ 이 기기는 진동을 지원하지 않습니다.\n\n' +
-                      'iOS Chrome은 진동을 지원하지 않습니다.\n' +
-                      'Safari를 사용해주세요!');
-                return;
-            }
-            
-            // 테스트 1: 짧은 진동
-            console.log('테스트 1: 짧은 진동 200ms');
-            let result1 = navigator.vibrate(200);
-            console.log('결과:', result1);
-            
-            // 테스트 2: 긴 진동
-            setTimeout(() => {
-                console.log('테스트 2: 긴 진동 500ms');
-                let result2 = navigator.vibrate(500);
-                console.log('결과:', result2);
-            }, 400);
-            
-            // 테스트 3: 패턴 진동
-            setTimeout(() => {
-                console.log('테스트 3: 패턴 진동');
-                let result3 = navigator.vibrate([100, 50, 100, 50, 100]);
-                console.log('결과:', result3);
-            }, 1000);
-            
-            alert('✅ 진동 테스트 실행!\n\n' +
-                  '3번의 진동이 느껴져야 합니다:\n' +
-                  '1. 짧은 진동\n' +
-                  '2. 긴 진동\n' +
-                  '3. 패턴 진동\n\n' +
-                  '진동이 없다면 F12 → Console을 확인하세요.');
-        }
 
         // ========== 발신 친구 관리 ==========
         function addSenderFriend() {
@@ -782,52 +735,64 @@
         const db = getDatabase(app);
         const geocoder = new kakao.maps.services.Geocoder();
 
+        // ========== 긴급 버튼 진동 함수 (전역) ==========
+        window.handleEmergencyTouch = function(event) {
+            console.log('👆 긴급 버튼 터치!');
+            
+            // 즉시 진동! (여러 번 시도)
+            try {
+                if (navigator.vibrate) {
+                    // 1차 시도: 500ms
+                    const result1 = navigator.vibrate(500);
+                    console.log('🔊 진동 1차:', result1);
+                    
+                    // 2차 시도: 50ms 후 패턴
+                    setTimeout(() => {
+                        const result2 = navigator.vibrate([200, 100, 200]);
+                        console.log('🔊 진동 2차:', result2);
+                    }, 50);
+                    
+                    // 3차 시도: 150ms 후 긴 진동
+                    setTimeout(() => {
+                        const result3 = navigator.vibrate(400);
+                        console.log('🔊 진동 3차:', result3);
+                    }, 150);
+                } else {
+                    console.log('❌ navigator.vibrate 없음');
+                    alert('진동이 지원되지 않는 기기입니다');
+                }
+            } catch (e) {
+                console.error('진동 오류:', e);
+            }
+        };
+        
+        window.handleEmergencyClick = function() {
+            console.log('🔴 긴급 버튼 클릭!');
+            
+            const btn = document.getElementById('emergencyBtn');
+            
+            // 시각적 피드백
+            btn.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                btn.style.transform = 'scale(1)';
+            }, 150);
+            
+            // 추적 시작/중지
+            if (!window.isTracking) {
+                startTracking();
+            } else {
+                stopTracking();
+            }
+        };
+        
         // ========== 발신 기능 ==========
-        let isTracking = false;
+        window.isTracking = false;
         let watchId = null;
         const myID = localStorage.getItem('safeZoneID_SND');
         
         const emergencyBtn = document.getElementById('emergencyBtn');
         const statusMsg = document.getElementById('statusMsg');
         const trackingBadge = document.getElementById('trackingBadge');
-        
-        // touchstart에서 즉시 진동 (iOS/Android 모두 지원)
-        emergencyBtn.addEventListener('touchstart', function(e) {
-            console.log('👆 터치 시작! 진동 즉시 실행!');
-            
-            // 즉시 진동!
-            if (navigator.vibrate) {
-                const result = navigator.vibrate(500);
-                console.log('🔊 터치 진동:', result);
-                
-                // iOS 백업
-                setTimeout(() => {
-                    navigator.vibrate([200, 100, 200]);
-                }, 50);
-            } else {
-                console.log('❌ 진동 API 없음');
-                // 진동 대체: 시각적 효과
-                alert('진동 기능이 지원되지 않습니다');
-            }
-        }, { passive: true });
-        
-        emergencyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            console.log('🔴 긴급 버튼 클릭!');
-            
-            // 시각적 피드백
-            this.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                this.style.transform = 'scale(1)';
-            }, 150);
-            
-            if (!isTracking) {
-                startTracking();
-            } else {
-                stopTracking();
-            }
-        });
         
         function startTracking() {
             statusMsg.innerText = "📍 위치 추적 시작...";
@@ -864,7 +829,7 @@
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
             
-            isTracking = true;
+            window.isTracking = true;
             emergencyBtn.classList.add('tracking');
             emergencyBtn.innerText = "추적중지";
             trackingBadge.style.display = 'inline-block';
@@ -878,7 +843,7 @@
             
             remove(ref(db, 'emergency_signals/' + myID));
             
-            isTracking = false;
+            window.isTracking = false;
             emergencyBtn.classList.remove('tracking');
             emergencyBtn.innerText = "긴급구조";
             trackingBadge.style.display = 'none';
