@@ -1,41 +1,83 @@
-<style>
-    /* 스르사마가 요청하신 '그림자 없는 완벽한 원형' 디자인 */
-    .btn-circle { 
-        width: 230px; height: 230px; 
-        background-color: #ff0000; /* 그림자 없는 순수한 빨강 */
-        border-radius: 50%; border: 8px solid white; /* 흰색 테두리로 깔끔하게 강조 */
-        color: white; font-size: 42px; font-weight: 900;
-        cursor: pointer; 
-        outline: none;
-        box-shadow: none; /* 그림자 완전 제거! */
-        -webkit-tap-highlight-color: transparent; 
-        user-select: none;
-    }
-    /* 버튼을 누를 때만 살짝 색이 변하게 하여 눌렸음을 알립니다. */
-    .btn-circle:active { background-color: #b30000; transform: scale(0.98); }
-</style>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#2b2b85">
+    <title>안전지대 발신소 V8.0</title>
+    
+    <link rel="manifest" href="manifest-sender.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-<script type="module">
-    // [중요] 비서 파일 버전도 v8로 업데이트하여 폰의 기억을 강제로 초기화합니다.
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw-sender.js?v=8') // 주소 뒤에 v=8을 붙여 강제 업데이트
-            .then(() => console.log('✅ 신입 비서(V8) 출근 완료!'))
-            .catch(() => console.log('❌ 비서가 아직 졸고 있습니다.'));
-    }
-
-    // 긴급 버튼 클릭 시 '즉각 진동' 로직 강화
-    const emergencyBtn = document.getElementById('emergencyBtn');
-    emergencyBtn.addEventListener('click', function() {
-        console.log('🚨 긴급 상황 신호 발송 시작!');
-        
-        // 안드로이드에서 가장 강력하게 느끼는 진동 패턴
-        if (navigator.vibrate) {
-            navigator.vibrate([500, 100, 500, 100, 500]); // 징~ 징~ 징~ 세 번 크게!
+    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
+    
+    <style>
+        * { 
+            margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; 
+            -webkit-font-smoothing: antialiased;
+            /* [중요] 모든 요소에서 텍스트 선택 기능을 물리적으로 차단합니다 */
+            -webkit-user-select: none; 
+            user-select: none; 
+            -webkit-touch-callout: none; 
         }
+        body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; overflow-y: auto; padding: 20px; }
+        .active { display: flex !important; }
         
-        // 지도가 안 떠도 일단 진동과 함께 실행 알림을 띄웁니다.
-        alert("🚨 긴급 신호를 전송합니다!"); 
+        #mainScreen { justify-content: center; }
+        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; }
         
-        // 이후 위치 추적 로직 실행...
-    });
-</script>
+        .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
+        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* V8.0: 그림자 없는 순수 레드 원형 버튼 */
+        .btn-circle { 
+            width: 220px; height: 220px; 
+            background-color: #ff0000; /* 선명한 단색 레드 */
+            border-radius: 50%; border: 8px solid white; /* 흰색 테두리로 강조 */
+            color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; 
+            cursor: pointer; z-index: 10; 
+            outline: none; box-shadow: none; /* 그림자 완전 제거 */
+            -webkit-tap-highlight-color: transparent; /* 누를 때 생기는 네모 박스 방지 */
+            transition: transform 0.1s;
+        }
+        .btn-circle:active { transform: scale(0.92); background-color: #cc0000; } /* 누를 때 반응 강화 */
+        .btn-circle.tracking { background-color: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
+        #statusMsg { margin-top: 30px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .id-display { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; }
+        .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
+        .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div id="mainScreen" class="screen active">
+        <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
+        <div class="radar-container">
+            <div class="radar-ring"></div>
+            <button id="emergencyBtn" class="btn-circle">긴급구조</button>
+        </div>
+        <p id="statusMsg">버튼을 눌러주세요</p>
+    </div>
+
+    <div id="setScreen" class="screen">
+        <h1>설정 (V8.0)</h1>
+        <div class="card">
+            <p>내 안전 ID</p>
+            <div class="id-display"><div class="id-text" id="myIdText">...</div></div>
+        </div>
+        <button class="btn-pill" onclick="go('mainScreen')">← 돌아가기</button>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
+        import { getDatabase, ref, set, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
+            databaseURL: "https://safezone-2c1b2-default-rtdb
