@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>안전지대 발신소 V6.3</title>
+    <title>안전지대 발신소 V6.4</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -15,7 +15,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; overflow-y: auto; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; overflow-y: auto; padding: 20px; }
         .active { display: flex !important; }
         
         #mainScreen { justify-content: center; }
@@ -25,13 +25,23 @@
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        .btn-circle { width: 220px; height: 220px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.5); cursor: pointer; transition: 0.1s; z-index: 10; display: flex; align-items: center; justify-content: center; }
+        .btn-circle { width: 220px; height: 220px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.5); cursor: pointer; z-index: 10; }
         .btn-circle.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
         #statusMsg { margin-top: 30px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        
+        /* [원상복구] 스르사마가 좋아하신 카드 디자인 */
+        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 100%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .id-display { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; }
         .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
+        
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: none; font-size: 18px; margin: 15px 0; text-align: center; background: rgba(255,255,255,0.9); color: #2b2b85; font-weight: bold; }
+        .btn-yellow { background: #ffd700; color: #2b2b85; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; cursor: pointer; margin-top: 10px; }
+        
+        .friend-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        .delete-btn { color: #ff4757; font-size: 24px; cursor: pointer; background: none; border: none; }
+
         .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
         .tracking-badge { background: rgba(255,107,107,0.9); padding: 10px 20px; border-radius: 20px; font-size: 14px; margin-top: 15px; display: inline-block; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -50,21 +60,68 @@
     </div>
 
     <div id="setScreen" class="screen">
-        <h1 style="margin-bottom: 20px;">설정</h1>
+        <h1 style="margin-bottom: 25px;">설정</h1>
+        
         <div class="card">
             <p style="font-size:18px; opacity:0.9;">내 안전 ID</p>
-            <div style="background:rgba(255,215,0,0.2); padding:15px; border-radius:15px; margin:15px 0;">
+            <div class="id-display">
                 <div class="id-text" id="myIdText">로딩중...</div>
             </div>
         </div>
-        <button class="btn-pill" style="background:rgba(255,255,255,0.3);" onclick="go('mainScreen')">← 돌아가기</button>
+
+        <div class="card">
+            <p style="font-size:18px; opacity:0.9;">🤝 친구 등록하기</p>
+            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2">
+            <button class="btn-yellow" onclick="addFriend()">이 ID를 친구로 추가</button>
+        </div>
+
+        <div class="card">
+            <p style="font-size:18px; opacity:0.9;">연결된 친구 목록</p>
+            <div id="friendList" style="margin-top: 15px;">
+                </div>
+        </div>
+
+        <button class="btn-pill" onclick="go('mainScreen')">← 돌아가기</button>
     </div>
 
     <script>
-        // 화면 전환 함수
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
+            if(id === 'setScreen') loadFriends();
+        }
+
+        function addFriend() {
+            const id = document.getElementById('friendID').value.trim().toUpperCase();
+            if(!id) return;
+            let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            if(list.length >= 5) { alert("최대 5명까지 가능합니다."); return; }
+            if(!list.includes(id)) list.push(id);
+            localStorage.setItem('friendList_SND', JSON.stringify(list));
+            document.getElementById('friendID').value = "";
+            loadFriends();
+        }
+
+        function deleteFriend(id) {
+            let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            list = list.filter(f => f !== id);
+            localStorage.setItem('friendList_SND', JSON.stringify(list));
+            loadFriends();
+        }
+
+        function loadFriends() {
+            const list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
+            const cont = document.getElementById('friendList');
+            if(list.length === 0) {
+                cont.innerHTML = '<p style="opacity:0.6;">등록된 친구가 없습니다.</p>';
+                return;
+            }
+            cont.innerHTML = list.map(f => `
+                <div class="friend-item">
+                    <span>✅ ${f}</span>
+                    <button class="delete-btn" onclick="deleteFriend('${f}')">✕</button>
+                </div>
+            `).join('');
         }
     </script>
 
@@ -92,17 +149,14 @@
         const emergencyBtn = document.getElementById('emergencyBtn');
         const statusMsg = document.getElementById('statusMsg');
         const trackingBadge = document.getElementById('trackingBadge');
-        
         let isTracking = false;
         let watchId = null;
         let geocoder = null;
 
-        // [핵심 보완] 버튼 클릭 시점에 카카오 지도를 체크합니다.
         emergencyBtn.addEventListener('click', function() {
             if (!isTracking) {
-                // 카카오 지도가 안 켜졌으면 경고창을 띄웁니다.
                 if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services) {
-                    alert("⚠️ 카카오 지도 서비스가 아직 준비되지 않았습니다.\n1~2초 후 다시 눌러주세요!");
+                    alert("⚠️ 지도가 아직 준비되지 않았습니다. 잠시만 기다려주세요!");
                     return;
                 }
                 geocoder = new kakao.maps.services.Geocoder();
@@ -114,17 +168,11 @@
 
         function startTracking() {
             statusMsg.innerText = "📍 위치 추적을 시작합니다...";
-            if (!navigator.geolocation) {
-                alert("❌ 이 폰은 위치 추적(GPS)을 지원하지 않습니다.");
-                return;
-            }
-
             watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
                 enableHighAccuracy: true,
                 timeout: 10000,
                 maximumAge: 0
             });
-
             isTracking = true;
             emergencyBtn.classList.add('tracking');
             emergencyBtn.innerText = "추적중지";
@@ -132,10 +180,7 @@
         }
 
         function stopTracking() {
-            if (watchId !== null) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-            }
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
             remove(ref(db, 'emergency_signals/' + myID));
             isTracking = false;
             emergencyBtn.classList.remove('tracking');
@@ -147,19 +192,13 @@
         function updatePosition(position) {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
-
             geocoder.coord2Address(lon, lat, function(result, status) {
                 if (status === kakao.maps.services.Status.OK) {
                     const address = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
-                    
                     set(ref(db, 'emergency_signals/' + myID), {
-                        sender: myID,
-                        address: address,
-                        lat: lat,
-                        lon: lon,
+                        sender: myID, address: address, lat: lat, lon: lon,
                         mapUrl: `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`,
-                        time: new Date().toLocaleString(),
-                        timestamp: serverTimestamp()
+                        time: new Date().toLocaleString(), timestamp: serverTimestamp()
                     });
                     statusMsg.innerText = "✅ 위치 업데이트: " + address.substring(0, 15) + "...";
                 }
@@ -167,13 +206,11 @@
         }
 
         function handleError(error) {
-            if (error.code === 1) alert("❌ 위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 허용을 해주세요!");
+            alert("❌ 위치 권한을 허용해주세요!");
             stopTracking();
         }
 
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw-sender.js');
-        }
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw-sender.js');
     </script>
 </body>
 </html>
