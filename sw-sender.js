@@ -1,4 +1,4 @@
-const CACHE_NAME = 'safezone-sender-v6';
+const CACHE_NAME = 'safezone-sender-v7'; // [중요] v6를 v7으로 바꿨습니다!
 const urlsToCache = [
   'index.html',
   'manifest-sender.json'
