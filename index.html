@@ -4,155 +4,67 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>안전지대 발신소 V6.0</title>
+    <title>안전지대 발신소 V6.3</title>
     
-    <!-- PWA Manifest -->
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="발신소">
 
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
         body { height: 100vh; background: #2b2b85; color: white; text-align: center; overflow: hidden; }
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; position: absolute; top: 0; left: 0; overflow-y: auto; }
+        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; padding: 20px; position: absolute; top: 0; left: 0; overflow-y: auto; }
         .active { display: flex !important; }
         
-        /* 메인 화면 중앙 정렬 */
-        #mainScreen { justify-content: center; padding: 20px; }
+        #mainScreen { justify-content: center; }
+        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; }
         
-        .gear-btn { position: absolute; top: 20px; right: 20px; width: 45px; height: 45px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; z-index: 999; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-        .gear-btn:active { background: rgba(255,255,255,0.4); transform: scale(0.9); }
-
         .radar-container { position: relative; width: 260px; height: 260px; display: flex; align-items: center; justify-content: center; }
         .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 4px solid transparent; border-top-color: #ffd700; border-right-color: transparent; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .btn-circle { width: 220px; height: 220px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 40px; font-weight: 900; letter-spacing: 2px; box-shadow: 0 10px 30px rgba(249, 11, 62, 0.5); cursor: pointer; transition: 0.1s; z-index: 10; display: flex; align-items: center; justify-content: center; }
-        .btn-circle:active { transform: scale(0.95); box-shadow: 0 5px 15px rgba(249, 11, 62, 0.5); background: #d0002f; }
         .btn-circle.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
         #statusMsg { margin-top: 30px; font-size: 16px; color: #ffd700; font-weight: bold; opacity: 0.8; }
-
         .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; width: 90%; max-width: 400px; margin-bottom: 20px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-        
-        .id-display { background: rgba(255,215,0,0.2); padding: 15px; border-radius: 15px; margin: 15px 0; }
         .id-text { font-size: 32px; color: #ffd700; font-weight: 900; letter-spacing: 2px; }
-        
-        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); font-size: 18px; margin: 15px 0; text-align: center; background: rgba(255,255,255,0.9); color: #2b2b85; font-weight: bold; }
-        
         .btn-pill { background: rgba(255,255,255,0.2); color: white; padding: 18px; width: 100%; max-width: 350px; font-size: 22px; font-weight: bold; border-radius: 50px; border: none; margin-top: 20px; cursor: pointer; }
-        .btn-pill:active { background: rgba(255,255,255,0.3); }
-        
-        .btn-add { background: #ffd700; color: #2b2b85; padding: 15px; width: 100%; font-size: 18px; font-weight: bold; border-radius: 12px; border: none; margin-top: 15px; cursor: pointer; }
-        .btn-add:active { background: #ffed4e; transform: scale(0.98); }
-        
-        .friend-item { background: rgba(56,239,125,0.2); padding: 15px 20px; border-radius: 15px; margin: 10px 0; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; }
-        .friend-item .id { flex: 1; text-align: left; }
-        .friend-item .delete { background: #ff4757; color: white; border: none; padding: 8px 15px; border-radius: 25px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .friend-item .delete:active { background: #ff3838; transform: scale(0.95); }
-        
-        .section-title { font-size: 18px; opacity: 0.9; margin-bottom: 5px; text-align: left; }
-        .friend-count { background: rgba(255,215,0,0.3); padding: 5px 15px; border-radius: 15px; font-size: 14px; display: inline-block; margin: 10px 0; }
-        
         .tracking-badge { background: rgba(255,107,107,0.9); padding: 10px 20px; border-radius: 20px; font-size: 14px; margin-top: 15px; display: inline-block; animation: blink 1s infinite; }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        /* 설정 화면 상단 여백 */
-        #setScreen { padding: 20px; justify-content: flex-start; padding-top: 60px; }
     </style>
 </head>
 <body>
 
-    <!-- 메인 화면 -->
     <div id="mainScreen" class="screen active">
         <button class="gear-btn" onclick="go('setScreen')">⚙️</button>
-        
         <div class="radar-container">
             <div class="radar-ring"></div>
             <button id="emergencyBtn" class="btn-circle">긴급구조</button>
         </div>
-        <p id="statusMsg">버튼을 누르면 구조 신호가 전송됩니다.</p>
+        <p id="statusMsg">버튼을 눌러주세요</p>
         <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
     </div>
 
-    <!-- 설정 화면 -->
     <div id="setScreen" class="screen">
         <h1 style="margin-bottom: 20px;">설정</h1>
-        
         <div class="card">
-            <p class="section-title">내 안전 ID</p>
-            <div class="id-display">
+            <p style="font-size:18px; opacity:0.9;">내 안전 ID</p>
+            <div style="background:rgba(255,215,0,0.2); padding:15px; border-radius:15px; margin:15px 0;">
                 <div class="id-text" id="myIdText">로딩중...</div>
             </div>
         </div>
-
-        <div class="card">
-            <p class="section-title">👥 친구 등록하기</p>
-            <input type="text" id="friendID" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addFriend()">이 ID를 친구로 추가</button>
-        </div>
-
-        <div class="card">
-            <p class="section-title">등록된 친구 목록</p>
-            <div class="friend-count">
-                <span id="friendCount">0</span>/5명
-            </div>
-            <div id="friendList" style="margin-top: 15px;"></div>
-        </div>
-
-        <button class="btn-pill" style="background:rgba(255,255,255,0.3);" onclick="go('mainScreen')">← 메인으로</button>
+        <button class="btn-pill" style="background:rgba(255,255,255,0.3);" onclick="go('mainScreen')">← 돌아가기</button>
     </div>
 
     <script>
+        // 화면 전환 함수
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'setScreen') loadSettings();
-        }
-        
-        function addFriend() {
-            const friendId = document.getElementById('friendID').value.trim().toUpperCase();
-            if(!friendId) { alert('❌ 친구 ID를 입력해주세요!'); return; }
-            let friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            if(friendList.length >= 5) { 
-                alert('❌ 최대 5명까지만 등록 가능합니다!\n친구를 삭제한 후 추가해주세요.'); 
-                return; 
-            }
-            if(friendList.includes(friendId)) { alert('❌ 이미 등록된 친구입니다!'); return; }
-            friendList.push(friendId);
-            localStorage.setItem('friendList_SND', JSON.stringify(friendList));
-            document.getElementById('friendID').value = '';
-            alert('✅ ' + friendId + ' 등록 완료!');
-            loadSettings();
-        }
-        
-        function deleteFriend(friendId) {
-            if(!confirm('⚠️ ' + friendId + ' 님을 삭제하시겠습니까?')) return;
-            let friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            friendList = friendList.filter(id => id !== friendId);
-            localStorage.setItem('friendList_SND', JSON.stringify(friendList));
-            alert('✅ 삭제 완료!');
-            loadSettings();
-        }
-        
-        function loadSettings() {
-            const friendList = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            document.getElementById('friendCount').innerText = friendList.length;
-            const listContainer = document.getElementById('friendList');
-            if(friendList.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:15px; font-size:16px;">등록된 친구가 없습니다</p>';
-            } else {
-                listContainer.innerHTML = friendList.map(id => `
-                    <div class="friend-item">
-                        <span class="id">✅ ${id}</span>
-                        <button class="delete" onclick="deleteFriend('${id}')">✕</button>
-                    </div>
-                `).join('');
-            }
         }
     </script>
 
@@ -175,150 +87,93 @@
             myID = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
             localStorage.setItem('safeZoneID_SND', myID);
         }
+        document.getElementById('myIdText').innerText = myID;
 
-        const geocoder = new kakao.maps.services.Geocoder();
+        const emergencyBtn = document.getElementById('emergencyBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const trackingBadge = document.getElementById('trackingBadge');
+        
         let isTracking = false;
         let watchId = null;
+        let geocoder = null;
 
-        // DOM이 완전히 로드된 후 실행
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM 로드 완료!');
-            
-            const statusMsg = document.getElementById('statusMsg');
-            const emergencyBtn = document.getElementById('emergencyBtn');
-            const trackingBadge = document.getElementById('trackingBadge');
-            const myIdText = document.getElementById('myIdText');
-            
-            // 요소 확인
-            if (!emergencyBtn) {
-                console.error('❌ 긴급 버튼을 찾을 수 없습니다!');
-                return;
-            }
-            
-            console.log('✅ 긴급 버튼 찾음:', emergencyBtn);
-            myIdText.innerText = myID;
-
-            // 긴급 버튼 이벤트 리스너 연결
-            emergencyBtn.addEventListener('click', function() {
-                console.log('🔴 버튼 클릭됨! isTracking:', isTracking);
-                if (!isTracking) {
-                    startTracking();
-                } else {
-                    stopTracking();
-                }
-            });
-
-            console.log('✅ 이벤트 리스너 연결 완료!');
-
-            function startTracking() {
-                console.log('🚀 추적 시작!');
-                statusMsg.innerText = "📍 실시간 위치 추적을 시작합니다...";
-                
-                if (!navigator.geolocation) {
-                    statusMsg.innerText = "❌ GPS를 지원하지 않는 브라우저입니다.";
-                    alert("❌ 이 브라우저는 GPS를 지원하지 않습니다!");
+        // [핵심 보완] 버튼 클릭 시점에 카카오 지도를 체크합니다.
+        emergencyBtn.addEventListener('click', function() {
+            if (!isTracking) {
+                // 카카오 지도가 안 켜졌으면 경고창을 띄웁니다.
+                if (typeof kakao === 'undefined' || !kakao.maps || !kakao.maps.services) {
+                    alert("⚠️ 카카오 지도 서비스가 아직 준비되지 않았습니다.\n1~2초 후 다시 눌러주세요!");
                     return;
                 }
-
-                // watchPosition으로 실시간 위치 추적
-                watchId = navigator.geolocation.watchPosition(
-                    updatePosition,
-                    handleError,
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-
-                isTracking = true;
-                emergencyBtn.classList.add('tracking');
-                emergencyBtn.innerText = "추적중지";
-                trackingBadge.style.display = 'inline-block';
-            }
-
-            function stopTracking() {
-                console.log('⏹️ 추적 중지!');
-                if (watchId !== null) {
-                    navigator.geolocation.clearWatch(watchId);
-                    watchId = null;
-                }
-
-                // Firebase에서 긴급 신호 삭제
-                const myPath = ref(db, 'emergency_signals/' + myID);
-                remove(myPath);
-
-                isTracking = false;
-                emergencyBtn.classList.remove('tracking');
-                emergencyBtn.innerText = "긴급구조";
-                trackingBadge.style.display = 'none';
-                statusMsg.innerText = "✅ 위치 추적이 종료되었습니다.";
-            }
-
-            function updatePosition(position) {
-                const lat = position.coords.latitude;
-                const lon = position.coords.longitude;
-                
-                console.log('📍 위치 업데이트:', lat, lon);
-
-                geocoder.coord2Address(lon, lat, function(result, status) {
-                    if (status === kakao.maps.services.Status.OK) {
-                        const address = result[0].road_address ? 
-                            result[0].road_address.address_name : 
-                            result[0].address.address_name;
-                        const mapUrl = `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`;
-                        
-                        const myPath = ref(db, 'emergency_signals/' + myID);
-                        
-                        set(myPath, {
-                            sender: myID,
-                            address: address,
-                            lat: lat,
-                            lon: lon,
-                            mapUrl: mapUrl,
-                            time: new Date().toLocaleString(),
-                            timestamp: serverTimestamp()
-                        });
-
-                        statusMsg.innerText = "✅ 위치 업데이트: " + address.substring(0, 30) + "...";
-                        console.log('🔥 Firebase 업데이트 완료:', address);
-                    }
-                });
-            }
-
-            function handleError(error) {
-                console.log('❌ GPS 에러:', error);
-                let errorMsg = '';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMsg = "❌ 위치 권한이 거부되었습니다.";
-                        alert("❌ 위치 권한을 허용해주세요!\n\n브라우저 설정 → 사이트 설정 → 위치 → 허용");
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMsg = "❌ 위치 정보를 사용할 수 없습니다.";
-                        alert("❌ GPS를 켜주세요!");
-                        break;
-                    case error.TIMEOUT:
-                        errorMsg = "⚠️ 위치 요청 시간 초과. 재시도 중...";
-                        return; // 타임아웃은 재시도
-                    default:
-                        errorMsg = "❌ 알 수 없는 오류가 발생했습니다.";
-                }
-                statusMsg.innerText = errorMsg;
+                geocoder = new kakao.maps.services.Geocoder();
+                startTracking();
+            } else {
                 stopTracking();
             }
         });
 
-        // PWA Service Worker 등록
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw-sender.js')
-                    .then(reg => console.log('✅ Service Worker 등록 성공:', reg))
-                    .catch(err => console.log('❌ Service Worker 등록 실패:', err));
+        function startTracking() {
+            statusMsg.innerText = "📍 위치 추적을 시작합니다...";
+            if (!navigator.geolocation) {
+                alert("❌ 이 폰은 위치 추적(GPS)을 지원하지 않습니다.");
+                return;
+            }
+
+            watchId = navigator.geolocation.watchPosition(updatePosition, handleError, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            });
+
+            isTracking = true;
+            emergencyBtn.classList.add('tracking');
+            emergencyBtn.innerText = "추적중지";
+            trackingBadge.style.display = 'inline-block';
+        }
+
+        function stopTracking() {
+            if (watchId !== null) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+            }
+            remove(ref(db, 'emergency_signals/' + myID));
+            isTracking = false;
+            emergencyBtn.classList.remove('tracking');
+            emergencyBtn.innerText = "긴급구조";
+            trackingBadge.style.display = 'none';
+            statusMsg.innerText = "✅ 위치 추적이 종료되었습니다.";
+        }
+
+        function updatePosition(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            geocoder.coord2Address(lon, lat, function(result, status) {
+                if (status === kakao.maps.services.Status.OK) {
+                    const address = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
+                    
+                    set(ref(db, 'emergency_signals/' + myID), {
+                        sender: myID,
+                        address: address,
+                        lat: lat,
+                        lon: lon,
+                        mapUrl: `https://map.kakao.com/link/map/긴급구조요청,${lat},${lon}`,
+                        time: new Date().toLocaleString(),
+                        timestamp: serverTimestamp()
+                    });
+                    statusMsg.innerText = "✅ 위치 업데이트: " + address.substring(0, 15) + "...";
+                }
             });
         }
 
-        console.log('✅ Firebase 초기화 완료! DOM 로드 대기 중...');
+        function handleError(error) {
+            if (error.code === 1) alert("❌ 위치 권한이 거부되었습니다.\n브라우저 설정에서 위치 허용을 해주세요!");
+            stopTracking();
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw-sender.js');
+        }
     </script>
 </body>
 </html>
