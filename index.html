@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>블랙아웃 가디언 V16.1 (버그 픽스판)</title>
+    <title>블랙아웃 가디언 V16.2 (클릭 버그 완전 해결)</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -265,35 +265,34 @@
         const statusMsg = document.getElementById('statusMsg');
         const trackingBadge = document.getElementById('trackingBadge');
 
-        // ========== 긴급 버튼 이벤트 리스너 (버그 픽스 적용) ==========
+        // ========== 긴급 버튼 이벤트 통합 (클릭 오류 완전 제거) ==========
         document.addEventListener('DOMContentLoaded', () => {
             const emergencyBtn = document.getElementById('emergencyBtn');
             
-            // touchstart로 진동 우선 실행
-            emergencyBtn.addEventListener('touchstart', (e) => {
+            // 모든 동작을 click 하나로 통합하여 터치/마우스 모두 정상 작동하도록 수정
+            emergencyBtn.addEventListener('click', (e) => {
                 e.preventDefault();
-                console.log('👆 긴급 버튼 터치!');
+                console.log('🔴 긴급 버튼 클릭 작동!');
+                
+                // 1. 진동 실행
                 if (navigator.vibrate) {
                     navigator.vibrate([400, 100, 400, 100, 800]);
                 } else {
                     emergencyBtn.style.background = '#ff0000';
                     setTimeout(() => { emergencyBtn.style.background = window.isTracking ? '#ff6b6b' : '#f90b3e'; }, 200);
                 }
-            }, { passive: false });
-            
-            // click으로 통신 실행
-            emergencyBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                console.log('🔴 긴급 버튼 클릭!');
+                
+                // 2. 애니메이션
                 emergencyBtn.style.transform = 'scale(0.9)';
                 setTimeout(() => { emergencyBtn.style.transform = 'scale(1)'; }, 150);
                 
+                // 3. 통신 실행
                 if (!window.isTracking) { startTracking(); } 
                 else { stopTracking(); }
             });
         });
 
-        // ========== 1단계/2단계 분리형 통신 (버그 픽스 적용) ==========
+        // ========== 1단계/2단계 분리형 통신 ==========
         window.startTracking = function() {
             const myID = localStorage.getItem('safeZoneID_SND')?.trim().toUpperCase();
             if (!myID) { alert('❌ ID가 설정되지 않았습니다'); return; }
