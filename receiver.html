@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#2b2b85">
-    <title>블랙아웃 가디언 V16.6 완전수정판</title>
+    <title>블랙아웃 가디언 V18.1 (즉각 진동)</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,8 +13,7 @@
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-user-select: none; -moz-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none !important; }
-        button, input, a { outline: none !important; -webkit-tap-highlight-color: transparent !important; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none !important; }
         html, body { width: 100%; height: 100%; overflow: hidden; position: fixed; touch-action: manipulation; }
         body { background: #2b2b85 !important; color: white; }
         
@@ -35,7 +34,7 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
         
         .btn-emergency { width: 240px; height: 240px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 42px; font-weight: 900; letter-spacing: 3px; box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6); cursor: pointer; z-index: 10; transition: all 0.15s ease; touch-action: manipulation; }
-        .btn-emergency:active { transform: scale(0.85); box-shadow: 0 6px 20px rgba(249, 11, 62, 0.9); background: #c00830; }
+        .btn-emergency:active { transform: scale(0.85); background: #c00830; box-shadow: 0 6px 20px rgba(249, 11, 62, 0.9); }
         .btn-emergency.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         
@@ -44,15 +43,14 @@
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
         #receiverScreen { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; flex-direction: column; align-items: center; padding: 20px; }
-        #receiverScreen.emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%) !important; animation: blink-bg 1s infinite alternate; }
-        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.8; } }
+        #receiverScreen.emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%) !important; animation: blink-bg 0.5s infinite alternate; }
+        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.7; } }
         
         .receiver-title { font-size: 36px; margin: 25px 0; font-weight: 900; }
         .btn-box, .btn-white { padding: 22px; width: 90%; max-width: 400px; font-size: 26px; font-weight: bold; border: none; cursor: pointer; transition: all 0.2s; }
         .btn-box { background: rgba(0,0,0,0.2); color: white; margin: 12px 0; border-radius: 18px; }
-        .btn-box:active { transform: scale(0.96); }
         .btn-white { background: white; color: #11998e; border-radius: 50px; margin-top: 25px; font-weight: 900; }
-        .btn-white:active { transform: scale(0.94); opacity: 0.85; }
+        .btn-white:active { transform: scale(0.94); }
         
         #map { width: 100%; max-width: 500px; height: 350px; border-radius: 20px; margin: 20px 0; border: 3px solid rgba(255,255,255,0.3); background: #e0e0e0; }
         .emergency-card { background: rgba(255,255,255,0.15); padding: 25px; border-radius: 25px; width: 90%; max-width: 400px; margin-top: 25px; }
@@ -71,12 +69,6 @@
         .friend-item { background: rgba(255,255,255,0.2); padding: 18px 25px; border-radius: 18px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
         .btn-delete { background: #ff4757; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 22px; font-weight: bold; transition: all 0.2s; }
         .btn-delete:active { transform: scale(0.88); }
-        
-        #logPanel { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.98); color: #0f0; font-family: 'Courier New', monospace; font-size: 13px; padding: 10px; max-height: 250px; overflow-y: auto; z-index: 99999; display: none; border-top: 3px solid #0f0; }
-        .log-header { background: #0f0; color: #000; padding: 8px; font-weight: bold; margin-bottom: 8px; border-radius: 5px; }
-        .log-error { color: #f00; font-weight: bold; }
-        .log-success { color: #0ff; font-weight: bold; }
-        .log-warn { color: #ff0; }
     </style>
 </head>
 <body>
@@ -99,7 +91,7 @@
         <button id="btn1" class="btn-box">대기 중...</button>
         <button id="btn2" class="btn-box">수신 대기 중</button>
         <div id="map"></div>
-        <button id="soundBtn" class="btn-white">🔊 소리 활성화 (필수!)</button>
+        <button id="soundBtn" class="btn-white" style="background:#ff4500; color:white; font-size:28px;">🔊 반드시 눌러주세요!</button>
         <div id="emergencyCard" class="emergency-card" style="display:none;">
             <span class="live-badge">🔴 LIVE</span>
             <p id="friendName" style="font-size:28px; font-weight:bold; margin:15px 0;"></p>
@@ -129,7 +121,6 @@
             <div id="senderFriendList"></div>
         </div>
         <button class="btn-white" style="background:rgba(255,255,255,0.3); color:white;" onclick="hideSettings()">← 돌아가기</button>
-        <button id="logToggle1" class="btn-white" style="background:rgba(0,200,255,0.5); color:white; margin-top:10px;" onclick="toggleLog()">📋 작동 기록 보기</button>
     </div>
 
     <div id="receiverSettings" class="settings-screen" style="background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
@@ -151,59 +142,16 @@
             <div id="receiverFriendList"></div>
         </div>
         <button class="btn-white" onclick="hideSettings()">← 돌아가기</button>
-        <button id="logToggle2" class="btn-white" style="background:rgba(0,200,255,0.5); color:white; margin-top:10px;" onclick="toggleLog()">📋 작동 기록 보기</button>
-    </div>
-
-    <div id="logPanel">
-        <div class="log-header">📋 작동 기록 (최신순)</div>
-        <div id="logContent"></div>
     </div>
 
     <script>
-        const log = (msg, type = 'normal') => {
-            console.log(msg);
-            const panel = document.getElementById('logContent');
-            const time = new Date().toLocaleTimeString();
-            let className = '';
-            if (type === 'error') className = 'log-error';
-            else if (type === 'success') className = 'log-success';
-            else if (type === 'warn') className = 'log-warn';
-            
-            panel.innerHTML = `<div class="${className}">[${time}] ${msg}</div>` + panel.innerHTML;
-        };
-        
-        window.toggleLog = () => {
-            const panel = document.getElementById('logPanel');
-            const btn1 = document.getElementById('logToggle1');
-            const btn2 = document.getElementById('logToggle2');
-            
-            if (panel.style.display === 'none') {
-                panel.style.display = 'block';
-                btn1.innerText = '📋 기록 닫기';
-                btn2.innerText = '📋 기록 닫기';
-                btn1.style.background = 'rgba(255,100,0,0.5)';
-                btn2.style.background = 'rgba(255,100,0,0.5)';
-                log('=== 작동 기록 시작 ===', 'success');
-            } else {
-                panel.style.display = 'none';
-                btn1.innerText = '📋 작동 기록 보기';
-                btn2.innerText = '📋 작동 기록 보기';
-                btn1.style.background = 'rgba(0,200,255,0.5)';
-                btn2.style.background = 'rgba(0,200,255,0.5)';
-            }
-        };
-
-        document.addEventListener('gesturestart', e => e.preventDefault());
-        document.addEventListener('gesturechange', e => e.preventDefault());
-        document.addEventListener('gestureend', e => e.preventDefault());
-
         let senderId = localStorage.getItem('safeZoneID_SND');
         if (!senderId) { 
             senderId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); 
             localStorage.setItem('safeZoneID_SND', senderId); 
         }
         document.getElementById('senderId').innerText = senderId;
-        log('발신 ID: ' + senderId);
+        console.log('발신 ID:', senderId);
 
         let receiverId = localStorage.getItem('safeZoneID_RCV');
         if (!receiverId) { 
@@ -211,7 +159,7 @@
             localStorage.setItem('safeZoneID_RCV', receiverId); 
         }
         document.getElementById('receiverId').innerText = receiverId;
-        log('수신 ID: ' + receiverId);
+        console.log('수신 ID:', receiverId);
 
         let currentMode = localStorage.getItem('currentMode') || 'sender';
         window.startListening = null;
@@ -228,18 +176,13 @@
                 senderScreen.classList.remove('active'); 
                 receiverScreen.classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
-                
-                log('모드 전환: 수신 모드', 'success');
-                setTimeout(() => {
-                    if (window.startListening) window.startListening();
-                }, 500);
+                setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
             } else {
                 currentMode = 'sender';
                 toggle.className = 'mode-toggle sender'; 
                 toggle.innerText = '🔄 현재: 구조 요청 모드';
                 receiverScreen.classList.remove('active'); 
                 senderScreen.classList.add('active');
-                log('모드 전환: 발신 모드', 'success');
             }
             localStorage.setItem('currentMode', currentMode);
         };
@@ -285,7 +228,6 @@
             input.value = ''; 
             alert('✅ 등록: ' + id); 
             loadSenderFriends();
-            log('친구 추가: ' + id, 'success');
         };
         
         window.deleteSenderFriend = function(id) {
@@ -294,7 +236,6 @@
             list = list.filter(f => f !== id); 
             localStorage.setItem('friendList_SND', JSON.stringify(list)); 
             loadSenderFriends();
-            log('친구 삭제: ' + id, 'warn');
         };
         
         function loadSenderFriends() {
@@ -323,13 +264,8 @@
             input.value = ''; 
             alert('✅ 등록: ' + id); 
             loadReceiverFriends();
-            log('수신 친구 추가: ' + id, 'success');
-            
-            setTimeout(() => {
-                if (window.startListening) {
-                    window.startListening();
-                }
-            }, 500);
+            console.log('친구 추가됨:', id);
+            setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
         };
         
         window.deleteReceiverFriend = function(id) {
@@ -338,7 +274,6 @@
             list = list.filter(f => f !== id); 
             localStorage.setItem('friendList_RCV', JSON.stringify(list)); 
             loadReceiverFriends();
-            log('수신 친구 삭제: ' + id, 'warn');
         };
         
         function loadReceiverFriends() {
@@ -368,74 +303,55 @@
         const db = getDatabase(app);
         const geocoder = new kakao.maps.services.Geocoder();
 
-        log('✅ Firebase 연결됨', 'success');
-
         window.isTracking = false;
         let watchId = null;
         const statusMsg = document.getElementById('statusMsg');
         const trackingBadge = document.getElementById('trackingBadge');
         const emergencyBtn = document.getElementById('emergencyBtn');
 
-        // ⭐⭐⭐ 발신 버튼 - 완전 수정판 ⭐⭐⭐
-        log('🔧 발신 버튼 이벤트 등록 시작...');
-        
-        // 방법 1: touchstart (진동 전용)
+        // ⚡⚡⚡ 0.001초 만에 진동! touchstart 이벤트 ⚡⚡⚡
         emergencyBtn.addEventListener('touchstart', function(e) {
-            log('👆 버튼 터치 감지!', 'success');
+            console.log('⚡ TOUCHSTART - 손가락 닿음!');
             
-            // 진동 시도 1
+            // 즉시 진동! (동기 실행)
             if (navigator.vibrate) {
-                log('🔊 진동 API 존재 - 실행 중...');
-                const result1 = navigator.vibrate(500);
-                log('진동 결과 1: ' + (result1 ? '성공' : '실패'), result1 ? 'success' : 'error');
+                const startTime = performance.now();
                 
-                // 진동 시도 2 (0.1초 후)
-                setTimeout(() => {
-                    const result2 = navigator.vibrate([200, 100, 200, 100, 400]);
-                    log('진동 결과 2: ' + (result2 ? '성공' : '실패'), result2 ? 'success' : 'error');
-                }, 100);
+                // 강력한 진동 패턴
+                const result = navigator.vibrate([500, 100, 500, 100, 800]);
                 
-                // 진동 시도 3 (0.2초 후)
-                setTimeout(() => {
-                    const result3 = navigator.vibrate(600);
-                    log('진동 결과 3: ' + (result3 ? '성공' : '실패'), result3 ? 'success' : 'error');
-                }, 200);
+                const endTime = performance.now();
+                console.log('🔊 진동 실행:', result ? '성공' : '실패');
+                console.log('⏱️ 실행 시간:', (endTime - startTime).toFixed(2), 'ms');
             } else {
-                log('❌ 진동 API 없음 (iOS 기기)', 'error');
+                console.log('❌ 진동 API 없음 (iOS)');
             }
         }, { passive: false });
         
-        // 방법 2: click (통신 전용)
+        // 🔴 통신은 click 이벤트에서 처리
         emergencyBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            log('🔴 버튼 클릭 이벤트!', 'success');
+            console.log('🔴 CLICK - 통신 시작!');
             
             if (!window.isTracking) { 
-                log('▶ 추적 시작 요청', 'success');
                 startTracking(); 
             } else { 
-                log('■ 추적 중지 요청', 'warn');
                 stopTracking(); 
             }
         });
-        
-        log('✅ 발신 버튼 이벤트 등록 완료', 'success');
 
         function startTracking() {
             const myID = localStorage.getItem('safeZoneID_SND')?.trim().toUpperCase();
             if (!myID) { 
                 alert('❌ ID 없음'); 
-                log('❌ 발신 ID 없음!', 'error');
                 return; 
             }
             
-            log('🚨🚨🚨 긴급 신호 전송 시작!', 'success');
-            log('발신자 ID: ' + myID);
+            console.log('🚨 긴급 신호 전송:', myID);
             
-            const emergencyRef = ref(db, 'emergency_signals/' + myID);
-            log('Firebase 경로: emergency_signals/' + myID);
+            const emergencyRef = ref(db, 'emergency_global');
             
-            const data = {
+            set(emergencyRef, {
                 sender: myID,
                 address: '위치 확인 중...',
                 lat: 37.5665,
@@ -444,46 +360,34 @@
                 time: new Date().toLocaleString(),
                 timestamp: serverTimestamp(),
                 status: 'emergency'
-            };
-            
-            log('전송할 데이터: ' + JSON.stringify(data));
-            
-            set(emergencyRef, data).then(() => {
-                statusMsg.innerText = "✅ 긴급 신호 전송 완료!";
-                log('✅✅✅ Firebase 전송 성공!', 'success');
+            }).then(() => {
+                statusMsg.innerText = "✅ 긴급 신호 전송됨!";
+                console.log('✅ Firebase 전송 성공');
                 
-                // 전송 성공 진동
+                // 전송 성공 피드백 진동
                 if (navigator.vibrate) {
-                    navigator.vibrate([300, 100, 300]);
-                    log('✅ 확인 진동 실행', 'success');
+                    navigator.vibrate([200, 100, 200]);
                 }
             }).catch(err => {
-                log('❌❌❌ Firebase 전송 실패!', 'error');
-                log('오류 메시지: ' + err.message, 'error');
-                log('오류 코드: ' + err.code, 'error');
-                alert('❌ 전송 실패!\n\n' + err.message + '\n\nFirebase Rules를 확인하세요!');
+                console.error('❌ Firebase 오류:', err);
+                alert('❌ 전송 실패!\n\n' + err.message);
                 return;
             });
             
-            // GPS 시작
             statusMsg.innerText = "📍 위치 확인 중...";
-            log('📍 GPS 위치 추적 시작...');
             
             watchId = navigator.geolocation.watchPosition(
                 (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    log(`📍 GPS 좌표: ${lat.toFixed(5)}, ${lon.toFixed(5)}`, 'success');
+                    console.log('📍 GPS:', lat, lon);
                     
                     geocoder.coord2Address(lon, lat, (result, status) => {
-                        let addr = '주소 변환 실패';
+                        let addr = '주소 확인 불가';
                         if (status === kakao.maps.services.Status.OK && result[0]) {
                             addr = result[0].road_address ? 
                                 result[0].road_address.address_name : 
                                 result[0].address.address_name;
-                            log('✅ 주소 변환 성공: ' + addr, 'success');
-                        } else {
-                            log('⚠️ 주소 변환 실패', 'warn');
                         }
                         
                         set(emergencyRef, {
@@ -498,13 +402,12 @@
                         });
                         
                         statusMsg.innerText = "✅ " + addr.substring(0, 25) + "...";
-                        log('✅ 위치 정보 업데이트 완료', 'success');
+                        console.log('✅ 주소 업데이트:', addr);
                     });
                 },
                 (error) => { 
-                    log('⚠️ GPS 오류: ' + error.message, 'error');
-                    log('오류 코드: ' + error.code, 'error');
-                    statusMsg.innerText = "⚠️ 위치 불가 (신호는 전송됨)"; 
+                    console.error('⚠️ GPS 오류:', error);
+                    statusMsg.innerText = "⚠️ 위치 불가 (신호 전송됨)"; 
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
@@ -513,40 +416,34 @@
             emergencyBtn.classList.add('tracking');
             emergencyBtn.innerText = "추적중지";
             trackingBadge.style.display = 'inline-block';
-            log('✅ 추적 모드 활성화', 'success');
         }
         
         function stopTracking() {
             if (watchId) { 
                 navigator.geolocation.clearWatch(watchId); 
                 watchId = null; 
-                log('GPS 추적 중지', 'warn');
             }
             
-            const myID = localStorage.getItem('safeZoneID_SND');
-            if(myID) {
-                remove(ref(db, 'emergency_signals/' + myID));
-                log('🛑 Firebase 신호 제거: ' + myID, 'warn');
-            }
+            remove(ref(db, 'emergency_global'));
+            console.log('🛑 신호 제거');
             
             window.isTracking = false;
             emergencyBtn.classList.remove('tracking');
             emergencyBtn.innerText = "긴급구조";
             trackingBadge.style.display = 'none';
             statusMsg.innerText = "✅ 추적 종료";
-            log('✅ 추적 종료됨', 'success');
         }
 
         window.startTracking = startTracking;
         window.stopTracking = stopTracking;
 
-        // ⭐⭐⭐ 수신 기능 ⭐⭐⭐
+        // ========== 수신 기능 ==========
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         siren.loop = true;
+        siren.volume = 1.0;
         let sirenReady = false;
         
         let kakaoMap, marker;
-        let listeners = [];
         let currentEmergency = null;
         
         const mapContainer = document.getElementById('map');
@@ -557,122 +454,87 @@
         marker = new kakao.maps.Marker({ position: kakaoMap.getCenter() });
         marker.setMap(kakaoMap);
         
-        log('✅ 지도 초기화 완료', 'success');
-        
         const soundBtn = document.getElementById('soundBtn');
         
         soundBtn.onclick = function() {
-            log('🔊 소리 활성화 버튼 클릭', 'success');
+            console.log('🔊 소리 활성화 클릭');
             
-            if (navigator.vibrate) {
-                navigator.vibrate(100);
-            }
-            
-            log('사이렌 재생 시도 중...');
             siren.play().then(() => {
-                log('✅ 사이렌 재생 성공', 'success');
+                console.log('✅ 사이렌 재생 성공');
                 siren.pause(); 
                 siren.currentTime = 0;
                 sirenReady = true;
                 soundBtn.innerText = "✅ 소리 켜짐!";
                 soundBtn.style.background = '#00ff00';
                 soundBtn.style.color = '#000';
-                log('✅✅✅ 사이렌 준비 완료!', 'success');
+                alert('✅ 사이렌 준비 완료!');
             }).catch(e => {
-                log('❌ 사이렌 실패: ' + e.message, 'error');
-                alert('⚠️ 소리를 켜려면 이 버튼을 다시 눌러주세요!');
+                console.error('❌ 사이렌 실패:', e);
+                alert('⚠️ 다시 눌러주세요!');
             });
         };
         
         window.startListening = function() {
-            log('🔄 수신 대기 시작...', 'success');
+            console.log('🔄 수신 대기 시작');
             
-            // 기존 리스너 정리
-            listeners.forEach(u => { 
-                try { 
-                    u(); 
-                    log('기존 리스너 제거', 'warn');
-                } catch(e) {} 
-            });
-            listeners = [];
+            const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
+            console.log('👂 대기 중:', friendList);
             
-            const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            log('👂 대기 중인 친구: ' + (list.length > 0 ? list.join(', ') : '없음'));
-            
-            if (list.length === 0) {
-                log('⚠️ 등록된 친구가 없습니다!', 'warn');
-                return;
+            if (friendList.length === 0) {
+                console.log('⚠️ 친구 없음 - 모든 신호 받기');
             }
             
-            list.forEach(fid => {
-                const path = ref(db, 'emergency_signals/' + fid);
-                log('📡 리스너 등록 시작: ' + fid);
+            const globalRef = ref(db, 'emergency_global');
+            console.log('📡 리스너 등록: emergency_global');
+            
+            onValue(globalRef, (snap) => {
+                const data = snap.val();
+                console.log('Firebase 데이터:', data);
                 
-                try {
-                    const unsub = onValue(path, (snap) => {
-                        const data = snap.val();
-                        log('Firebase 데이터 수신: ' + fid + ' = ' + (data ? '있음' : '없음'));
-                        
-                        if (data) { 
-                            log('🚨🚨🚨 긴급 신호 감지!', 'error');
-                            log('발신자: ' + fid, 'error');
-                            log('데이터: ' + JSON.stringify(data), 'error');
-                            showEmergency(fid, data); 
-                        } else { 
-                            if (currentEmergency === fid) {
-                                log('✅ 신호 종료됨: ' + fid, 'success');
-                                hideEmergency(); 
-                            }
-                        }
-                    }, (error) => {
-                        log('❌ 리스너 오류: ' + error.message, 'error');
-                        log('오류 코드: ' + error.code, 'error');
-                    });
-                    
-                    listeners.push(unsub);
-                    log('✅ 리스너 등록 성공: ' + fid, 'success');
-                } catch (e) {
-                    log('❌ 리스너 등록 실패: ' + e.message, 'error');
+                if (!data) {
+                    console.log('데이터 없음');
+                    if (currentEmergency) hideEmergency();
+                    return;
                 }
+                
+                const senderID = data.sender;
+                console.log('발신자:', senderID);
+                console.log('친구 목록:', friendList);
+                
+                if (friendList.length === 0 || friendList.includes(senderID)) {
+                    console.log('✅ 표시!');
+                    showEmergency(senderID, data);
+                } else {
+                    console.log('❌ 친구 아님, 무시');
+                }
+            }, (error) => {
+                console.error('❌ 리스너 오류:', error);
             });
             
-            log('✅✅✅ 총 ' + listeners.length + '개 리스너 활성화', 'success');
+            console.log('✅ 리스너 활성화');
         };
         
         function showEmergency(fid, data) {
             if (currentEmergency !== fid) {
-                log('🚨 긴급 상황 표시 시작', 'error');
+                console.log('🚨 긴급 상황:', fid);
                 
-                // 사이렌 재생
+                // 사이렌
                 if (sirenReady) {
-                    log('🔊 사이렌 재생 중...', 'error');
-                    siren.play().then(() => {
-                        log('✅ 사이렌 재생 성공', 'success');
-                    }).catch(e => {
-                        log('❌ 사이렌 재생 실패: ' + e.message, 'error');
-                    });
+                    console.log('🔊 사이렌 재생');
+                    siren.play().catch(e => console.error('사이렌 오류:', e));
                 } else {
-                    log('⚠️⚠️⚠️ 사이렌 준비 안됨!', 'warn');
-                    log('소리 켜기 버튼을 눌러주세요!', 'warn');
-                    alert('🔊 소리 켜기 버튼을 눌러주세요!');
+                    console.log('⚠️ 사이렌 준비 안됨!');
+                    alert('🔊 "반드시 눌러주세요!" 버튼을 눌러주세요!');
                 }
                 
                 currentEmergency = fid;
                 
-                // 진동
+                // 진동 (안드로이드만)
                 if(navigator.vibrate) {
-                    log('🔊 긴급 진동 시작...', 'error');
+                    console.log('🔊 긴급 진동');
                     navigator.vibrate([300, 100, 300, 100, 300, 100, 600]);
-                    setTimeout(() => {
-                        navigator.vibrate([400, 100, 400, 100, 800]);
-                        log('🔊 진동 2차', 'error');
-                    }, 1500);
-                    setTimeout(() => {
-                        navigator.vibrate([500, 100, 500, 100, 1000]);
-                        log('🔊 진동 3차', 'error');
-                    }, 3000);
-                } else {
-                    log('❌ 진동 API 없음 (iOS)', 'error');
+                    setTimeout(() => navigator.vibrate([400, 100, 400, 100, 800]), 1500);
+                    setTimeout(() => navigator.vibrate([500, 100, 500, 100, 1000]), 3000);
                 }
             }
             
@@ -694,9 +556,6 @@
             const pos = new kakao.maps.LatLng(data.lat, data.lon);
             kakaoMap.setCenter(pos); 
             marker.setPosition(pos);
-            
-            log('✅ 지도 업데이트: ' + data.address, 'success');
-            log('좌표: ' + data.lat + ', ' + data.lon, 'success');
         }
         
         function hideEmergency() {
@@ -713,23 +572,15 @@
             soundBtn.style.display = "block";
             document.getElementById('emergencyCard').style.display = "none";
             document.getElementById('resetBtn').style.display = "none";
-            
-            log('✅ 안전 상태로 복귀', 'success');
         }
         
         document.getElementById('resetBtn').onclick = function() {
-            log('🛑 수동 종료 버튼 클릭', 'warn');
-            const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            list.forEach(fid => {
-                remove(ref(db, 'emergency_signals/' + fid));
-                log('신호 제거: ' + fid, 'warn');
-            });
+            remove(ref(db, 'emergency_global'));
             hideEmergency();
-            log('✅ 종료 완료', 'success');
+            console.log('🛑 수동 종료');
         };
         
-        log('✅✅✅ 시스템 초기화 완료!', 'success');
-        log('📋 작동 기록 보기 버튼을 눌러 상세 로그를 확인하세요', 'success');
+        console.log('✅ 시스템 준비 완료');
     </script>
 </body>
 </html>
