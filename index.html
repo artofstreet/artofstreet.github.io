@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>ArtOfStreet 안전지대 - Final Premium</title>
+    <title>ArtOfStreet 안전지대 - Final Fixed</title>
     
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
-        /* [기본 설정] */
+        /* [기본 스타일] */
         * { 
             margin: 0; padding: 0; box-sizing: border-box; 
             font-family: 'Pretendard', -apple-system, sans-serif;
@@ -45,37 +45,25 @@
 
         /* [발신] 구조 요청 모드 */
         #senderScreen { justify-content: center; padding: 20px; }
-        
-        /* 최종 확정 네온 링 디자인 */
         .radar-box { 
             position: relative; width: 310px; height: 310px; 
             display: flex; align-items: center; justify-content: center; 
             margin-bottom: 20px;
         }
 
-        /* 세 번째 사진의 핵심: 쨍한 광채 */
+        /* 쨍한 네온 광채 */
         .outer-glow {
             position: absolute; width: 92%; height: 92%; border-radius: 50%;
             background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
-            box-shadow: 
-                0 0 35px 5px rgba(255, 0, 0, 0.4),
-                0 0 55px 15px rgba(0, 255, 0, 0.2),
-                0 0 75px 25px rgba(0, 0, 255, 0.3);
-            filter: blur(8px);
-            animation: rotate 4s linear infinite;
-            opacity: 0.9;
+            box-shadow: 0 0 35px 5px rgba(255, 0, 0, 0.4), 0 0 55px 15px rgba(0, 255, 0, 0.2), 0 0 75px 25px rgba(0, 0, 255, 0.3);
+            filter: blur(8px); animation: rotate 4s linear infinite; opacity: 0.9;
         }
-
         .inner-ring {
             position: absolute; width: 88%; height: 88%; border-radius: 50%;
             background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
-            padding: 5px; 
-            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #fff calc(100% - 5px));
-            animation: rotate 4s linear infinite;
-            z-index: 5;
-            box-shadow: 0 0 10px rgba(255,255,255,0.2);
+            padding: 5px; -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 6px), #fff calc(100% - 5px));
+            animation: rotate 4s linear infinite; z-index: 5;
         }
-
         @keyframes rotate { 100% { transform: rotate(360deg); } }
 
         .inner-circle {
@@ -84,7 +72,7 @@
             box-shadow: inset 0 0 40px rgba(0,0,0,0.9); border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer; z-index: 10;
         }
-        .sos-main { font-size: 68px; font-weight: 900; color: white; letter-spacing: -1px; }
+        .sos-main { font-size: 68px; font-weight: 900; color: white; }
         .sos-sub { font-size: 22px; color: #94a3b8; margin-top: 5px; font-weight: 600; }
 
         .tracking-badge {
@@ -96,27 +84,29 @@
 
         /* [수신] 가족 보호 모드 */
         #receiverScreen { background: #064e3b; padding: 20px; }
-        #receiverScreen.emergency { background: #991b1b !important; animation: blink-bg 0.5s infinite alternate; }
+        #receiverScreen.emergency { background: #991b1b !important; }
         .receiver-title { font-size: 28px; margin: 20px 0; font-weight: 900; text-align: center; }
         #map { width: 100%; height: 320px; border-radius: 20px; border: 3px solid rgba(255,255,255,0.2); margin-bottom: 20px; }
-        .status-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.2); width: 100%; }
+        .status-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; text-align: center; width: 100%; border: 1px solid rgba(255,255,255,0.2); }
 
         /* [설정 레이어] */
         .settings-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 10000; padding: 85px 20px 20px; }
         .settings-overlay.active { display: block; }
         .card { background: #1e293b; padding: 20px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 20px; }
         .id-text { font-size: 32px; color: #60a5fa; font-weight: 900; text-align: center; display: block; }
-        .btn-white { background: white; color: #0f172a; padding: 15px; border-radius: 12px; border: none; font-weight: bold; width: 100%; cursor: pointer; }
+        .btn-white { background: white; color: #0f172a; padding: 15px; border-radius: 12px; border: none; font-weight: bold; width: 100%; cursor: pointer; margin-top: 10px; }
+        
+        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid #334155; font-size: 18px; text-align: center; background: #0f172a; color: white; margin: 10px 0; }
     </style>
 </head>
 <body>
 
     <header class="top-header">
-        <div class="icon-btn" onclick="window.toggleMode()">
+        <div class="icon-btn" onclick="handleModeToggle()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M7 16l-4-4 4-4M3 12h18M17 8l4 4-4 4"/></svg>
         </div>
         <div class="header-title" id="headerTitle">구조 요청 모드</div>
-        <div class="icon-btn" onclick="window.showSettings()">
+        <div class="icon-btn" onclick="handleSettingsShow()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
     </header>
@@ -130,7 +120,8 @@
                 <div class="sos-sub">구조요청</div>
             </div>
         </div>
-        <div id="statusMsg"></div> <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중</div>
+        <div id="statusMsg"></div>
+        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중</div>
     </main>
 
     <main id="receiverScreen" class="app-screen">
@@ -139,21 +130,21 @@
         <div class="status-card">
             <p id="recvStatus" style="font-size: 18px;">가족의 신호를 기다리는 중...</p>
         </div>
-        <button class="btn-white" id="soundBtn" style="margin-top:15px;">🔊 사이렌 준비</button>
-        <button class="btn-white" id="stopSiren" style="display:none; background:#dc2626; color:white; margin-top:10px;">사이렌 정지</button>
+        <button class="btn-white" id="soundBtn">🔊 사이렌 준비</button>
+        <button class="btn-white" id="stopSiren" style="display:none; background:#dc2626; color:white;">사이렌 정지</button>
     </main>
 
     <div id="settingsOverlay" class="settings-overlay">
         <div class="card">
-            <h3>내 기기 고유 ID</h3>
+            <h3 style="margin-bottom:10px;">내 기기 고유 ID</h3>
             <span class="id-text" id="myIdText">...</span>
         </div>
         <div class="card">
             <h3>👥 연결 관리</h3>
             <input type="text" id="friendInput" class="input-box" placeholder="상대 ID 입력">
-            <button class="btn-white" style="background:#2563eb; color:white;">연결 추가하기</button>
+            <button class="btn-white" style="background:#2563eb; color:white;" onclick="window.handleAddFriend()">연결 추가하기</button>
         </div>
-        <button class="btn-white" onclick="window.hideSettings()">닫기</button>
+        <button class="btn-white" onclick="window.handleSettingsHide()">닫기</button>
     </div>
 
     <script type="module">
@@ -178,8 +169,8 @@
         let isTracking = false;
         let watchId = null;
 
-        // [연결 복구] 윈도우 객체에 함수 할당
-        window.toggleMode = function() {
+        // [핵심 해결] 전역 함수 강제 연결
+        window.handleModeToggle = function() {
             currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
             document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? '구조 요청 모드' : '가족 보호 모드';
             document.getElementById('senderScreen').classList.toggle('active');
@@ -189,9 +180,20 @@
             }
         };
 
-        window.showSettings = () => document.getElementById('settingsOverlay').classList.add('active');
-        window.hideSettings = () => document.getElementById('settingsOverlay').classList.remove('active');
+        window.handleSettingsShow = () => document.getElementById('settingsOverlay').classList.add('active');
+        window.handleSettingsHide = () => document.getElementById('settingsOverlay').classList.remove('active');
+        window.handleAddFriend = () => {
+            const input = document.getElementById('friendInput');
+            if(input.value) {
+                let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
+                list.push(input.value.toUpperCase());
+                localStorage.setItem('friendList_RCV', JSON.stringify(list));
+                input.value = '';
+                alert('가족이 등록되었습니다!');
+            }
+        };
 
+        // 발신 로직
         document.getElementById('sosBtn').onclick = function() {
             if(!isTracking) {
                 isTracking = true;
@@ -204,7 +206,7 @@
                         let addr = (status === kakao.maps.services.Status.OK) ? res[0].address.address_name : '위치 파악 중';
                         set(ref(db, 'emergency_global'), { sender: myID, lat, lon, address: addr, time: new Date().toLocaleTimeString() });
                     });
-                });
+                }, null, { enableHighAccuracy: true });
             } else {
                 isTracking = false;
                 navigator.geolocation.clearWatch(watchId);
@@ -214,10 +216,11 @@
             }
         };
 
+        // 수신 및 지도
         const map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
         const marker = new kakao.maps.Marker({ position: map.getCenter() });
         marker.setMap(map);
-        window.kakaoMap = map; window.marker = marker;
+        window.kakaoMap = map;
 
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         siren.loop = true;
