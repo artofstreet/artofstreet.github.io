@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>블랙아웃 가디언 V19.6 - Original</title>
+    <title>블랙아웃 가디언 V20.0 - Final</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -36,7 +36,7 @@
             color: white; 
         }
         
-        /* ========== 상단 헤더 (절대 건드리지 말 것!) ========== */
+        /* ========== 상단 헤더 ========== */
         .top-header { 
             position: fixed; 
             top: 0; 
@@ -136,17 +136,17 @@
             margin: 40px 0;
         }
         
-        /* ========== ⭐ 오리지널 띠: 날카로운 두 가지 색 선 (노란색 + 보라/빨강) ========== */
+        /* ========== 🎯 C자형 터진 고리 (4분의 1 뚫림) ========== */
         .radar-ring {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
             pointer-events: none;
-            animation: spin-clean 2s linear infinite;
+            animation: spin-ring 2s linear infinite;
         }
         
-        /* 얇고 선명한 두 가지 색 띠 */
+        /* C자형 고리 (270도만 표시, 90도는 투명) */
         .radar-ring::before {
             content: '';
             position: absolute;
@@ -157,10 +157,16 @@
             border-radius: 50%;
             background: conic-gradient(
                 from 0deg,
-                #ffd700 0deg,
-                #ffd700 180deg,
-                #b82bf2 180deg,
-                #b82bf2 360deg
+                transparent 0deg,
+                transparent 45deg,
+                #ff0844 45deg,
+                #ff0844 135deg,
+                #ffcc00 135deg,
+                #ffcc00 225deg,
+                #ff0844 225deg,
+                #ff0844 315deg,
+                transparent 315deg,
+                transparent 360deg
             );
         }
         
@@ -176,12 +182,12 @@
             border-radius: 50%;
         }
         
-        @keyframes spin-clean { 
+        @keyframes spin-ring { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         }
         
-        /* ========== SOS 버튼 (절대 건드리지 말 것!) ========== */
+        /* ========== SOS 버튼 ========== */
         .btn-emergency { 
             width: 260px; 
             height: 260px; 
@@ -217,7 +223,6 @@
             50% { transform: scale(1.05); } 
         }
         
-        /* ========== SOS 텍스트 (절대 건드리지 말 것!) ========== */
         .sos-text {
             font-size: 72px;
             font-weight: 900;
@@ -460,7 +465,7 @@
 </head>
 <body>
 
-    <!-- ========== 상단 헤더 (절대 건드리지 말 것!) ========== -->
+    <!-- ========== 상단 헤더 ========== -->
     <div class="top-header">
         <div class="settings-btn" onclick="showSettings()">⚙️</div>
         <div class="header-title" id="headerTitle">구조 요청 모드</div>
@@ -470,7 +475,7 @@
     <!-- ========== 발신 화면 ========== -->
     <div id="senderScreen" class="app-screen active">
         <div class="radar-container">
-            <!-- 오리지널 띠: 노란색 + 보라색, 얇고 선명 -->
+            <!-- C자형 터진 고리 (90도 뚫림) -->
             <div class="radar-ring"></div>
             
             <button id="emergencyBtn" class="btn-emergency">
