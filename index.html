@@ -107,7 +107,7 @@
         <div class="icon-btn" id="modeToggleBtn" onclick="handleModeToggle()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M7 16l-4-4 4-4M3 12h18M17 8l4 4-4 4"/></svg>
         </div>
-        <div class="header-title" id="headerTitle">구조 요청 모드</div>
+        <div class="header-title" id="headerTitle">SOS 요청 모드</div>
         <div class="icon-btn" id="settingsBtn" onclick="handleSettingsShow()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
@@ -127,7 +127,7 @@
     </main>
 
     <main id="receiverScreen" class="app-screen">
-        <h1 class="receiver-title">가족 보호 센터</h1>
+        <h1 class="receiver-title">SOS 지원 모드</h1>
         <div id="map"></div>
         <div class="status-card">
             <p id="recvStatus" style="font-size: 18px;">가족의 신호를 기다리는 중...</p>
@@ -160,7 +160,7 @@
         // 전역 함수들
         function handleModeToggle() {
             currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
-            document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? '구조 요청 모드' : '가족 보호 모드';
+            document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? 'SOS 요청 모드' : 'SOS 지원 모드';
             document.getElementById('senderScreen').classList.toggle('active');
             document.getElementById('receiverScreen').classList.toggle('active');
             if (currentMode === 'receiver') {
@@ -229,7 +229,7 @@
                     const pos = new kakao.maps.LatLng(data.lat, data.lon);
                     map.setCenter(pos); 
                     marker.setPosition(pos);
-                    document.getElementById('recvStatus').innerHTML = `🚨 <strong>${data.sender}</strong>님 구조 요청!<br>위치: ${data.address}`;
+                    document.getElementById('recvStatus').innerHTML = `🚨 <strong>${data.sender}</strong>님 SOS 요청!<br>위치: ${data.address}`;
                     if(sirenReady) siren.play();
                     document.getElementById('receiverScreen').classList.add('emergency');
                     document.getElementById('stopSiren').style.display = "block";
