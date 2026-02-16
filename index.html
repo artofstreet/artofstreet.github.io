@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>ArtOfStreet 안전지대 V20.7 - Sreusama Edition</title>
+    <title>ArtOfStreet 안전지대 V20.8 - Sreusama Edition</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -20,6 +20,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             -webkit-user-select: none; 
             user-select: none; 
+            -webkit-touch-callout: none; 
             -webkit-tap-highlight-color: transparent; 
             outline: none !important; 
         }
@@ -35,7 +36,7 @@
             color: white; 
         }
         
-        /* ========== 상단 헤더 (완벽 대칭) ========== */
+        /* ========== 상단 헤더 ========== */
         .top-header { 
             position: fixed; 
             top: 0; 
@@ -52,22 +53,23 @@
         }
         
         .header-title {
-            font-size: 24px;
+            font-size: 26px;
             font-weight: 900;
             color: white;
             letter-spacing: 1px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         
-        .settings-btn, .mode-toggle-btn { 
+        .settings-btn { 
             position: absolute; 
             top: 20px; 
-            width: 55px; 
+            left: 20px;
+            width: 60px; 
             height: 40px; 
             background: rgba(255,255,255,0.15); 
             border: 2px solid rgba(255,255,255,0.3); 
             border-radius: 12px; 
-            font-size: 20px; 
+            font-size: 22px; 
             cursor: pointer; 
             transition: all 0.3s ease;
             display: flex;
@@ -75,9 +77,32 @@
             justify-content: center;
             backdrop-filter: blur(10px);
         }
-        .settings-btn { left: 20px; }
-        .mode-toggle-btn { right: 20px; }
-        .settings-btn:active, .mode-toggle-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.25); }
+        .settings-btn:active { 
+            transform: scale(0.9); 
+            background: rgba(255,255,255,0.25); 
+        }
+        
+        .mode-toggle-btn { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px;
+            width: 60px; 
+            height: 40px; 
+            background: rgba(255,255,255,0.15); 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            backdrop-filter: blur(10px);
+        }
+        .mode-toggle-btn:active { 
+            transform: scale(0.9); 
+            background: rgba(255,255,255,0.25); 
+        }
         
         /* ========== 메인 화면 ========== */
         .app-screen { 
@@ -93,32 +118,32 @@
         .app-screen.active { display: flex; }
         
         #senderScreen { 
-            background: #0f172a !important; 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
             flex-direction: column; 
             align-items: center; 
             justify-content: center; 
             padding: 20px; 
         }
         
-        /* ========== ⚡ 레이더 컨테이너: 띠와 버튼의 '초밀착' 설계 ========== */
+        /* ========== ⚡ 레이더 컨테이너: 스르사마 특별판 디자인 적용 ========== */
         .radar-container { 
             position: relative; 
-            width: 285px; /* 띠의 크기 */
+            width: 285px; 
             height: 285px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
-            margin-bottom: 30px;
+            margin: 40px 0;
         }
         
-        /* 4분의 1이 터진 3색 형광 띠 (보라-빨강-노랑) */
+        /* 형광 3색 얇은 실선 (보라-빨강-노랑) */
         .radar-ring {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
             pointer-events: none;
-            animation: spin-ring 1.5s linear infinite; /* 속도감 있는 회전 */
+            animation: spin-ring 1.5s linear infinite;
         }
         
         .radar-ring::before {
@@ -129,15 +154,15 @@
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg,
-                transparent 90deg,     /* 1/4 터진 공간 */
-                #FF00FF 90deg,         /* 밝은 형광 보라 */
+                transparent 90deg,
+                #FF00FF 90deg,
                 #FF00FF 180deg,
-                #FF0000 180deg,        /* 밝은 형광 빨강 */
+                #FF0000 180deg,
                 #FF0000 270deg,
-                #FFFF00 270deg,        /* 밝은 형광 노랑 */
+                #FFFF00 270deg,
                 #FFFF00 360deg
             );
-            mask: radial-gradient(transparent 68%, black 70%); /* 얇고 날카로운 선 */
+            mask: radial-gradient(transparent 68%, black 70%);
             -webkit-mask: radial-gradient(transparent 68%, black 70%);
         }
         
@@ -146,9 +171,9 @@
             100% { transform: rotate(360deg); } 
         }
         
-        /* ========== 🔴 밝고 쨍한 빨강 SOS 버튼 (완벽 중앙) ========== */
+        /* ========== 🔴 밝고 쨍한 빨강 SOS 버튼 (완벽 중앙 정렬) ========== */
         .btn-emergency { 
-            width: 255px; /* 띠와 거의 밀착된 크기 */
+            width: 255px; 
             height: 255px; 
             background: radial-gradient(circle, #FF4444 0%, #FF0000 100%); 
             border-radius: 50%; 
@@ -158,209 +183,17 @@
             cursor: pointer; 
             z-index: 10; 
             transition: all 0.2s ease; 
+            touch-action: manipulation;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center; /* 텍스트 정중앙 정렬 */
+            justify-content: center;
             padding: 0;
         }
         
-        .btn-emergency:active { transform: scale(0.95); box-shadow: 0 0 50px rgba(255, 0, 0, 0.8); }
-        .btn-emergency.tracking { animation: pulse-red 1s infinite alternate; }
-        
-        @keyframes pulse-red {
-            from { box-shadow: 0 0 20px rgba(255,0,0,0.5); }
-            to { box-shadow: 0 0 60px rgba(255,0,0,0.9); }
+        .btn-emergency:active { 
+            transform: scale(0.95); 
+            box-shadow: 0 0 50px rgba(255, 0, 0, 0.8); 
         }
         
-        .sos-text {
-            font-size: 68px;
-            font-weight: 900;
-            letter-spacing: 4px;
-            line-height: 1;
-            margin-bottom: 5px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.4);
-        }
-        
-        .request-text {
-            font-size: 24px;
-            font-weight: 700;
-            opacity: 0.95;
-            letter-spacing: 1px;
-        }
-        
-        #statusMsg { font-size: 18px; color: #94a3b8; font-weight: 600; text-align: center; margin-top: 10px; }
-        .tracking-badge { background: #ef4444; padding: 10px 20px; border-radius: 20px; font-weight: bold; margin-top: 15px; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
-
-        /* ========== 나머지 화면 스타일 (수신/설정) ========== */
-        #receiverScreen { background: #064e3b !important; flex-direction: column; align-items: center; padding: 20px; }
-        #receiverScreen.emergency { background: #7f1d1d !important; }
-        .receiver-title { font-size: 28px; margin: 20px 0; font-weight: 900; }
-        #map { width: 100%; height: 350px; border-radius: 20px; border: 3px solid rgba(255,255,255,0.2); margin-bottom: 20px; }
-        .btn-box { width: 100%; padding: 18px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 12px; margin-bottom: 10px; font-size: 18px; font-weight: bold; }
-        .emergency-card { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 20px; width: 100%; backdrop-filter: blur(10px); border: 2px solid #ef4444; }
-        
-        .settings-screen { display: none; position: absolute; top: 80px; left: 0; width: 100%; height: calc(100% - 80px); padding: 20px; z-index: 8888; background: #0f172a; overflow-y: auto; }
-        .settings-screen.active { display: block; }
-        .card { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1); }
-        .id-text { font-size: 32px; color: #3b82f6; font-weight: 900; text-align: center; padding: 10px; }
-        .input-box { width: 100%; padding: 15px; border-radius: 10px; border: none; background: rgba(255,255,255,0.1); color: white; font-size: 20px; margin-bottom: 10px; text-align: center; }
-        .btn-add { width: 100%; padding: 15px; background: #3b82f6; border: none; color: white; border-radius: 10px; font-weight: bold; font-size: 18px; }
-        .friend-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; margin-bottom: 8px; }
-        .btn-delete { background: #ef4444; border: none; color: white; padding: 5px 12px; border-radius: 5px; cursor: pointer; }
-    </style>
-</head>
-<body>
-
-    <div class="top-header">
-        <div class="settings-btn" onclick="showSettings()">⚙️</div>
-        <div class="header-title" id="headerTitle">구조 요청 모드</div>
-        <div class="mode-toggle-btn" onclick="toggleMode()">⇄</div>
-    </div>
-
-    <div id="senderScreen" class="app-screen active">
-        <div class="radar-container">
-            <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">
-                <div class="sos-text">SOS</div>
-                <div class="request-text">구조요청</div>
-            </button>
-        </div>
-        <p id="statusMsg">버튼을 눌러주세요</p>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 위치 추적 중</div>
-    </div>
-
-    <div id="receiverScreen" class="app-screen">
-        <h1 id="receiverTitle" class="receiver-title">✅ 안전 확인 중</h1>
-        <div id="map"></div>
-        <div id="emergencyCard" class="emergency-card" style="display:none;">
-            <p id="friendName" style="font-size:22px; font-weight:bold; color:#ef4444;">🚨 긴급 상황!</p>
-            <p id="address" style="margin:10px 0;"></p>
-            <a href="#" id="mapLink" class="btn-add" style="display:block; text-align:center; text-decoration:none; background:#ef4444;">카카오맵 열기</a>
-        </div>
-        <button id="soundBtn" class="btn-box" style="margin-top:20px; background:#10b981;">🔊 수신 대기 시작</button>
-    </div>
-
-    <div id="senderSettings" class="settings-screen">
-        <div class="card">
-            <p>내 ID</p>
-            <div id="senderId" class="id-text">로딩중...</div>
-        </div>
-        <div class="card">
-            <input type="text" id="senderFriendInput" class="input-box" placeholder="친구 ID 입력">
-            <button class="btn-add" onclick="addSenderFriend()">친구 추가</button>
-        </div>
-        <div id="senderFriendList"></div>
-        <button class="btn-box" onclick="hideSettings()">닫기</button>
-    </div>
-
-    <div id="receiverSettings" class="settings-screen">
-        <div class="card">
-            <p>내 ID</p>
-            <div id="receiverId" class="id-text">로딩중...</div>
-        </div>
-        <div class="card">
-            <input type="text" id="receiverFriendInput" class="input-box" placeholder="친구 ID 입력">
-            <button class="btn-add" onclick="addReceiverFriend()">친구 추가</button>
-        </div>
-        <div id="receiverFriendList"></div>
-        <button class="btn-box" onclick="hideSettings()">닫기</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, serverTimestamp, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const geocoder = new kakao.maps.services.Geocoder();
-
-        // --- ID 및 모드 관리 ---
-        let senderId = localStorage.getItem('safeZoneID_SND') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        localStorage.setItem('safeZoneID_SND', senderId);
-        document.getElementById('senderId').innerText = senderId;
-
-        let receiverId = localStorage.getItem('safeZoneID_RCV') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        localStorage.setItem('safeZoneID_RCV', receiverId);
-        document.getElementById('receiverId').innerText = receiverId;
-
-        let currentMode = localStorage.getItem('currentMode') || 'sender';
-
-        window.toggleMode = function() {
-            currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
-            localStorage.setItem('currentMode', currentMode);
-            location.reload();
-        };
-
-        window.showSettings = function() {
-            const id = (currentMode === 'sender') ? 'senderSettings' : 'receiverSettings';
-            document.getElementById(id).classList.add('active');
-        };
-
-        window.hideSettings = function() {
-            document.querySelectorAll('.settings-screen').forEach(s => s.classList.remove('active'));
-        };
-
-        // --- 발신 로직 ---
-        let watchId = null;
-        const emergencyBtn = document.getElementById('emergencyBtn');
-
-        emergencyBtn.onclick = function() {
-            if (!watchId) {
-                startTracking();
-            } else {
-                stopTracking();
-            }
-        };
-
-        function startTracking() {
-            emergencyBtn.classList.add('tracking');
-            document.getElementById('trackingBadge').style.display = 'block';
-            document.getElementById('statusMsg').innerText = "📍 신호 전송 중...";
-            
-            watchId = navigator.geolocation.watchPosition(pos => {
-                const lat = pos.coords.latitude;
-                const lon = pos.coords.longitude;
-                
-                geocoder.coord2Address(lon, lat, (result, status) => {
-                    const addr = (status === kakao.maps.services.Status.OK) ? result[0].address.address_name : "위치 확인 중";
-                    set(ref(db, 'emergency_global'), {
-                        sender: senderId,
-                        address: addr,
-                        lat: lat, lon: lon,
-                        mapUrl: `https://map.kakao.com/link/map/구조요청,${lat},${lon}`,
-                        timestamp: serverTimestamp()
-                    });
-                    document.getElementById('statusMsg').innerText = "✅ " + addr;
-                });
-            }, err => {}, { enableHighAccuracy: true });
-        }
-
-        function stopTracking() {
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            watchId = null;
-            remove(ref(db, 'emergency_global'));
-            emergencyBtn.classList.remove('tracking');
-            document.getElementById('trackingBadge').style.display = 'none';
-            document.getElementById('statusMsg').innerText = "버튼을 눌러주세요";
-        }
-
-        // --- 초기 로드 ---
-        window.onload = () => {
-            if (currentMode === 'receiver') {
-                document.getElementById('headerTitle').innerText = '가족 보호 모드';
-                document.getElementById('senderScreen').classList.remove('active');
-                document.getElementById('receiverScreen').classList.add('active');
-            }
-        };
-    </script>
-</body>
-</html>
+        .btn-emergency.tracking
