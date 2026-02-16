@@ -104,7 +104,7 @@
         </div>
         <div class="header-title" id="headerTitle">구조 요청 모드</div>
         <div class="icon-btn" onclick="window.showSettings()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 a2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
     </header>
 
@@ -116,8 +116,7 @@
                 <div class="sos-sub">구조요청</div>
             </div>
         </div>
-        <div id="statusMsg" style="color:#94a3b8">대기 중</div>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중</div>
+        <div id="statusMsg"></div> <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중</div>
     </main>
 
     <main id="receiverScreen" class="app-screen">
@@ -146,7 +145,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        import { getDatabase, ref, set, remove, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
@@ -158,7 +157,6 @@
         const db = getDatabase(app);
         const geocoder = new kakao.maps.services.Geocoder();
 
-        // 전역 변수 설정
         let myID = localStorage.getItem('safeZoneID_V19') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
         localStorage.setItem('safeZoneID_V19', myID);
         document.getElementById('myIdText').innerText = myID;
@@ -167,33 +165,34 @@
         let isTracking = false;
         let watchId = null;
 
-        // [핵심] 윈도우 객체에 함수 연결 (버튼 클릭 작동 보장)
+        // [수정 핵심] 모든 기능을 window 객체에 연결하여 클릭 작동 보장
         window.toggleMode = function() {
             currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
             document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? '구조 요청 모드' : '가족 보호 모드';
             document.getElementById('senderScreen').classList.toggle('active');
             document.getElementById('receiverScreen').classList.toggle('active');
             if (currentMode === 'receiver') {
-                setTimeout(() => { map.relayout(); }, 300);
-                startListening();
+                setTimeout(() => { map.relayout(); startListening(); }, 300);
             }
         };
 
         window.showSettings = () => document.getElementById('settingsOverlay').classList.add('active');
         window.hideSettings = () => document.getElementById('settingsOverlay').classList.remove('active');
 
-        // 발신 버튼 로직
+        // 발신 버튼
         document.getElementById('sosBtn').onclick = function() {
             if(!isTracking) {
                 isTracking = true;
                 this.parentElement.classList.add('tracking');
                 document.getElementById('trackingBadge').style.display = 'block';
-                document.getElementById('statusMsg').innerText = "📍 긴급 신호 발신 중...";
                 if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
 
                 watchId = navigator.geolocation.watchPosition(pos => {
                     const lat = pos.coords.latitude, lon = pos.coords.longitude;
-                    set(ref(db, 'emergency_global'), { sender: myID, lat, lon, time: new Date().toLocaleTimeString() });
+                    geocoder.coord2Address(lon, lat, (res, status) => {
+                        let addr = (status === kakao.maps.services.Status.OK) ? res[0].address.address_name : '위치 확인 중';
+                        set(ref(db, 'emergency_global'), { sender: myID, lat, lon, address: addr, time: new Date().toLocaleTimeString() });
+                    });
                 });
             } else {
                 isTracking = false;
@@ -201,15 +200,15 @@
                 remove(ref(db, 'emergency_global'));
                 this.parentElement.classList.remove('tracking');
                 document.getElementById('trackingBadge').style.display = 'none';
-                document.getElementById('statusMsg').innerText = "대기 중";
+                document.getElementById('statusMsg').innerText = "";
             }
         };
 
-        // 수신 및 지도 로직
+        // 수신 및 지도
         const map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
         const marker = new kakao.maps.Marker({ position: map.getCenter() });
         marker.setMap(map);
-        window.kakaoMap = map; window.marker = marker;
+        window.kakaoMap = map;
 
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         siren.loop = true;
@@ -238,7 +237,7 @@
         function hideEmergency() {
             siren.pause();
             document.getElementById('receiverScreen').classList.remove('emergency');
-            document.getElementById('receiverTitle').innerText = "✅ 현재 안전합니다";
+            document.getElementById('receiverTitle').innerText = "가족 보호 센터";
             document.getElementById('recvStatus').innerText = "가족의 신호를 기다리는 중...";
             document.getElementById('stopSiren').style.display = "none";
         }
