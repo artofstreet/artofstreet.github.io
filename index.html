@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>블랙아웃 가디언 V19.3 - 긴급 수정판</title>
+    <title>블랙아웃 가디언 V19.4 - 엇갈린 띠</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -36,7 +36,7 @@
             color: white; 
         }
         
-        /* ========== 상단 헤더 (깊은 파란색) ========== */
+        /* ========== 상단 헤더 ========== */
         .top-header { 
             position: fixed; 
             top: 0; 
@@ -60,12 +60,10 @@
             text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         
-        /* ========== ⚙️ 설정 버튼 (좌측) - 완전 대칭! ========== */
         .settings-btn { 
             position: absolute; 
             top: 20px; 
             left: 20px;
-            /* ✅ 모드 전환 버튼과 동일한 크기! */
             width: 60px; 
             height: 40px; 
             background: rgba(255,255,255,0.15); 
@@ -84,12 +82,10 @@
             background: rgba(255,255,255,0.25); 
         }
         
-        /* ========== ⇄ 모드 전환 버튼 (우측) - 완전 대칭! ========== */
         .mode-toggle-btn { 
             position: absolute; 
             top: 20px; 
             right: 20px;
-            /* ✅ 설정 버튼과 동일한 크기! */
             width: 60px; 
             height: 40px; 
             background: rgba(255,255,255,0.15); 
@@ -140,65 +136,111 @@
             margin: 40px 0;
         }
         
-        /* ========== 🌈 무지개 네온 띠 (필수!) - 완전 복구! ========== */
-        .radar-ring { 
-            position: absolute; 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 50%; 
+        /* ========== 🌈 엇갈린 무지개 띠 3개 (Staggered Arcs) ========== */
+        .radar-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
-            animation: spin-ring 3s linear infinite;
         }
         
-        /* 무지개 띠를 ::before로 구현 */
+        /* 첫 번째 호 (Arc 1) */
         .radar-ring::before {
             content: '';
             position: absolute;
-            top: -8px;
-            left: -8px;
-            right: -8px;
-            bottom: -8px;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
             border-radius: 50%;
             background: conic-gradient(
                 from 0deg,
-                #ff0000 0deg,
-                #ff7f00 51deg,
-                #ffff00 102deg,
-                #00ff00 153deg,
-                #0000ff 204deg,
-                #4b0082 255deg,
-                #9400d3 306deg,
-                #ff0000 360deg
+                transparent 0deg,
+                transparent 20deg,
+                #ff0000 30deg,
+                #ff7f00 50deg,
+                #ffff00 70deg,
+                #00ff00 90deg,
+                rgba(0, 255, 0, 0.5) 110deg,
+                transparent 120deg,
+                transparent 360deg
             );
-            animation: pulse-glow 2s ease-in-out infinite;
+            animation: spin-arc1 4s linear infinite;
+            filter: blur(2px) brightness(1.3);
         }
         
-        /* 안쪽을 투명하게 만들어 띠 모양으로 */
+        /* 두 번째 호 (Arc 2) */
         .radar-ring::after {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
             border-radius: 50%;
+            background: conic-gradient(
+                from 120deg,
+                transparent 0deg,
+                transparent 20deg,
+                #0000ff 30deg,
+                #4b0082 50deg,
+                #9400d3 70deg,
+                #ff0000 90deg,
+                rgba(255, 0, 0, 0.5) 110deg,
+                transparent 120deg,
+                transparent 360deg
+            );
+            animation: spin-arc2 4s linear infinite;
+            animation-delay: -1.33s;
+            filter: blur(2px) brightness(1.3);
         }
         
-        @keyframes spin-ring { 
+        /* 세 번째 호 (Arc 3) - 별도 엘리먼트 필요 */
+        .radar-ring-extra {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .radar-ring-extra::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 240deg,
+                transparent 0deg,
+                transparent 20deg,
+                #ffff00 30deg,
+                #00ff00 50deg,
+                #0000ff 70deg,
+                #9400d3 90deg,
+                rgba(148, 0, 211, 0.5) 110deg,
+                transparent 120deg,
+                transparent 360deg
+            );
+            animation: spin-arc3 4s linear infinite;
+            animation-delay: -2.67s;
+            filter: blur(2px) brightness(1.3);
+        }
+        
+        @keyframes spin-arc1 { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         }
         
-        @keyframes pulse-glow { 
-            0%, 100% { 
-                opacity: 1; 
-                filter: blur(2px) brightness(1.2);
-            } 
-            50% { 
-                opacity: 0.8; 
-                filter: blur(3px) brightness(1.5);
-            } 
+        @keyframes spin-arc2 { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        @keyframes spin-arc3 { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
         }
         
         /* ========== SOS 버튼 ========== */
@@ -237,7 +279,6 @@
             50% { transform: scale(1.05); } 
         }
         
-        /* ========== SOS 텍스트 ========== */
         .sos-text {
             font-size: 72px;
             font-weight: 900;
@@ -490,7 +531,10 @@
     <!-- ========== 발신 화면 ========== -->
     <div id="senderScreen" class="app-screen active">
         <div class="radar-container">
+            <!-- 엇갈린 무지개 띠 3개 -->
             <div class="radar-ring"></div>
+            <div class="radar-ring-extra"></div>
+            
             <button id="emergencyBtn" class="btn-emergency">
                 <div class="sos-text">SOS</div>
                 <div class="request-text">구조요청</div>
