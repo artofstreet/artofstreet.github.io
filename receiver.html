@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="ko" style="background: #2b2b85;">
+<html lang="ko" style="background: #0f172a;">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#2b2b85">
-    <title>블랙아웃 가디언 V18.1 (즉각 진동)</title>
+    <meta name="theme-color" content="#1e3a8a">
+    <title>블랙아웃 가디언 V19.1 - Premium Edition</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,97 +13,483 @@
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; outline: none !important; }
-        html, body { width: 100%; height: 100%; overflow: hidden; position: fixed; touch-action: manipulation; }
-        body { background: #2b2b85 !important; color: white; }
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            -webkit-user-select: none; 
+            user-select: none; 
+            -webkit-touch-callout: none; 
+            -webkit-tap-highlight-color: transparent; 
+            outline: none !important; 
+        }
+        html, body { 
+            width: 100%; 
+            height: 100%; 
+            overflow: hidden; 
+            position: fixed; 
+            touch-action: manipulation; 
+        }
+        body { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
+            color: white; 
+        }
         
-        .mode-toggle { position: fixed; top: 0; left: 0; right: 0; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; cursor: pointer; z-index: 9999; box-shadow: 0 4px 15px rgba(0,0,0,0.3); transition: all 0.2s; border: none; }
-        .mode-toggle.sender { background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%); color: #2b2b85; }
-        .mode-toggle.receiver { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); color: white; }
-        .mode-toggle:active { transform: scale(0.96); }
+        /* ========== 상단 헤더 (깊은 파란색) ========== */
+        .top-header { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            height: 80px; 
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 3px solid rgba(255,255,255,0.1);
+        }
         
-        .app-screen { display: none; width: 100%; height: calc(100% - 100px); position: absolute; top: 100px; left: 0; overflow-y: auto; touch-action: pan-y; }
+        .header-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        /* ========== 모드 전환 버튼 (우측 상단) ========== */
+        .mode-toggle-btn { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px;
+            width: 60px; 
+            height: 40px; 
+            background: rgba(255,255,255,0.15); 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 12px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            backdrop-filter: blur(10px);
+        }
+        .mode-toggle-btn:active { 
+            transform: scale(0.9); 
+            background: rgba(255,255,255,0.25); 
+        }
+        
+        /* ========== 설정 버튼 (좌측 상단) ========== */
+        .settings-btn { 
+            position: absolute; 
+            top: 20px; 
+            right: 20px; 
+            width: 40px; 
+            height: 40px; 
+            background: rgba(255,255,255,0.15); 
+            border: 2px solid rgba(255,255,255,0.3); 
+            border-radius: 12px; 
+            font-size: 22px; 
+            cursor: pointer; 
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+        .settings-btn:active { 
+            transform: scale(0.85); 
+            background: rgba(255,255,255,0.25); 
+        }
+        
+        /* ========== 메인 화면 ========== */
+        .app-screen { 
+            display: none; 
+            width: 100%; 
+            height: calc(100% - 80px); 
+            position: absolute; 
+            top: 80px; 
+            left: 0; 
+            overflow-y: auto; 
+            touch-action: pan-y; 
+        }
         .app-screen.active { display: flex; }
         
-        #senderScreen { background: #2b2b85 !important; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .gear-btn { position: absolute; top: 20px; right: 20px; width: 50px; height: 50px; background: rgba(255,255,255,0.2); border: none; border-radius: 50%; font-size: 26px; cursor: pointer; z-index: 999; transition: all 0.2s; }
-        .gear-btn:active { transform: scale(0.85); background: rgba(255,255,255,0.5); }
+        #senderScreen { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 20px; 
+        }
         
-        .radar-container { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; }
-        .radar-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 5px solid transparent; border-top-color: #ffd700; border-bottom-color: #b82bf2; border-left-color: #ff4757; animation: spin 2s linear infinite; pointer-events: none; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        /* ========== 레이더 컨테이너 ========== */
+        .radar-container { 
+            position: relative; 
+            width: 300px; 
+            height: 300px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            margin: 40px 0;
+        }
         
-        .btn-emergency { width: 240px; height: 240px; background: #f90b3e; border-radius: 50%; border: none; color: white; font-size: 42px; font-weight: 900; letter-spacing: 3px; box-shadow: 0 12px 35px rgba(249, 11, 62, 0.6); cursor: pointer; z-index: 10; transition: all 0.15s ease; touch-action: manipulation; }
-        .btn-emergency:active { transform: scale(0.85); background: #c00830; box-shadow: 0 6px 20px rgba(249, 11, 62, 0.9); }
-        .btn-emergency.tracking { background: #ff6b6b; animation: pulse 1.5s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        /* ========== 무지개 네온 띠 (필수!) ========== */
+        .radar-ring { 
+            position: absolute; 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 50%; 
+            border: 6px solid transparent; 
+            animation: rainbow-spin 3s linear infinite, pulse-ring 2s ease-in-out infinite; 
+            pointer-events: none;
+            background: linear-gradient(90deg, 
+                #ff0000 0%, 
+                #ff7f00 14%, 
+                #ffff00 28%, 
+                #00ff00 42%, 
+                #0000ff 57%, 
+                #4b0082 71%, 
+                #9400d3 85%, 
+                #ff0000 100%
+            );
+            background-clip: padding-box;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
         
-        #statusMsg { margin-top: 35px; font-size: 26px; color: #ffd700; font-weight: bold; }
-        .tracking-badge { background: rgba(255,107,107,0.9); padding: 12px 25px; border-radius: 25px; font-size: 24px; margin-top: 20px; display: inline-block; animation: blink 1s infinite; }
+        @keyframes rainbow-spin { 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        @keyframes pulse-ring { 
+            0%, 100% { opacity: 1; transform: scale(1); } 
+            50% { opacity: 0.7; transform: scale(1.05); } 
+        }
+        
+        /* ========== SOS 버튼 ========== */
+        .btn-emergency { 
+            width: 260px; 
+            height: 260px; 
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); 
+            border-radius: 50%; 
+            border: none; 
+            color: white; 
+            box-shadow: 0 12px 40px rgba(220, 38, 38, 0.6), 0 0 80px rgba(220, 38, 38, 0.3); 
+            cursor: pointer; 
+            z-index: 10; 
+            transition: all 0.2s ease; 
+            touch-action: manipulation;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn-emergency:active { 
+            transform: scale(0.9); 
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.8); 
+        }
+        
+        .btn-emergency.tracking { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+            animation: pulse-button 1.5s ease-in-out infinite; 
+        }
+        
+        @keyframes pulse-button { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.05); } 
+        }
+        
+        /* ========== SOS 텍스트 ========== */
+        .sos-text {
+            font-size: 72px;
+            font-weight: 900;
+            color: white;
+            letter-spacing: 8px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            line-height: 1;
+        }
+        
+        .request-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.95);
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+        
+        #statusMsg { 
+            margin-top: 30px; 
+            font-size: 22px; 
+            color: #60a5fa; 
+            font-weight: 600; 
+            text-align: center;
+        }
+        
+        .tracking-badge { 
+            background: rgba(239, 68, 68, 0.9); 
+            padding: 12px 28px; 
+            border-radius: 25px; 
+            font-size: 20px; 
+            margin-top: 20px; 
+            display: inline-block; 
+            animation: blink 1s infinite; 
+            border: 2px solid rgba(255,255,255,0.3);
+        }
         @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         
-        #receiverScreen { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important; flex-direction: column; align-items: center; padding: 20px; }
-        #receiverScreen.emergency { background: linear-gradient(135deg, #ff0844 0%, #ff4757 100%) !important; animation: blink-bg 0.5s infinite alternate; }
-        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.7; } }
+        /* ========== 수신 화면 ========== */
+        #receiverScreen { 
+            background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 20px; 
+        }
+        #receiverScreen.emergency { 
+            background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%) !important; 
+            animation: blink-bg 0.5s infinite alternate; 
+        }
+        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.8; } }
         
-        .receiver-title { font-size: 36px; margin: 25px 0; font-weight: 900; }
-        .btn-box, .btn-white { padding: 22px; width: 90%; max-width: 400px; font-size: 26px; font-weight: bold; border: none; cursor: pointer; transition: all 0.2s; }
-        .btn-box { background: rgba(0,0,0,0.2); color: white; margin: 12px 0; border-radius: 18px; }
-        .btn-white { background: white; color: #11998e; border-radius: 50px; margin-top: 25px; font-weight: 900; }
-        .btn-white:active { transform: scale(0.94); }
+        .receiver-title { 
+            font-size: 32px; 
+            margin: 25px 0; 
+            font-weight: 900; 
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
         
-        #map { width: 100%; max-width: 500px; height: 350px; border-radius: 20px; margin: 20px 0; border: 3px solid rgba(255,255,255,0.3); background: #e0e0e0; }
-        .emergency-card { background: rgba(255,255,255,0.15); padding: 25px; border-radius: 25px; width: 90%; max-width: 400px; margin-top: 25px; }
-        .live-badge { background: #ff4757; padding: 8px 18px; border-radius: 20px; font-size: 20px; display: inline-block; animation: pulse 1.5s infinite; }
+        .btn-box, .btn-white { 
+            padding: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            font-size: 24px; 
+            font-weight: bold; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            border-radius: 15px;
+        }
+        .btn-box { 
+            background: rgba(0,0,0,0.2); 
+            color: white; 
+            margin: 10px 0; 
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .btn-white { 
+            background: white; 
+            color: #047857; 
+            margin-top: 20px; 
+            font-weight: 900;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-white:active { transform: scale(0.95); }
         
-        .settings-screen { display: none; position: absolute; top: 100px; left: 0; width: 100%; height: calc(100% - 100px); padding: 20px; overflow-y: auto; z-index: 8888; }
+        #map { 
+            width: 100%; 
+            max-width: 500px; 
+            height: 350px; 
+            border-radius: 20px; 
+            margin: 20px 0; 
+            border: 3px solid rgba(255,255,255,0.3); 
+            background: #e0e0e0; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        
+        .emergency-card { 
+            background: rgba(255,255,255,0.15); 
+            padding: 25px; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 400px; 
+            margin-top: 25px; 
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .live-badge { 
+            background: #dc2626; 
+            padding: 8px 20px; 
+            border-radius: 20px; 
+            font-size: 18px; 
+            display: inline-block; 
+            animation: pulse-button 1.5s infinite; 
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+        
+        /* ========== 설정 화면 ========== */
+        .settings-screen { 
+            display: none; 
+            position: absolute; 
+            top: 80px; 
+            left: 0; 
+            width: 100%; 
+            height: calc(100% - 80px); 
+            padding: 20px; 
+            overflow-y: auto; 
+            z-index: 8888; 
+        }
         .settings-screen.active { display: block; }
-        .card { background: rgba(255,255,255,0.1); padding: 28px; border-radius: 22px; width: 100%; max-width: 450px; margin: 0 auto 25px; border: 1px solid rgba(255,255,255,0.2); }
-        .section-title { font-size: 26px; margin-bottom: 15px; font-weight: bold; }
-        .id-display { background: rgba(255,215,0,0.2); padding: 18px; border-radius: 18px; margin: 15px 0; text-align: center; }
-        .id-text { font-size: 38px; color: #ffd700; font-weight: 900; letter-spacing: 3px; }
-        .input-box { width: 100%; padding: 18px; border-radius: 15px; border: none; font-size: 26px; margin: 15px 0; text-align: center; }
-        .btn-add { background: #ffd700; color: #2b2b85; padding: 18px; width: 100%; font-size: 26px; font-weight: bold; border-radius: 15px; border: none; cursor: pointer; transition: all 0.2s; }
+        
+        .settings-screen.sender-settings { 
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
+        }
+        .settings-screen.receiver-settings { 
+            background: linear-gradient(135deg, #064e3b 0%, #047857 100%); 
+        }
+        
+        .card { 
+            background: rgba(255,255,255,0.1); 
+            padding: 28px; 
+            border-radius: 20px; 
+            width: 100%; 
+            max-width: 450px; 
+            margin: 0 auto 25px; 
+            border: 2px solid rgba(255,255,255,0.2); 
+            backdrop-filter: blur(10px);
+        }
+        
+        .section-title { 
+            font-size: 24px; 
+            margin-bottom: 15px; 
+            font-weight: bold; 
+        }
+        
+        .id-display { 
+            background: rgba(59, 130, 246, 0.2); 
+            padding: 18px; 
+            border-radius: 15px; 
+            margin: 15px 0; 
+            text-align: center; 
+            border: 2px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .id-text { 
+            font-size: 38px; 
+            color: #60a5fa; 
+            font-weight: 900; 
+            letter-spacing: 4px; 
+        }
+        
+        .input-box { 
+            width: 100%; 
+            padding: 18px; 
+            border-radius: 12px; 
+            border: 2px solid rgba(255,255,255,0.3); 
+            font-size: 24px; 
+            margin: 15px 0; 
+            text-align: center; 
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .btn-add { 
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); 
+            color: white; 
+            padding: 18px; 
+            width: 100%; 
+            font-size: 24px; 
+            font-weight: bold; 
+            border-radius: 12px; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s; 
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+        }
         .btn-add:active { transform: scale(0.96); }
         
-        .friend-item { background: rgba(255,255,255,0.2); padding: 18px 25px; border-radius: 18px; margin: 12px 0; display: flex; justify-content: space-between; align-items: center; font-size: 24px; font-weight: bold; }
-        .btn-delete { background: #ff4757; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 22px; font-weight: bold; transition: all 0.2s; }
+        .friend-item { 
+            background: rgba(255,255,255,0.2); 
+            padding: 18px 25px; 
+            border-radius: 15px; 
+            margin: 12px 0; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 22px; 
+            font-weight: bold; 
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-delete { 
+            background: #dc2626; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            border-radius: 25px; 
+            cursor: pointer; 
+            font-size: 20px; 
+            font-weight: bold; 
+            transition: all 0.2s; 
+        }
         .btn-delete:active { transform: scale(0.88); }
+        
+        .btn-back {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 18px;
+            width: 100%;
+            max-width: 450px;
+            font-size: 22px;
+            font-weight: bold;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin: 20px auto;
+            display: block;
+        }
+        .btn-back:active { transform: scale(0.96); }
     </style>
 </head>
 <body>
 
-    <div id="modeToggle" class="mode-toggle sender">🔄 현재: 구조 요청 모드</div>
+    <!-- ========== 상단 헤더 ========== -->
+    <div class="top-header">
+        <div class="mode-toggle-btn" onclick="toggleMode()">⇄</div>
+        <div class="header-title" id="headerTitle">구조 요청 모드</div>
+        <div class="settings-btn" onclick="showSettings()">⚙️</div>
+    </div>
 
+    <!-- ========== 발신 화면 ========== -->
     <div id="senderScreen" class="app-screen active">
-        <button class="gear-btn" onclick="showSettings('sender')">⚙️</button>
         <div class="radar-container">
             <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">긴급구조</button>
+            <button id="emergencyBtn" class="btn-emergency">
+                <div class="sos-text">SOS</div>
+                <div class="request-text">구조요청</div>
+            </button>
         </div>
         <p id="statusMsg">버튼을 눌러주세요</p>
         <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
     </div>
 
+    <!-- ========== 수신 화면 ========== -->
     <div id="receiverScreen" class="app-screen">
-        <button class="gear-btn" onclick="showSettings('receiver')">⚙️</button>
         <h1 id="receiverTitle" class="receiver-title">✅ 현재 안전합니다</h1>
         <button id="btn1" class="btn-box">대기 중...</button>
         <button id="btn2" class="btn-box">수신 대기 중</button>
         <div id="map"></div>
-        <button id="soundBtn" class="btn-white" style="background:#ff4500; color:white; font-size:28px;">🔊 반드시 눌러주세요!</button>
+        <button id="soundBtn" class="btn-white" style="background:#dc2626; color:white;">🔊 소리 켜기 (필수!)</button>
         <div id="emergencyCard" class="emergency-card" style="display:none;">
             <span class="live-badge">🔴 LIVE</span>
-            <p id="friendName" style="font-size:28px; font-weight:bold; margin:15px 0;"></p>
-            <p id="address" style="font-size:24px; margin:12px 0;"></p>
-            <p id="time" style="font-size:20px; opacity:0.8;"></p>
-            <a href="#" id="mapLink" class="btn-white" style="display:block; background:#ffd700; color:#1e3c72; text-decoration:none; text-align:center; margin-top:20px;" target="_blank">🗺️ 실시간 위치 확인</a>
+            <p id="friendName" style="font-size:26px; font-weight:bold; margin:15px 0;"></p>
+            <p id="address" style="font-size:22px; margin:12px 0;"></p>
+            <p id="time" style="font-size:18px; opacity:0.8;"></p>
+            <a href="#" id="mapLink" class="btn-white" style="display:block; background:#3b82f6; color:white; text-decoration:none; text-align:center; margin-top:20px;" target="_blank">🗺️ 실시간 위치 확인</a>
         </div>
-        <button id="resetBtn" class="btn-white" style="display:none; background:#ff4757; color:white;">상황 종료</button>
+        <button id="resetBtn" class="btn-white" style="display:none; background:#dc2626; color:white;">상황 종료</button>
     </div>
 
-    <div id="senderSettings" class="settings-screen" style="background:#2b2b85;">
-        <h1 style="font-size:36px; margin-bottom:25px; text-align:center; color:white;">발신소 설정</h1>
+    <!-- ========== 발신 설정 화면 ========== -->
+    <div id="senderSettings" class="settings-screen sender-settings">
+        <h1 style="font-size:32px; margin-bottom:25px; text-align:center; color:white; font-weight:900;">발신소 설정</h1>
         <div class="card">
             <p class="section-title" style="color:white;">내 안전 ID</p>
             <div class="id-display"><div class="id-text" id="senderId">로딩중...</div></div>
@@ -115,16 +501,17 @@
         </div>
         <div class="card">
             <p class="section-title" style="color:white;">등록된 친구 목록</p>
-            <p style="background:rgba(255,215,0,0.3); padding:8px 18px; border-radius:18px; font-size:22px; display:inline-block; margin:12px 0; color:white;">
+            <p style="background:rgba(59,130,246,0.3); padding:8px 18px; border-radius:15px; font-size:20px; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(59,130,246,0.3);">
                 <span id="senderCount">0</span>/5명
             </p>
             <div id="senderFriendList"></div>
         </div>
-        <button class="btn-white" style="background:rgba(255,255,255,0.3); color:white;" onclick="hideSettings()">← 돌아가기</button>
+        <button class="btn-back" onclick="hideSettings()">← 돌아가기</button>
     </div>
 
-    <div id="receiverSettings" class="settings-screen" style="background:linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-        <h1 style="font-size:36px; margin-bottom:25px; text-align:center; color:white;">수신소 설정</h1>
+    <!-- ========== 수신 설정 화면 ========== -->
+    <div id="receiverSettings" class="settings-screen receiver-settings">
+        <h1 style="font-size:32px; margin-bottom:25px; text-align:center; color:white; font-weight:900;">수신소 설정</h1>
         <div class="card">
             <p class="section-title" style="color:white;">내 고유 ID</p>
             <div class="id-display"><div class="id-text" id="receiverId">로딩중...</div></div>
@@ -136,12 +523,12 @@
         </div>
         <div class="card">
             <p class="section-title" style="color:white;">등록된 친구 목록</p>
-            <p style="background:rgba(255,215,0,0.3); padding:8px 18px; border-radius:18px; font-size:22px; display:inline-block; margin:12px 0; color:white;">
+            <p style="background:rgba(59,130,246,0.3); padding:8px 18px; border-radius:15px; font-size:20px; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(59,130,246,0.3);">
                 <span id="receiverCount">0</span>/5명
             </p>
             <div id="receiverFriendList"></div>
         </div>
-        <button class="btn-white" onclick="hideSettings()">← 돌아가기</button>
+        <button class="btn-back" onclick="hideSettings()">← 돌아가기</button>
     </div>
 
     <script>
@@ -164,23 +551,21 @@
         let currentMode = localStorage.getItem('currentMode') || 'sender';
         window.startListening = null;
         
-        document.getElementById('modeToggle').onclick = function() {
-            const toggle = document.getElementById('modeToggle');
+        window.toggleMode = function() {
             const senderScreen = document.getElementById('senderScreen');
             const receiverScreen = document.getElementById('receiverScreen');
+            const headerTitle = document.getElementById('headerTitle');
             
             if (currentMode === 'sender') {
                 currentMode = 'receiver';
-                toggle.className = 'mode-toggle receiver'; 
-                toggle.innerText = '🔄 현재: 가족 보호 모드';
+                headerTitle.innerText = '가족 보호 모드';
                 senderScreen.classList.remove('active'); 
                 receiverScreen.classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
                 setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
             } else {
                 currentMode = 'sender';
-                toggle.className = 'mode-toggle sender'; 
-                toggle.innerText = '🔄 현재: 구조 요청 모드';
+                headerTitle.innerText = '구조 요청 모드';
                 receiverScreen.classList.remove('active'); 
                 senderScreen.classList.add('active');
             }
@@ -189,8 +574,7 @@
         
         window.addEventListener('load', () => {
             if (currentMode === 'receiver') {
-                document.getElementById('modeToggle').className = 'mode-toggle receiver';
-                document.getElementById('modeToggle').innerText = '🔄 현재: 가족 보호 모드';
+                document.getElementById('headerTitle').innerText = '가족 보호 모드';
                 document.getElementById('senderScreen').classList.remove('active');
                 document.getElementById('receiverScreen').classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
@@ -198,8 +582,8 @@
             }
         });
 
-        window.showSettings = function(type) {
-            if (type === 'sender') { 
+        window.showSettings = function() {
+            if (currentMode === 'sender') { 
                 document.getElementById('senderSettings').classList.add('active'); 
                 loadSenderFriends(); 
             } else { 
@@ -243,7 +627,7 @@
             document.getElementById('senderCount').innerText = list.length;
             const cont = document.getElementById('senderFriendList');
             if (list.length === 0) { 
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; color:white;">등록된 친구가 없습니다</p>'; 
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:20px; color:white;">등록된 친구가 없습니다</p>'; 
                 return; 
             }
             cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');
@@ -264,7 +648,6 @@
             input.value = ''; 
             alert('✅ 등록: ' + id); 
             loadReceiverFriends();
-            console.log('친구 추가됨:', id);
             setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
         };
         
@@ -281,7 +664,7 @@
             document.getElementById('receiverCount').innerText = list.length;
             const cont = document.getElementById('receiverFriendList');
             if (list.length === 0) { 
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; color:white;">등록된 친구가 없습니다</p>'; 
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:20px; color:white;">등록된 친구가 없습니다</p>'; 
                 return; 
             }
             cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');
@@ -309,29 +692,14 @@
         const trackingBadge = document.getElementById('trackingBadge');
         const emergencyBtn = document.getElementById('emergencyBtn');
 
-        // ⚡⚡⚡ 0.001초 만에 진동! touchstart 이벤트 ⚡⚡⚡
         emergencyBtn.addEventListener('touchstart', function(e) {
-            console.log('⚡ TOUCHSTART - 손가락 닿음!');
-            
-            // 즉시 진동! (동기 실행)
             if (navigator.vibrate) {
-                const startTime = performance.now();
-                
-                // 강력한 진동 패턴
-                const result = navigator.vibrate([500, 100, 500, 100, 800]);
-                
-                const endTime = performance.now();
-                console.log('🔊 진동 실행:', result ? '성공' : '실패');
-                console.log('⏱️ 실행 시간:', (endTime - startTime).toFixed(2), 'ms');
-            } else {
-                console.log('❌ 진동 API 없음 (iOS)');
+                navigator.vibrate([500, 100, 500, 100, 800]);
             }
         }, { passive: false });
         
-        // 🔴 통신은 click 이벤트에서 처리
         emergencyBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔴 CLICK - 통신 시작!');
             
             if (!window.isTracking) { 
                 startTracking(); 
@@ -347,9 +715,8 @@
                 return; 
             }
             
-            console.log('🚨 긴급 신호 전송:', myID);
-            
             const emergencyRef = ref(db, 'emergency_global');
+            const sendTime = new Date().toLocaleTimeString();
             
             set(emergencyRef, {
                 sender: myID,
@@ -357,19 +724,16 @@
                 lat: 37.5665,
                 lon: 126.9780,
                 mapUrl: 'https://map.kakao.com/',
-                time: new Date().toLocaleString(),
+                time: sendTime,
                 timestamp: serverTimestamp(),
                 status: 'emergency'
             }).then(() => {
                 statusMsg.innerText = "✅ 긴급 신호 전송됨!";
-                console.log('✅ Firebase 전송 성공');
                 
-                // 전송 성공 피드백 진동
                 if (navigator.vibrate) {
                     navigator.vibrate([200, 100, 200]);
                 }
             }).catch(err => {
-                console.error('❌ Firebase 오류:', err);
                 alert('❌ 전송 실패!\n\n' + err.message);
                 return;
             });
@@ -380,7 +744,6 @@
                 (position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
-                    console.log('📍 GPS:', lat, lon);
                     
                     geocoder.coord2Address(lon, lat, (result, status) => {
                         let addr = '주소 확인 불가';
@@ -396,17 +759,15 @@
                             lat: lat,
                             lon: lon,
                             mapUrl: `https://map.kakao.com/link/map/긴급구조,${lat},${lon}`,
-                            time: new Date().toLocaleString(),
+                            time: new Date().toLocaleTimeString(),
                             timestamp: serverTimestamp(),
                             status: 'emergency'
                         });
                         
                         statusMsg.innerText = "✅ " + addr.substring(0, 25) + "...";
-                        console.log('✅ 주소 업데이트:', addr);
                     });
                 },
                 (error) => { 
-                    console.error('⚠️ GPS 오류:', error);
                     statusMsg.innerText = "⚠️ 위치 불가 (신호 전송됨)"; 
                 },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -414,7 +775,6 @@
             
             window.isTracking = true;
             emergencyBtn.classList.add('tracking');
-            emergencyBtn.innerText = "추적중지";
             trackingBadge.style.display = 'inline-block';
         }
         
@@ -425,11 +785,9 @@
             }
             
             remove(ref(db, 'emergency_global'));
-            console.log('🛑 신호 제거');
             
             window.isTracking = false;
             emergencyBtn.classList.remove('tracking');
-            emergencyBtn.innerText = "긴급구조";
             trackingBadge.style.display = 'none';
             statusMsg.innerText = "✅ 추적 종료";
         }
@@ -437,7 +795,6 @@
         window.startTracking = startTracking;
         window.stopTracking = stopTracking;
 
-        // ========== 수신 기능 ==========
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         siren.loop = true;
         siren.volume = 1.0;
@@ -457,84 +814,52 @@
         const soundBtn = document.getElementById('soundBtn');
         
         soundBtn.onclick = function() {
-            console.log('🔊 소리 활성화 클릭');
-            
             siren.play().then(() => {
-                console.log('✅ 사이렌 재생 성공');
                 siren.pause(); 
                 siren.currentTime = 0;
                 sirenReady = true;
                 soundBtn.innerText = "✅ 소리 켜짐!";
-                soundBtn.style.background = '#00ff00';
-                soundBtn.style.color = '#000';
+                soundBtn.style.background = '#10b981';
                 alert('✅ 사이렌 준비 완료!');
             }).catch(e => {
-                console.error('❌ 사이렌 실패:', e);
                 alert('⚠️ 다시 눌러주세요!');
             });
         };
         
         window.startListening = function() {
-            console.log('🔄 수신 대기 시작');
-            
             const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            console.log('👂 대기 중:', friendList);
-            
-            if (friendList.length === 0) {
-                console.log('⚠️ 친구 없음 - 모든 신호 받기');
-            }
             
             const globalRef = ref(db, 'emergency_global');
-            console.log('📡 리스너 등록: emergency_global');
             
             onValue(globalRef, (snap) => {
                 const data = snap.val();
-                console.log('Firebase 데이터:', data);
                 
                 if (!data) {
-                    console.log('데이터 없음');
                     if (currentEmergency) hideEmergency();
                     return;
                 }
                 
                 const senderID = data.sender;
-                console.log('발신자:', senderID);
-                console.log('친구 목록:', friendList);
                 
                 if (friendList.length === 0 || friendList.includes(senderID)) {
-                    console.log('✅ 표시!');
                     showEmergency(senderID, data);
-                } else {
-                    console.log('❌ 친구 아님, 무시');
                 }
-            }, (error) => {
-                console.error('❌ 리스너 오류:', error);
             });
-            
-            console.log('✅ 리스너 활성화');
         };
         
         function showEmergency(fid, data) {
             if (currentEmergency !== fid) {
-                console.log('🚨 긴급 상황:', fid);
-                
-                // 사이렌
                 if (sirenReady) {
-                    console.log('🔊 사이렌 재생');
-                    siren.play().catch(e => console.error('사이렌 오류:', e));
+                    siren.play().catch(e => console.error(e));
                 } else {
-                    console.log('⚠️ 사이렌 준비 안됨!');
-                    alert('🔊 "반드시 눌러주세요!" 버튼을 눌러주세요!');
+                    alert('🔊 "소리 켜기" 버튼을 먼저 눌러주세요!');
                 }
                 
                 currentEmergency = fid;
                 
-                // 진동 (안드로이드만)
                 if(navigator.vibrate) {
-                    console.log('🔊 긴급 진동');
                     navigator.vibrate([300, 100, 300, 100, 300, 100, 600]);
                     setTimeout(() => navigator.vibrate([400, 100, 400, 100, 800]), 1500);
-                    setTimeout(() => navigator.vibrate([500, 100, 500, 100, 1000]), 3000);
                 }
             }
             
@@ -577,10 +902,7 @@
         document.getElementById('resetBtn').onclick = function() {
             remove(ref(db, 'emergency_global'));
             hideEmergency();
-            console.log('🛑 수동 종료');
         };
-        
-        console.log('✅ 시스템 준비 완료');
     </script>
 </body>
 </html>
