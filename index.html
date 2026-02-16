@@ -437,20 +437,45 @@
             border-radius: 20px; 
             width: 100%; 
             max-width: 450px; 
-            margin: 0 auto 25px; 
+            margin: 0 auto 35px; 
             border: 2px solid rgba(255,255,255,0.2); 
             backdrop-filter: blur(10px);
         }
         
+        .btn-copy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 25px;
+            font-size: 22px;
+            font-weight: 900;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            margin-top: 15px;
+            width: 100%;
+        }
+        .btn-copy:active { transform: scale(0.96); }
+        
+        .id-guide-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: #60a5fa;
+            text-align: center;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+        
         .section-title { 
             font-size: 26px; 
-            margin-bottom: 15px; 
+            margin-bottom: 20px; 
             font-weight: 900; 
         }
         
         .id-display { 
             background: rgba(59, 130, 246, 0.2); 
-            padding: 18px; 
+            padding: 20px; 
             border-radius: 15px; 
             margin: 15px 0; 
             text-align: center; 
@@ -466,11 +491,11 @@
         
         .input-box { 
             width: 100%; 
-            padding: 20px; 
+            padding: 22px; 
             border-radius: 12px; 
             border: 2px solid rgba(255,255,255,0.3); 
             font-size: 26px; 
-            margin: 15px 0; 
+            margin: 20px 0; 
             text-align: center; 
             background: rgba(255,255,255,0.1);
             color: white;
@@ -480,7 +505,7 @@
         .btn-add { 
             background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); 
             color: white; 
-            padding: 20px; 
+            padding: 22px; 
             width: 100%; 
             font-size: 26px; 
             font-weight: 900; 
@@ -489,14 +514,15 @@
             cursor: pointer; 
             transition: all 0.2s; 
             box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            margin-top: 10px;
         }
         .btn-add:active { transform: scale(0.96); }
         
         .friend-item { 
             background: rgba(255,255,255,0.2); 
-            padding: 20px 25px; 
+            padding: 22px 28px; 
             border-radius: 15px; 
-            margin: 12px 0; 
+            margin: 18px 0; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -509,7 +535,7 @@
             background: #dc2626; 
             color: white; 
             border: none; 
-            padding: 12px 24px; 
+            padding: 14px 26px; 
             border-radius: 25px; 
             cursor: pointer; 
             font-size: 22px; 
@@ -576,21 +602,23 @@
     <div id="senderSettings" class="settings-screen sender-settings">
         <div class="settings-header">
             <button class="settings-back-btn" onclick="hideSettings()">← 뒤로</button>
-            <div class="settings-title-center">설정</div>
+            <div class="settings-title-center">SOS 요청 설정</div>
             <button class="settings-done-btn" onclick="hideSettings()">완료</button>
         </div>
         <div class="settings-content">
             <div class="card">
                 <p class="section-title" style="color:white;">내 안전 ID</p>
                 <div class="id-display"><div class="id-text" id="senderId">로딩중...</div></div>
+                <button class="btn-copy" onclick="copySenderId()">ID 복사하기</button>
+                <p class="id-guide-text">이 ID를 나를 지켜줄 보호자에게 알려주세요.</p>
             </div>
             <div class="card">
-                <p class="section-title" style="color:white;">👥 친구 등록하기</p>
+                <p class="section-title" style="color:white;">👥 내 보호자 등록</p>
                 <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-                <button class="btn-add" onclick="addSenderFriend()">친구 추가</button>
+                <button class="btn-add" onclick="addSenderFriend()">보호자 추가</button>
             </div>
             <div class="card">
-                <p class="section-title" style="color:white;">등록된 친구 목록</p>
+                <p class="section-title" style="color:white;">등록된 보호자 목록</p>
                 <p style="background:rgba(59,130,246,0.3); padding:10px 20px; border-radius:15px; font-size:22px; font-weight:900; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(59,130,246,0.3);">
                     <span id="senderCount">0</span>/5명
                 </p>
@@ -602,22 +630,24 @@
     <div id="receiverSettings" class="settings-screen receiver-settings">
         <div class="settings-header">
             <button class="settings-back-btn" onclick="hideSettings()">← 뒤로</button>
-            <div class="settings-title-center">설정</div>
+            <div class="settings-title-center">SOS 지원 설정</div>
             <button class="settings-done-btn" onclick="hideSettings()">완료</button>
         </div>
         <div class="settings-content">
             <div class="card">
-                <p class="section-title" style="color:white;">내 고유 ID</p>
+                <p class="section-title" style="color:white;">내 안전 ID</p>
                 <div class="id-display"><div class="id-text" id="receiverId">로딩중...</div></div>
+                <button class="btn-copy" onclick="copyReceiverId()">ID 복사하기</button>
+                <p class="id-guide-text">이 ID를 내가 보호할 사람에게 알려주세요.</p>
             </div>
             <div class="card">
-                <p class="section-title" style="color:white;">👥 친구 등록하기</p>
+                <p class="section-title" style="color:white;">🛡️ 보호대상자 추가</p>
                 <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-                <button class="btn-add" onclick="addReceiverFriend()">친구 추가</button>
+                <button class="btn-add" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onclick="addReceiverFriend()">보호대상자 등록</button>
             </div>
             <div class="card">
-                <p class="section-title" style="color:white;">등록된 친구 목록</p>
-                <p style="background:rgba(59,130,246,0.3); padding:10px 20px; border-radius:15px; font-size:22px; font-weight:900; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(59,130,246,0.3);">
+                <p class="section-title" style="color:white;">등록된 보호대상자</p>
+                <p style="background:rgba(16,185,129,0.3); padding:10px 20px; border-radius:15px; font-size:22px; font-weight:900; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(16,185,129,0.4);">
                     <span id="receiverCount">0</span>/5명
                 </p>
                 <div id="receiverFriendList"></div>
@@ -691,6 +721,28 @@
             document.getElementById('receiverSettings').classList.remove('active');
         };
 
+        window.copySenderId = function() {
+            const id = localStorage.getItem('safeZoneID_SND');
+            if (id) {
+                navigator.clipboard.writeText(id).then(() => {
+                    alert('✅ ID가 복사되었습니다!\n\n' + id + '\n\n이 ID를 보호자에게 전달해주세요.');
+                }).catch(() => {
+                    alert('📋 내 안전 ID\n\n' + id + '\n\n위 ID를 직접 복사해서 보호자에게 전달해주세요.');
+                });
+            }
+        };
+
+        window.copyReceiverId = function() {
+            const id = localStorage.getItem('safeZoneID_RCV');
+            if (id) {
+                navigator.clipboard.writeText(id).then(() => {
+                    alert('✅ ID가 복사되었습니다!\n\n' + id);
+                }).catch(() => {
+                    alert('📋 내 안전 ID\n\n' + id + '\n\n위 ID를 직접 복사해주세요.');
+                });
+            }
+        };
+
         window.addSenderFriend = function() {
             const input = document.getElementById('senderFriendInput');
             let id = input.value.trim().toUpperCase();
@@ -698,18 +750,18 @@
             if (!id.startsWith('SZ-')) id = 'SZ-' + id;
             
             let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            if (list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
-            if (list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
+            if (list.length >= 5) { alert('❌ 최대 5명까지 등록할 수 있습니다!'); return; }
+            if (list.includes(id)) { alert('❌ 이미 등록된 보호자입니다!'); return; }
             
             list.push(id); 
             localStorage.setItem('friendList_SND', JSON.stringify(list));
             input.value = ''; 
-            alert('✅ 등록: ' + id); 
+            alert('✅ 보호자가 등록되었습니다!\n\n' + id); 
             loadSenderFriends();
         };
         
         window.deleteSenderFriend = function(id) {
-            if (!confirm('⚠️ 삭제하시겠습니까?')) return;
+            if (!confirm('⚠️ 이 보호자를 삭제하시겠습니까?\n\n' + id)) return;
             let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
             list = list.filter(f => f !== id); 
             localStorage.setItem('friendList_SND', JSON.stringify(list)); 
@@ -721,7 +773,7 @@
             document.getElementById('senderCount').innerText = list.length;
             const cont = document.getElementById('senderFriendList');
             if (list.length === 0) { 
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; font-weight:900; color:white;">등록된 친구가 없습니다</p>'; 
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; font-weight:900; color:white;">등록된 보호자가 없습니다</p>'; 
                 return; 
             }
             cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');
@@ -734,19 +786,19 @@
             if (!id.startsWith('SZ-')) id = 'SZ-' + id;
             
             let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            if (list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
-            if (list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
+            if (list.length >= 5) { alert('❌ 최대 5명까지 등록할 수 있습니다!'); return; }
+            if (list.includes(id)) { alert('❌ 이미 등록된 보호대상자입니다!'); return; }
             
             list.push(id); 
             localStorage.setItem('friendList_RCV', JSON.stringify(list));
             input.value = ''; 
-            alert('✅ 등록: ' + id); 
+            alert('✅ 보호대상자가 등록되었습니다!\n\n' + id); 
             loadReceiverFriends();
             setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
         };
         
         window.deleteReceiverFriend = function(id) {
-            if (!confirm('⚠️ 삭제하시겠습니까?')) return;
+            if (!confirm('⚠️ 이 보호대상자를 삭제하시겠습니까?\n\n' + id)) return;
             let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
             list = list.filter(f => f !== id); 
             localStorage.setItem('friendList_RCV', JSON.stringify(list)); 
@@ -758,7 +810,7 @@
             document.getElementById('receiverCount').innerText = list.length;
             const cont = document.getElementById('receiverFriendList');
             if (list.length === 0) { 
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; font-weight:900; color:white;">등록된 친구가 없습니다</p>'; 
+                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; font-weight:900; color:white;">등록된 보호대상자가 없습니다</p>'; 
                 return; 
             }
             cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');
