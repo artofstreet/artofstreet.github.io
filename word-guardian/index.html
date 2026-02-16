@@ -3,50 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>워드 가디언 - 건강 식단 1단계</title>
+    <title>워드 가디언 - 프로 에디션</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        /* 1. 배경: 화사한 핑크 그라데이션 */
-        body { margin: 0; padding: 0; overflow: hidden; background: linear-gradient(to bottom, #ffdde1, #ee9ca7); font-family: sans-serif; touch-action: none; }
+        /* 1. 프로 느낌 배경 & 폰트 */
+        body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            background: radial-gradient(circle at center top, #ffdde1, #ee9ca7 80%); 
+            font-family: 'Jua', sans-serif; touch-action: none; 
+        }
         #game-container { position: relative; width: 100vw; height: 100vh; }
-        
-        /* 2. 중앙의 '건강한 목표' 캐릭터 (배경처럼 은은하게) */
+
+        /* 2. 고급스러운 UI (점수판) */
+        #ui-top {
+            position: absolute; top: 20px; width: 100%; text-align: center; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        #score-box {
+            background: rgba(255, 255, 255, 0.9); padding: 10px 25px; border-radius: 30px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-size: 24px; color: #d63384;
+            border: 3px solid #ff8b94; display: flex; align-items: center;
+        }
+        #score-box span { margin-left: 10px; font-weight: bold; }
+
+        /* 3. 확실하게 구분되는 목표 캐릭터 (위치 이동 & 디자인 강조) */
         #goal-character {
-            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
-            font-size: 100px; opacity: 0.3; z-index: 1; user-select: none;
+            margin-top: 15px; /* 점수판 아래로 배치 */
+            font-size: 80px; 
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2)); /* 그림자 추가 */
+            opacity: 0.5; transition: all 0.3s;
         }
 
-        /* 3. 상단 점수판 규격 최적화 */
-        #score-board { position: absolute; top: 25px; left: 20px; font-size: 22px; font-weight: bold; z-index: 10; color: #d63384; text-shadow: 1px 1px 0px white; }
-        
-        /* 4. 떨어지는 음식 규격 (동글동글 귀엽게) */
+        /* 4. 떨어지는 아이템 (입체감 강화) */
         .word-item { 
-            position: absolute; padding: 12px 20px; border-radius: 40px; 
-            font-size: 18px; font-weight: bold; cursor: pointer; user-select: none; 
-            text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
+            position: absolute; padding: 10px 18px; border-radius: 35px; 
+            font-size: 20px; cursor: pointer; user-select: none; 
+            text-align: center; box-shadow: 0 8px 15px rgba(0,0,0,0.15); 
             display: flex; flex-direction: column; align-items: center; 
-            border: 3px solid white; z-index: 5;
+            border: 3px solid white; z-index: 5; transition: transform 0.1s;
         }
-        .good-word { background-color: #ffffff; color: #28a745; }
-        .bad-word { background-color: #500050; color: #ffadad; }
+        .good-word { background: linear-gradient(135deg, #ffffff, #e8f5e9); color: #2e7d32; }
+        .bad-word { background: linear-gradient(135deg, #fff0f0, #ffcdd2); color: #c62828; border-color: #ffcdd2; }
         
-        #deadline { position: absolute; bottom: 0; width: 100%; height: 8px; background: #ff4d4d; z-index: 10; }
+        #deadline { position: absolute; bottom: 0; width: 100%; height: 8px; background: linear-gradient(to right, #ff4d4d, #ff1a1a); z-index: 10; }
         
-        /* 5. 시작 버튼 크기 최적화 (총감독님 피드백 반영) */
+        /* 5. 프로 스타일 시작 버튼 */
         #start-btn { 
-            position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); 
-            padding: 12px 30px; font-size: 18px; font-weight: bold;
-            background-color: #ff6b81; border: 3px solid white; color: white; 
-            border-radius: 30px; cursor: pointer; box-shadow: 0 5px 0px #d63384; z-index: 20;
+            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); 
+            padding: 15px 40px; font-size: 22px; font-family: 'Jua', sans-serif;
+            background: linear-gradient(to bottom, #ff8b94, #ff6b81); 
+            border: 4px solid white; color: white; border-radius: 50px; cursor: pointer; 
+            box-shadow: 0 8px 0px #c23653, 0 15px 20px rgba(0,0,0,0.2); z-index: 20;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3); transition: all 0.1s;
+        }
+        #start-btn:active { top: 61%; box-shadow: 0 4px 0px #c23653, 0 10px 15px rgba(0,0,0,0.2); }
+
+        /* 6. 화려한 폭발 파티클 효과 */
+        .particle {
+            position: absolute; pointer-events: none; z-index: 6;
+            animation: explode 0.6s forwards ease-out;
+        }
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="score-board">건강 점수: 0</div>
-    <div id="goal-character">💪🥕</div> 
+    <div id="ui-top">
+        <div id="score-box">💪 <span id="score-text">0</span></div>
+        <div id="goal-character">🥕💪</div>
+    </div>
+    
     <div id="deadline"></div>
-    <button id="start-btn">건강 도전 시작!</button>
+    <button id="start-btn">🔥 건강 도전 시작! 🔥</button>
 </div>
 
 <script>
@@ -55,90 +87,80 @@
     
     function playSound(type) {
         if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
-        if (type === 'good') { // 맑은 소리
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime); 
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3); 
-        } else { // 둔탁한 소리
-            osc.type='square'; osc.frequency.setValueAtTime(120, audioCtx.currentTime); 
-            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2); 
+        if (type === 'good') { 
+            osc.frequency.setValueAtTime(700, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2); 
+        } else { 
+            osc.type='sawtooth'; osc.frequency.setValueAtTime(150, audioCtx.currentTime); gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.15); 
         }
-        osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    }
+
+    // 폭발 이펙트 함수
+    function createExplosion(x, y) {
+        for (let i = 0; i < 8; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.innerHTML = '💥';
+            particle.style.left = `${x}px`; particle.style.top = `${y}px`;
+            particle.style.fontSize = `${Math.random() * 20 + 15}px`;
+            const tx = (Math.random() - 0.5) * 150;
+            const ty = (Math.random() - 0.5) * 150;
+            particle.style.setProperty('--tx', `${tx}px`);
+            particle.style.setProperty('--ty', `${ty}px`);
+            container.appendChild(particle);
+            setTimeout(() => particle.remove(), 600);
+        }
     }
 
     const container = document.getElementById('game-container');
-    const scoreBoard = document.getElementById('score-board');
+    const scoreText = document.getElementById('score-text');
     const startBtn = document.getElementById('start-btn');
     const goalChar = document.getElementById('goal-character');
+    let score = 0, gameActive = false, speed = 2.5;
 
-    let score = 0, gameActive = false, speed = 2.2;
-
-    // 귀여운 음식 리스트 (총감독님 아이디어 반영)
-    const healthyFood = [
-        { text: '브로콜리', icon: '🥦' }, 
-        { text: '닭가슴살', icon: '🍗' }, 
-        { text: '사과', icon: '🍎' },
-        { text: '당근', icon: '🥕' }
-    ];
-    const junkFood = [
-        { text: '도넛', icon: '🍩' }, 
-        { text: '콜라', icon: '🥤' }, 
-        { text: '피자', icon: '🍕' },
-        { text: '감자튀김', icon: '🍟' }
-    ];
+    const healthyFood = [{ text: '브로콜리', icon: '🥦' }, { text: '닭가슴살', icon: '🍗' }, { text: '사과', icon: '🍎' }, { text: '당근', icon: '🥕' }];
+    const junkFood = [{ text: '도넛', icon: '🍩' }, { text: '콜라', icon: '🥤' }, { text: '피자', icon: '🍕' }, { text: '튀김', icon: '🍟' }];
 
     function createFood() {
         if (!gameActive) return;
         const isGood = Math.random() > 0.45;
         const data = isGood ? healthyFood[Math.floor(Math.random() * healthyFood.length)] : junkFood[Math.floor(Math.random() * junkFood.length)];
-        
         const el = document.createElement('div');
         el.className = `word-item ${isGood ? 'good-word' : 'bad-word'}`;
-        el.innerHTML = `<span style="font-size:28px">${data.icon}</span><span>${data.text}</span>`;
-        el.style.left = `${Math.random() * (window.innerWidth - 110)}px`;
+        el.innerHTML = `<span style="font-size:30px">${data.icon}</span><span>${data.text}</span>`;
+        el.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
         el.style.top = `-100px`;
         container.appendChild(el);
-
         let currentY = -100;
         function move() {
             if (!gameActive) { el.remove(); return; }
             currentY += speed; el.style.top = `${currentY}px`;
             if (currentY > window.innerHeight - 50) { gameOver(); el.remove(); } else { requestAnimationFrame(move); }
         }
-
         el.onclick = (e) => {
             e.stopPropagation();
-            if (isGood) { // 건강한 음식: 수집
-                score += 15; playSound('good');
-                el.style.transform = 'scale(1.6) translateY(50px)';
-                // 배경 캐릭터가 점점 진해짐 (성장 효과)
-                goalChar.style.opacity = Math.min(1, 0.3 + (score/500));
-            } else { // 해로운 음식: 파괴
-                score += 10; playSound('bad');
-                if (navigator.vibrate) navigator.vibrate(40);
-                el.innerHTML = '<span style="font-size:40px">💥</span>';
+            const rect = el.getBoundingClientRect();
+            if (isGood) { 
+                score += 15; playSound('good'); el.style.transform = 'scale(1.5) translateY(30px)'; 
+                goalChar.style.opacity = Math.min(1, 0.5 + (score/400));
+                goalChar.style.transform = `scale(${1 + score/800})`;
+            } else { 
+                score += 10; playSound('bad'); if (navigator.vibrate) navigator.vibrate(50);
+                createExplosion(rect.left + rect.width/2, rect.top + rect.height/2);
+                el.style.opacity = '0';
             }
-            scoreBoard.innerText = `건강 점수: ${score}`;
-            el.style.opacity = '0'; el.style.pointerEvents = 'none';
-            setTimeout(() => el.remove(), 250);
+            scoreText.innerText = score;
+            el.style.pointerEvents = 'none';
+            if(isGood) setTimeout(() => el.remove(), 250); else el.remove();
             speed += 0.02;
         };
         requestAnimationFrame(move);
-        setTimeout(createFood, Math.max(700, 2200 - (score * 5)));
+        setTimeout(createFood, Math.max(600, 2000 - (score * 5)));
     }
-
-    function gameOver() {
-        gameActive = false;
-        alert(`실험 종료!\n나의 건강 점수: ${score}\n더 건강한 음식을 골라주세요!`);
-        location.reload();
-    }
-
-    startBtn.onclick = () => { 
-        initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume();
-        startBtn.style.display = 'none'; gameActive = true; createFood(); 
-    };
+    function gameOver() { gameActive = false; alert(`도전 종료!\n⭐ 최종 건강 점수: ${score} ⭐`); location.reload(); }
+    startBtn.onclick = () => { initAudio(); if (audioCtx.state === 'suspended') audioCtx.resume(); startBtn.style.display = 'none'; gameActive = true; createFood(); };
 </script>
 </body>
 </html>
