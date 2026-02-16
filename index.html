@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>ArtOfStreet 안전지대 V20.8 - Sreusama Edition</title>
+    <title>ArtOfStreet 안전지대 V20.9 - Sreusama Edition</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -125,18 +125,18 @@
             padding: 20px; 
         }
         
-        /* ========== ⚡ 레이더 컨테이너: 스르사마 특별판 디자인 적용 ========== */
+        /* ========== 레이더 컨테이너 ========== */
         .radar-container { 
             position: relative; 
-            width: 285px; 
-            height: 285px; 
+            width: 280px; 
+            height: 280px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             margin: 40px 0;
         }
         
-        /* 형광 3색 얇은 실선 (보라-빨강-노랑) */
+        /* ========== ⚡ 스르사마의 4분의1 터진 가느다란 띠 (보라-빨강-노랑) ========== */
         .radar-ring {
             position: absolute;
             width: 100%;
@@ -149,21 +149,28 @@
         .radar-ring::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
             border-radius: 50%;
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg,
-                transparent 90deg,
-                #FF00FF 90deg,
+                transparent 90deg,   /* 4분의 1 터진 공간 */
+                #FF00FF 90deg,       /* 형광 보라 */
                 #FF00FF 180deg,
-                #FF0000 180deg,
+                #FF0000 180deg,      /* 형광 빨강 */
                 #FF0000 270deg,
-                #FFFF00 270deg,
+                #FFFF00 270deg,      /* 형광 노랑 */
                 #FFFF00 360deg
             );
-            mask: radial-gradient(transparent 68%, black 70%);
-            -webkit-mask: radial-gradient(transparent 68%, black 70%);
+        }
+        
+        /* 안쪽을 완벽하게 파내서 가느다란 실선만 남기는 안전한 기법 */
+        .radar-ring::after {
+            content: '';
+            position: absolute;
+            top: 3px; left: 3px; right: 3px; bottom: 3px;
+            background: #0f172a; /* 배경색과 맞춰서 투명한 척 하기 */
+            border-radius: 50%;
         }
         
         @keyframes spin-ring { 
@@ -171,29 +178,4 @@
             100% { transform: rotate(360deg); } 
         }
         
-        /* ========== 🔴 밝고 쨍한 빨강 SOS 버튼 (완벽 중앙 정렬) ========== */
-        .btn-emergency { 
-            width: 255px; 
-            height: 255px; 
-            background: radial-gradient(circle, #FF4444 0%, #FF0000 100%); 
-            border-radius: 50%; 
-            border: none; 
-            color: white; 
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); 
-            cursor: pointer; 
-            z-index: 10; 
-            transition: all 0.2s ease; 
-            touch-action: manipulation;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-        
-        .btn-emergency:active { 
-            transform: scale(0.95); 
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.8); 
-        }
-        
-        .btn-emergency.tracking
+        /* ========== 🔴 밝고 쨍한 빨강 SOS 버튼 (완벽
