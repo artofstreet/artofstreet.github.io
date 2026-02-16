@@ -7,6 +7,8 @@
     <title>ArtOfStreet 안전지대 - Final Fixed</title>
     
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
     <style>
         /* [기본 스타일] */
@@ -102,11 +104,11 @@
 <body>
 
     <header class="top-header">
-        <div class="icon-btn" onclick="handleModeToggle()">
+        <div class="icon-btn" id="modeToggleBtn" onclick="handleModeToggle()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M7 16l-4-4 4-4M3 12h18M17 8l4 4-4 4"/></svg>
         </div>
         <div class="header-title" id="headerTitle">구조 요청 모드</div>
-        <div class="icon-btn" onclick="handleSettingsShow()">
+        <div class="icon-btn" id="settingsBtn" onclick="handleSettingsShow()">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
     </header>
@@ -115,7 +117,7 @@
         <div class="radar-box">
             <div class="outer-glow"></div>
             <div class="inner-ring"></div>
-            <div class="inner-circle" id="sosBtn">
+            <div class="inner-circle" id="sosBtn" onclick="handleSOS()">
                 <div class="sos-main">SOS</div>
                 <div class="sos-sub">구조요청</div>
             </div>
@@ -130,8 +132,8 @@
         <div class="status-card">
             <p id="recvStatus" style="font-size: 18px;">가족의 신호를 기다리는 중...</p>
         </div>
-        <button class="btn-white" id="soundBtn">🔊 사이렌 준비</button>
-        <button class="btn-white" id="stopSiren" style="display:none; background:#dc2626; color:white;">사이렌 정지</button>
+        <button class="btn-white" id="soundBtn" onclick="handleSirenReady()">🔊 사이렌 준비</button>
+        <button class="btn-white" id="stopSiren" onclick="handleStopSiren()" style="display:none; background:#dc2626; color:white;">사이렌 정지</button>
     </main>
 
     <div id="settingsOverlay" class="settings-overlay">
@@ -142,35 +144,21 @@
         <div class="card">
             <h3>👥 연결 관리</h3>
             <input type="text" id="friendInput" class="input-box" placeholder="상대 ID 입력">
-            <button class="btn-white" style="background:#2563eb; color:white;" onclick="window.handleAddFriend()">연결 추가하기</button>
+            <button class="btn-white" id="addFriendBtn" onclick="handleAddFriend()" style="background:#2563eb; color:white;">연결 추가하기</button>
         </div>
-        <button class="btn-white" onclick="window.handleSettingsHide()">닫기</button>
+        <button class="btn-white" id="closeSettingsBtn" onclick="handleSettingsHide()">닫기</button>
     </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+    <script>
+        // 전역 변수 먼저 선언
+        var currentMode = 'sender';
+        var isTracking = false;
+        var watchId = null;
+        var map, marker, siren, sirenReady = false;
+        var db, geocoder, myID;
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const geocoder = new kakao.maps.services.Geocoder();
-
-        let myID = localStorage.getItem('safeZoneID_V19') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
-        localStorage.setItem('safeZoneID_V19', myID);
-        document.getElementById('myIdText').innerText = myID;
-
-        let currentMode = 'sender';
-        let isTracking = false;
-        let watchId = null;
-
-        // [핵심 해결] 전역 함수 강제 연결
-        window.handleModeToggle = function() {
+        // 전역 함수들
+        function handleModeToggle() {
             currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
             document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? '구조 요청 모드' : '가족 보호 모드';
             document.getElementById('senderScreen').classList.toggle('active');
@@ -178,11 +166,17 @@
             if (currentMode === 'receiver') {
                 setTimeout(() => { map.relayout(); startListening(); }, 300);
             }
-        };
+        }
 
-        window.handleSettingsShow = () => document.getElementById('settingsOverlay').classList.add('active');
-        window.handleSettingsHide = () => document.getElementById('settingsOverlay').classList.remove('active');
-        window.handleAddFriend = () => {
+        function handleSettingsShow() {
+            document.getElementById('settingsOverlay').classList.add('active');
+        }
+
+        function handleSettingsHide() {
+            document.getElementById('settingsOverlay').classList.remove('active');
+        }
+
+        function handleAddFriend() {
             const input = document.getElementById('friendInput');
             if(input.value) {
                 let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
@@ -191,51 +185,50 @@
                 input.value = '';
                 alert('가족이 등록되었습니다!');
             }
-        };
+        }
 
-        // 발신 로직
-        document.getElementById('sosBtn').onclick = function() {
+        function handleSOS() {
             if(!isTracking) {
                 isTracking = true;
-                this.parentElement.classList.add('tracking');
+                document.querySelector('.radar-box').classList.add('tracking');
                 document.getElementById('trackingBadge').style.display = 'flex';
                 if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
                 watchId = navigator.geolocation.watchPosition(pos => {
                     const lat = pos.coords.latitude, lon = pos.coords.longitude;
                     geocoder.coord2Address(lon, lat, (res, status) => {
                         let addr = (status === kakao.maps.services.Status.OK) ? res[0].address.address_name : '위치 파악 중';
-                        set(ref(db, 'emergency_global'), { sender: myID, lat, lon, address: addr, time: new Date().toLocaleTimeString() });
+                        db.ref('emergency_global').set({ sender: myID, lat, lon, address: addr, time: new Date().toLocaleTimeString() });
                     });
                 }, null, { enableHighAccuracy: true });
             } else {
                 isTracking = false;
                 navigator.geolocation.clearWatch(watchId);
-                remove(ref(db, 'emergency_global'));
-                this.parentElement.classList.remove('tracking');
+                db.ref('emergency_global').remove();
+                document.querySelector('.radar-box').classList.remove('tracking');
                 document.getElementById('trackingBadge').style.display = 'none';
             }
-        };
+        }
 
-        // 수신 및 지도
-        const map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
-        const marker = new kakao.maps.Marker({ position: map.getCenter() });
-        marker.setMap(map);
-        window.kakaoMap = map;
+        function handleSirenReady() {
+            siren.play().then(() => { 
+                siren.pause(); 
+                sirenReady = true; 
+                document.getElementById('soundBtn').innerText = "✅ 사이렌 감시 중"; 
+                document.getElementById('soundBtn').style.background = "#10b981"; 
+            });
+        }
 
-        const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
-        siren.loop = true;
-        let sirenReady = false;
-
-        document.getElementById('soundBtn').onclick = function() {
-            siren.play().then(() => { siren.pause(); sirenReady = true; this.innerText = "✅ 사이렌 감시 중"; this.style.background = "#10b981"; });
-        };
+        function handleStopSiren() {
+            hideEmergency();
+        }
 
         function startListening() {
-            onValue(ref(db, 'emergency_global'), (snap) => {
+            db.ref('emergency_global').on('value', (snap) => {
                 const data = snap.val();
                 if(data) {
                     const pos = new kakao.maps.LatLng(data.lat, data.lon);
-                    map.setCenter(pos); marker.setPosition(pos);
+                    map.setCenter(pos); 
+                    marker.setPosition(pos);
                     document.getElementById('recvStatus').innerHTML = `🚨 <strong>${data.sender}</strong>님 구조 요청!<br>위치: ${data.address}`;
                     if(sirenReady) siren.play();
                     document.getElementById('receiverScreen').classList.add('emergency');
@@ -249,10 +242,42 @@
         function hideEmergency() {
             siren.pause();
             document.getElementById('receiverScreen').classList.remove('emergency');
-            document.getElementById('receiverTitle').innerText = "✅ 현재 안전합니다";
+            document.querySelector('.receiver-title').innerText = "✅ 현재 안전합니다";
             document.getElementById('recvStatus').innerText = "가족의 신호를 기다리는 중...";
             document.getElementById('stopSiren').style.display = "none";
         }
+
+        // 페이지 로드 완료 후 초기화
+        window.onload = function() {
+            // Firebase 초기화
+            const firebaseConfig = {
+                apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
+                databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
+                projectId: "safezone-2c1b2",
+                appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
+            };
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            geocoder = new kakao.maps.services.Geocoder();
+
+            // ID 초기화
+            myID = localStorage.getItem('safeZoneID_V19') || 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase();
+            localStorage.setItem('safeZoneID_V19', myID);
+            document.getElementById('myIdText').innerText = myID;
+            
+            // 지도 초기화
+            map = new kakao.maps.Map(document.getElementById('map'), { 
+                center: new kakao.maps.LatLng(37.5665, 126.9780), 
+                level: 3 
+            });
+            marker = new kakao.maps.Marker({ position: map.getCenter() });
+            marker.setMap(map);
+            window.kakaoMap = map;
+
+            // 사이렌 초기화
+            siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
+            siren.loop = true;
+        };
     </script>
 </body>
 </html>
