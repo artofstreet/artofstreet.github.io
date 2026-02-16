@@ -3,61 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>워드 가디언 - 실험판</title>
+    <title>워드 가디언 - 터치&사운드 판</title>
     <style>
         body { margin: 0; padding: 0; overflow: hidden; background-color: #1a1a2e; font-family: sans-serif; color: white; touch-action: none; }
-        #game-container { position: relative; width: 100vw; height: 100vh; }
-        #score-board { position: absolute; top: 20px; left: 20px; font-size: 24px; font-weight: bold; z-index: 10; }
-        .word-item { position: absolute; padding: 10px 20px; border-radius: 20px; font-size: 20px; font-weight: bold; cursor: pointer; user-select: none; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; }
-        .good-word { background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%); color: #2d5a27; }
-        .bad-word { background: linear-gradient(135deg, #ff8b94 0%, #ffaaa5 100%); color: #6d1e1e; }
-        #deadline { position: absolute; bottom: 0; width: 100%; height: 5px; background-color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
-        #start-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 40px; font-size: 24px; background-color: #4ecca3; border: none; color: white; border-radius: 30px; cursor: pointer; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle, #24244d 0%, #1a1a2e 100%); }
+        #score-board { position: absolute; top: 30px; left: 20px; font-size: 28px; font-weight: bold; z-index: 10; text-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+        .word-item { position: absolute; padding: 12px 24px; border-radius: 25px; font-size: 22px; font-weight: bold; cursor: pointer; user-select: none; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; align-items: center; transition: transform 0.1s; }
+        .good-word { background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%); color: #2d5a27; border: 2px solid #ffffff; }
+        .bad-word { background: linear-gradient(135deg, #ff8b94 0%, #ffaaa5 100%); color: #6d1e1e; border: 2px solid #ffffff; }
+        #deadline { position: absolute; bottom: 0; width: 100%; height: 8px; background: linear-gradient(to right, #ff4d4d, #ff9999, #ff4d4d); box-shadow: 0 -2px 15px #ff4d4d; }
+        #start-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 20px 50px; font-size: 28px; background-color: #4ecca3; border: none; color: white; border-radius: 40px; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
+
 <div id="game-container">
-    <div id="score-board">점수: 0</div>
+    <div id="score-board">SCORE: 0</div>
     <div id="deadline"></div>
     <button id="start-btn">실험 시작!</button>
 </div>
+
 <script>
+    // --- 사운드 엔진 (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'good') { // 딩동~ 소리
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'bad') { // 팡! 소리
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.1);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.2);
+        }
+    }
+
     const container = document.getElementById('game-container');
     const scoreBoard = document.getElementById('score-board');
     const startBtn = document.getElementById('start-btn');
-    let score = 0, gameActive = false, speed = 2;
-    const goodWords = [{ text: 'Apple', icon: '🍎' }, { text: 'Book', icon: '📖' }, { text: 'Friend', icon: '🤝' }, { text: 'Star', icon: '⭐' }];
-    const badWords = [{ text: 'Liar', icon: '😈' }, { text: 'Bully', icon: '👿' }, { text: 'Angry', icon: '💣' }, { text: 'Fight', icon: '🤜' }];
+    
+    let score = 0;
+    let gameActive = false;
+    let speed = 2.5;
+
+    const goodWords = [{ text: 'Apple', icon: '🍎' }, { text: 'Book', icon: '📖' }, { text: 'Star', icon: '⭐' }];
+    const badWords = [{ text: 'Liar', icon: '😈' }, { text: 'Bully', icon: '👿' }, { text: 'Fight', icon: '🤜' }];
+
     function createWord() {
         if (!gameActive) return;
-        const isGood = Math.random() > 0.4;
+
+        const isGood = Math.random() > 0.5;
         const wordData = isGood ? goodWords[Math.floor(Math.random() * goodWords.length)] : badWords[Math.floor(Math.random() * badWords.length)];
+
         const wordEl = document.createElement('div');
         wordEl.className = `word-item ${isGood ? 'good-word' : 'bad-word'}`;
-        wordEl.innerHTML = `<span>${wordData.icon}</span><span>${wordData.text}</span>`;
-        wordEl.style.left = `${Math.random() * (window.innerWidth - 100)}px`;
-        wordEl.style.top = `-50px`;
+        wordEl.innerHTML = `<span style="font-size:30px">${wordData.icon}</span><span>${wordData.text}</span>`;
+        wordEl.style.left = `${Math.random() * (window.innerWidth - 120)}px`;
+        wordEl.style.top = `-80px`;
+
         container.appendChild(wordEl);
-        let currentY = -50;
+
+        let currentY = -80;
         function move() {
             if (!gameActive) { wordEl.remove(); return; }
             currentY += speed;
             wordEl.style.top = `${currentY}px`;
-            if (currentY > window.innerHeight - 60) { gameOver(); wordEl.remove(); } else { requestAnimationFrame(move); }
+
+            if (currentY > window.innerHeight - 80) {
+                gameOver();
+                wordEl.remove();
+            } else {
+                requestAnimationFrame(move);
+            }
         }
-        wordEl.onclick = () => {
-            if (isGood) { score += 10; wordEl.style.transform = 'scale(1.5)'; } 
-            else { score += 20; wordEl.innerHTML = '💥'; }
-            scoreBoard.innerText = `점수: ${score}`;
+
+        wordEl.onclick = (e) => {
+            e.stopPropagation();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+
+            if (isGood) {
+                score += 10;
+                playSound('good');
+                wordEl.style.transform = 'scale(1.4)';
+            } else {
+                score += 20;
+                playSound('bad');
+                // 진동 효과 (지원되는 기기에서만)
+                if (navigator.vibrate) navigator.vibrate(50);
+                wordEl.innerHTML = '<span style="font-size:40px">💥</span>';
+            }
+            
+            scoreBoard.innerText = `SCORE: ${score}`;
             wordEl.style.opacity = '0';
+            wordEl.style.pointerEvents = 'none';
             setTimeout(() => wordEl.remove(), 200);
-            speed += 0.05;
+            speed += 0.03;
         };
+
         requestAnimationFrame(move);
-        setTimeout(createWord, Math.max(500, 2000 - (score * 2)));
+        setTimeout(createWord, Math.max(600, 1800 - (score * 3)));
     }
-    function gameOver() { gameActive = false; alert(`게임 오버! 최종 점수: ${score}`); location.reload(); }
-    startBtn.onclick = () => { startBtn.style.display = 'none'; gameActive = true; createWord(); };
+
+    function gameOver() {
+        gameActive = false;
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        alert(`GAME OVER!\n최종 점수: ${score}`);
+        location.reload();
+    }
+
+    startBtn.onclick = () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        startBtn.style.display = 'none';
+        gameActive = true;
+        createWord();
+    };
 </script>
+
 </body>
 </html>
