@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <title>ArtOfStreet 안전지대 - Premium Edition</title>
+    <title>ArtOfStreet 안전지대 - Final Premium</title>
     
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
@@ -46,14 +46,14 @@
         /* [발신] 구조 요청 모드 */
         #senderScreen { justify-content: center; padding: 20px; }
         
-        /* 이미지를 바탕으로 최적화한 네온 링 */
+        /* 최종 확정 네온 링 디자인 */
         .radar-box { 
             position: relative; width: 310px; height: 310px; 
             display: flex; align-items: center; justify-content: center; 
             margin-bottom: 20px;
         }
 
-        /* 바깥쪽 광채 (이미지 느낌을 살려 조금 더 정교하게 수정) */
+        /* 세 번째 사진의 핵심: 쨍한 광채 */
         .outer-glow {
             position: absolute; width: 92%; height: 92%; border-radius: 50%;
             background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
@@ -66,7 +66,6 @@
             opacity: 0.9;
         }
 
-        /* 안쪽 선명한 무지개 띠 */
         .inner-ring {
             position: absolute; width: 88%; height: 88%; border-radius: 50%;
             background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
@@ -79,7 +78,6 @@
 
         @keyframes rotate { 100% { transform: rotate(360deg); } }
 
-        /* 중앙 SOS 버튼 */
         .inner-circle {
             width: 240px; height: 240px; background: #111827; border-radius: 50%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -89,7 +87,6 @@
         .sos-main { font-size: 68px; font-weight: 900; color: white; letter-spacing: -1px; }
         .sos-sub { font-size: 22px; color: #94a3b8; margin-top: 5px; font-weight: 600; }
 
-        /* [실시간 추적 배지] */
         .tracking-badge {
             background: rgba(220, 38, 38, 0.2); color: #ff4d4d; padding: 12px 30px; border-radius: 50px; border: 2px solid #ef4444;
             font-size: 18px; font-weight: 800; margin-top: 40px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
@@ -109,6 +106,7 @@
         .settings-overlay.active { display: block; }
         .card { background: #1e293b; padding: 20px; border-radius: 20px; border: 1px solid #334155; margin-bottom: 20px; }
         .id-text { font-size: 32px; color: #60a5fa; font-weight: 900; text-align: center; display: block; }
+        .btn-white { background: white; color: #0f172a; padding: 15px; border-radius: 12px; border: none; font-weight: bold; width: 100%; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -132,8 +130,7 @@
                 <div class="sos-sub">구조요청</div>
             </div>
         </div>
-        <div id="statusMsg"></div>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중</div>
+        <div id="statusMsg"></div> <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중</div>
     </main>
 
     <main id="receiverScreen" class="app-screen">
@@ -142,8 +139,8 @@
         <div class="status-card">
             <p id="recvStatus" style="font-size: 18px;">가족의 신호를 기다리는 중...</p>
         </div>
-        <button class="btn-white" id="soundBtn" style="width:100%; margin-top:15px;">🔊 사이렌 준비</button>
-        <button class="btn-white" id="stopSiren" style="display:none; background:#dc2626; color:white; width:100%; margin-top:10px;">사이렌 정지</button>
+        <button class="btn-white" id="soundBtn" style="margin-top:15px;">🔊 사이렌 준비</button>
+        <button class="btn-white" id="stopSiren" style="display:none; background:#dc2626; color:white; margin-top:10px;">사이렌 정지</button>
     </main>
 
     <div id="settingsOverlay" class="settings-overlay">
@@ -152,16 +149,16 @@
             <span class="id-text" id="myIdText">...</span>
         </div>
         <div class="card">
-            <h3>👥 보호자 등록</h3>
-            <input type="text" id="friendInput" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-add" style="background:#2563eb; color:white; border:none; padding:15px; border-radius:10px; width:100%; font-weight:bold;">연결 추가하기</button>
+            <h3>👥 연결 관리</h3>
+            <input type="text" id="friendInput" class="input-box" placeholder="상대 ID 입력">
+            <button class="btn-white" style="background:#2563eb; color:white;">연결 추가하기</button>
         </div>
-        <button class="btn-white" onclick="window.hideSettings()" style="width:100%;">닫기</button>
+        <button class="btn-white" onclick="window.hideSettings()">닫기</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, onValue, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+        import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
@@ -181,6 +178,7 @@
         let isTracking = false;
         let watchId = null;
 
+        // [연결 복구] 윈도우 객체에 함수 할당
         window.toggleMode = function() {
             currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
             document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? '구조 요청 모드' : '가족 보호 모드';
@@ -213,7 +211,6 @@
                 remove(ref(db, 'emergency_global'));
                 this.parentElement.classList.remove('tracking');
                 document.getElementById('trackingBadge').style.display = 'none';
-                document.getElementById('statusMsg').innerText = "";
             }
         };
 
@@ -249,12 +246,10 @@
         function hideEmergency() {
             siren.pause();
             document.getElementById('receiverScreen').classList.remove('emergency');
-            document.getElementById('receiverTitle').innerText = "가족 보호 센터";
+            document.getElementById('receiverTitle').innerText = "✅ 현재 안전합니다";
             document.getElementById('recvStatus').innerText = "가족의 신호를 기다리는 중...";
             document.getElementById('stopSiren').style.display = "none";
         }
-
-        document.getElementById('stopSiren').onclick = () => { siren.pause(); siren.currentTime = 0; };
     </script>
 </body>
 </html>
