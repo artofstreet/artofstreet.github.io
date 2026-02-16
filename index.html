@@ -463,7 +463,7 @@
 
     <div class="top-header">
         <div class="settings-btn" onclick="showSettings()">⚙️</div>
-        <div class="header-title" id="headerTitle">구조 요청 모드</div>
+        <div class="header-title" id="headerTitle">SOS 요청 모드</div>
         <div class="mode-toggle-btn" onclick="toggleMode()">⇄</div>
     </div>
 
@@ -563,14 +563,14 @@
             
             if (currentMode === 'sender') {
                 currentMode = 'receiver';
-                headerTitle.innerText = '가족 보호 모드';
+                headerTitle.innerText = 'SOS 지원 모드';
                 senderScreen.classList.remove('active'); 
                 receiverScreen.classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
                 setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
             } else {
                 currentMode = 'sender';
-                headerTitle.innerText = '구조 요청 모드';
+                headerTitle.innerText = 'SOS 요청 모드';
                 receiverScreen.classList.remove('active'); 
                 senderScreen.classList.add('active');
             }
@@ -579,7 +579,7 @@
         
         window.addEventListener('load', () => {
             if (currentMode === 'receiver') {
-                document.getElementById('headerTitle').innerText = '가족 보호 모드';
+                document.getElementById('headerTitle').innerText = 'SOS 지원 모드';
                 document.getElementById('senderScreen').classList.remove('active');
                 document.getElementById('receiverScreen').classList.add('active');
                 setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
