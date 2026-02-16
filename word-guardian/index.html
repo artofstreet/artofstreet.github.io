@@ -1,1 +1,63 @@
-
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>워드 가디언 - 실험판</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; background-color: #1a1a2e; font-family: sans-serif; color: white; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; }
+        #score-board { position: absolute; top: 20px; left: 20px; font-size: 24px; font-weight: bold; z-index: 10; }
+        .word-item { position: absolute; padding: 10px 20px; border-radius: 20px; font-size: 20px; font-weight: bold; cursor: pointer; user-select: none; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; flex-direction: column; align-items: center; }
+        .good-word { background: linear-gradient(135deg, #a8e6cf 0%, #dcedc1 100%); color: #2d5a27; }
+        .bad-word { background: linear-gradient(135deg, #ff8b94 0%, #ffaaa5 100%); color: #6d1e1e; }
+        #deadline { position: absolute; bottom: 0; width: 100%; height: 5px; background-color: #ff4d4d; box-shadow: 0 0 10px #ff4d4d; }
+        #start-btn { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 15px 40px; font-size: 24px; background-color: #4ecca3; border: none; color: white; border-radius: 30px; cursor: pointer; }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <div id="score-board">점수: 0</div>
+    <div id="deadline"></div>
+    <button id="start-btn">실험 시작!</button>
+</div>
+<script>
+    const container = document.getElementById('game-container');
+    const scoreBoard = document.getElementById('score-board');
+    const startBtn = document.getElementById('start-btn');
+    let score = 0, gameActive = false, speed = 2;
+    const goodWords = [{ text: 'Apple', icon: '🍎' }, { text: 'Book', icon: '📖' }, { text: 'Friend', icon: '🤝' }, { text: 'Star', icon: '⭐' }];
+    const badWords = [{ text: 'Liar', icon: '😈' }, { text: 'Bully', icon: '👿' }, { text: 'Angry', icon: '💣' }, { text: 'Fight', icon: '🤜' }];
+    function createWord() {
+        if (!gameActive) return;
+        const isGood = Math.random() > 0.4;
+        const wordData = isGood ? goodWords[Math.floor(Math.random() * goodWords.length)] : badWords[Math.floor(Math.random() * badWords.length)];
+        const wordEl = document.createElement('div');
+        wordEl.className = `word-item ${isGood ? 'good-word' : 'bad-word'}`;
+        wordEl.innerHTML = `<span>${wordData.icon}</span><span>${wordData.text}</span>`;
+        wordEl.style.left = `${Math.random() * (window.innerWidth - 100)}px`;
+        wordEl.style.top = `-50px`;
+        container.appendChild(wordEl);
+        let currentY = -50;
+        function move() {
+            if (!gameActive) { wordEl.remove(); return; }
+            currentY += speed;
+            wordEl.style.top = `${currentY}px`;
+            if (currentY > window.innerHeight - 60) { gameOver(); wordEl.remove(); } else { requestAnimationFrame(move); }
+        }
+        wordEl.onclick = () => {
+            if (isGood) { score += 10; wordEl.style.transform = 'scale(1.5)'; } 
+            else { score += 20; wordEl.innerHTML = '💥'; }
+            scoreBoard.innerText = `점수: ${score}`;
+            wordEl.style.opacity = '0';
+            setTimeout(() => wordEl.remove(), 200);
+            speed += 0.05;
+        };
+        requestAnimationFrame(move);
+        setTimeout(createWord, Math.max(500, 2000 - (score * 2)));
+    }
+    function gameOver() { gameActive = false; alert(`게임 오버! 최종 점수: ${score}`); location.reload(); }
+    startBtn.onclick = () => { startBtn.style.display = 'none'; gameActive = true; createWord(); };
+</script>
+</body>
+</html>
