@@ -1,317 +1,106 @@
 <!DOCTYPE html>
-<html lang="ko" style="background: #0f172a;">
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e3a8a">
-    <title>블랙아웃 가디언 V19.3 - Premium Edition</title>
+    <meta name="theme-color" content="#0f172a">
+    <title>블랙아웃 가디언 - Premium</title>
     
     <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
     
     <style>
+        /* 기본 설정 */
         * { 
             margin: 0; padding: 0; box-sizing: border-box; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            -webkit-user-select: none; user-select: none;
-            -webkit-tap-highlight-color: transparent; outline: none !important;
+            font-family: 'Pretendard', -apple-system, sans-serif;
+            -webkit-user-select: none;
         }
-        html, body { width: 100%; height: 100%; overflow: hidden; position: fixed; touch-action: manipulation; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; color: white; }
+        html, body { 
+            width: 100%; height: 100%; 
+            background-color: #0f172a; /* 아주 깊은 남색 배경 */
+            color: white; overflow: hidden;
+        }
         
-        /* ========== 상단 헤더 ========== */
+        /* 상단 헤더 - 사진처럼 짙은 네이비 */
         .top-header { 
-            position: fixed; top: 0; left: 0; right: 0; height: 80px; 
-            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%); 
-            z-index: 9999; display: flex; align-items: center; justify-content: center;
-            border-bottom: 3px solid rgba(255,255,255,0.1);
+            position: fixed; top: 0; left: 0; right: 0; height: 70px; 
+            background: #1e1b4b; /* 진한 남색 */
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
         }
-        .header-title { font-size: 26px; font-weight: 900; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .header-title { font-size: 20px; font-weight: 700; color: #cbd5e1; }
 
+        /* SVG 아이콘 버튼 */
         .icon-btn {
-            position: absolute; width: 50px; height: 50px;
-            background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; backdrop-filter: blur(10px); transition: all 0.2s;
+            width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; opacity: 0.8;
         }
-        .icon-btn:active { transform: scale(0.9); background: rgba(255,255,255,0.2); }
-        .mode-toggle-btn { left: 15px; }
-        .settings-btn { right: 15px; }
 
-        /* ========== 메인 화면 공통 ========== */
-        .app-screen { display: none; width: 100%; height: calc(100% - 80px); position: absolute; top: 80px; left: 0; overflow-y: auto; touch-action: pan-y; }
-        .app-screen.active { display: flex; flex-direction: column; align-items: center; }
-
-        /* ========== [발신] 구조 요청 모드 ========== */
-        #senderScreen { justify-content: center; padding: 20px; }
-        .radar-container { position: relative; width: 300px; height: 300px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; }
-        .radar-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            background: conic-gradient(red, orange, yellow, lime, aqua, blue, magenta, red);
-            padding: 7px; -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor; mask-composite: exclude;
-            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.4));
-            animation: rainbow-spin 3s linear infinite;
+        /* 메인 컨테이너 */
+        .main-container {
+            height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            padding-top: 70px;
         }
-        @keyframes rainbow-spin { 100% { transform: rotate(360deg); } }
 
-        .btn-emergency {
-            width: 250px; height: 250px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
-            border-radius: 50%; border: none; color: white;
-            box-shadow: 0 12px 40px rgba(220, 38, 38, 0.5);
-            z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        /* 버전 텍스트 */
+        .ver-text { font-size: 13px; color: #64748b; margin-bottom: 40px; }
+
+        /* 무지개 네온 링 - 사진 속 하이라이트 */
+        .radar-box {
+            position: relative; width: 280px; height: 280px;
+            display: flex; align-items: center; justify-content: center;
         }
-        .btn-emergency.tracking { animation: pulse-button 1.5s ease-in-out infinite; background: #ef4444; }
-        @keyframes pulse-button { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-
-        .sos-text { font-size: 72px; font-weight: 900; letter-spacing: 4px; }
-        .request-text { font-size: 24px; font-weight: 700; opacity: 0.9; }
-
-        #statusMsg { margin-top: 20px; font-size: 20px; color: #60a5fa; font-weight: 600; text-align: center; }
-        .tracking-badge {
-            background: rgba(220, 38, 38, 0.15); color: #ff4d4d; padding: 12px 30px; border-radius: 50px; border: 2px solid #ef4444;
-            font-size: 18px; font-weight: 800; margin-top: 30px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
-            animation: blink 1s infinite;
+        .outer-glow {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%;
+            padding: 8px; /* 띠 두께 */
+            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #fff calc(100% - 7px));
+            mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #fff calc(100% - 7px));
+            animation: rotate 4s linear infinite;
+            filter: blur(1px) drop-shadow(0 0 12px rgba(255, 255, 255, 0.4));
         }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
 
-        /* ========== [수신] 가족 보호 모드 ========== */
-        #receiverScreen { background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important; padding: 20px; }
-        #receiverScreen.emergency { background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%) !important; animation: blink-bg 0.5s infinite alternate; }
-        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.8; } }
-        
-        .receiver-title { font-size: 32px; margin: 25px 0; font-weight: 900; }
-        .btn-box, .btn-white { padding: 20px; width: 95%; max-width: 400px; font-size: 22px; font-weight: bold; border-radius: 15px; border: none; margin: 10px 0; }
-        .btn-box { background: rgba(0,0,0,0.2); color: white; border: 2px solid rgba(255,255,255,0.2); }
-        .btn-white { background: white; color: #047857; font-weight: 900; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
-        
-        #map { width: 100%; height: 350px; border-radius: 20px; margin: 20px 0; border: 3px solid rgba(255,255,255,0.3); }
-        .emergency-card { background: rgba(255,255,255,0.15); padding: 25px; border-radius: 20px; width: 95%; border: 2px solid rgba(255,255,255,0.3); backdrop-filter: blur(10px); }
-        .live-badge { background: #dc2626; padding: 8px 20px; border-radius: 20px; font-size: 16px; animation: pulse-button 1.5s infinite; border: 1px solid rgba(255,255,255,0.5); }
+        /* 내부 원형 버튼 영역 */
+        .inner-circle {
+            position: absolute; width: 240px; height: 240px;
+            background: #111827; border-radius: 50%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8), 0 0 20px rgba(255,255,255,0.05);
+            border: 2px solid rgba(255,255,255,0.1);
+        }
 
-        /* ========== 설정 화면 ========== */
-        .settings-screen { display: none; position: absolute; top: 80px; left: 0; width: 100%; height: calc(100% - 80px); padding: 20px; overflow-y: auto; z-index: 8888; }
-        .settings-screen.active { display: block; }
-        .sender-settings { background: #0f172a; }
-        .receiver-settings { background: #064e3b; }
-        .card { background: rgba(255,255,255,0.1); padding: 25px; border-radius: 20px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.2); }
-        .id-display { background: rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 15px; text-align: center; margin: 10px 0; border: 2px solid #3b82f6; }
-        .id-text { font-size: 32px; color: #60a5fa; font-weight: 900; letter-spacing: 2px; }
-        .input-box { width: 100%; padding: 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.3); font-size: 20px; text-align: center; background: rgba(255,255,255,0.1); color: white; margin: 10px 0; }
-        .btn-add { background: #2563eb; color: white; padding: 15px; width: 100%; font-size: 20px; font-weight: bold; border-radius: 12px; border: none; }
-        .friend-item { background: rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; margin: 8px 0; display: flex; justify-content: space-between; align-items: center; }
-        .btn-delete { background: #dc2626; color: white; border: none; padding: 8px 15px; border-radius: 10px; }
+        .sos-main { font-size: 64px; font-weight: 900; letter-spacing: 2px; line-height: 1; }
+        .sos-sub { font-size: 20px; font-weight: 500; margin-top: 10px; color: #94a3b8; }
+
+        /* 상태 메세지 */
+        .status-txt { margin-top: 50px; font-size: 16px; color: #94a3b8; }
+
+        /* 실시간 위치 추적 버튼 - 빨간 네온 */
+        .live-badge {
+            margin-top: 60px;
+            background: rgba(220, 38, 38, 0.1);
+            border: 2px solid #ef4444;
+            padding: 10px 25px;
+            border-radius: 30px;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+            color: #ef4444; font-weight: 700;
+        }
+        .dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } }
+
     </style>
 </head>
 <body>
 
-    <div class="top-header">
-        <div class="icon-btn mode-toggle-btn" onclick="toggleMode()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 16l-4-4 4-4M3 12h18M17 8l4 4-4 4"/></svg>
+    <header class="top-header">
+        <div class="icon-btn" onclick="toggleMode()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><path d="M7 16l-4-4 4-4M3 12h18M17 8l4 4-4 4"/></svg>
         </div>
-        <div class="header-title" id="headerTitle">구조 요청 모드</div>
-        <div class="icon-btn settings-btn" onclick="showSettings()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0a2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </div>
-    </div>
-
-    <div id="senderScreen" class="app-screen active">
-        <div class="radar-container">
-            <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">
-                <div class="sos-text">SOS</div>
-                <div class="request-text">구조요청</div>
-            </button>
-        </div>
-        <p id="statusMsg">버튼을 눌러주세요</p>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
-    </div>
-
-    <div id="receiverScreen" class="app-screen">
-        <h1 id="receiverTitle" class="receiver-title">✅ 현재 안전합니다</h1>
-        <button id="btn1" class="btn-box">가족 대기 중...</button>
-        <div id="map"></div>
-        <button id="soundBtn" class="btn-white" style="background:#dc2626; color:white;">🔊 소리 켜기 (필수!)</button>
-        <div id="emergencyCard" class="emergency-card" style="display:none;">
-            <span class="live-badge">🔴 LIVE</span>
-            <p id="friendName" style="font-size:24px; font-weight:bold; margin:10px 0;"></p>
-            <p id="address" style="font-size:20px; margin:5px 0;"></p>
-            <p id="time" style="font-size:16px; opacity:0.8;"></p>
-            <a href="#" id="mapLink" class="btn-white" style="display:block; background:#3b82f6; color:white; text-decoration:none; text-align:center;" target="_blank">🗺️ 위치 확인</a>
-        </div>
-        <button id="resetBtn" class="btn-white" style="display:none; background:#dc2626; color:white;">상황 종료</button>
-    </div>
-
-    <div id="senderSettings" class="settings-screen sender-settings">
-        <h1 style="text-align:center; margin-bottom:20px;">발신 설정</h1>
-        <div class="card">
-            <p>내 안전 ID</p>
-            <div class="id-display"><div class="id-text" id="senderId">...</div></div>
-        </div>
-        <div class="card">
-            <p>👥 보호자 등록</p>
-            <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-add" onclick="addSenderFriend()">친구 추가</button>
-        </div>
-        <div id="senderFriendList" class="card"></div>
-        <button class="btn-white" onclick="hideSettings()">← 돌아가기</button>
-    </div>
-
-    <div id="receiverSettings" class="settings-screen receiver-settings">
-        <h1 style="text-align:center; margin-bottom:20px;">수신 설정</h1>
-        <div class="card">
-            <p>내 고유 ID</p>
-            <div class="id-display"><div class="id-text" id="receiverId">...</div></div>
-        </div>
-        <div class="card">
-            <p>👥 가족 등록</p>
-            <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2">
-            <button class="btn-add" onclick="addReceiverFriend()">친구 추가</button>
-        </div>
-        <div id="receiverFriendList" class="card"></div>
-        <button class="btn-white" onclick="hideSettings()">← 돌아가기</button>
-    </div>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, serverTimestamp, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-
-        // Firebase 설정 (기존 설정 그대로 사용)
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const geocoder = new kakao.maps.services.Geocoder();
-
-        // 상태 변수
-        let currentMode = localStorage.getItem('currentMode') || 'sender';
-        let isTracking = false;
-        let watchId = null;
-
-        // ID 설정 및 표시
-        let sID = localStorage.getItem('safeZoneID_SND') || ('SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase());
-        localStorage.setItem('safeZoneID_SND', sID);
-        document.getElementById('senderId').innerText = sID;
-
-        let rID = localStorage.getItem('safeZoneID_RCV') || ('SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase());
-        localStorage.setItem('safeZoneID_RCV', rID);
-        document.getElementById('receiverId').innerText = rID;
-
-        // 모드 전환
-        window.toggleMode = function() {
-            const sScreen = document.getElementById('senderScreen');
-            const rScreen = document.getElementById('receiverScreen');
-            const hTitle = document.getElementById('headerTitle');
-            
-            if (currentMode === 'sender') {
-                currentMode = 'receiver';
-                hTitle.innerText = '가족 보호 모드';
-                sScreen.classList.remove('active'); rScreen.classList.add('active');
-                setTimeout(() => { if(window.kakaoMap) window.kakaoMap.relayout(); startListening(); }, 200);
-            } else {
-                currentMode = 'sender';
-                hTitle.innerText = '구조 요청 모드';
-                rScreen.classList.remove('active'); sScreen.classList.add('active');
-            }
-            localStorage.setItem('currentMode', currentMode);
-        };
-
-        // 초기 화면 설정
-        if (currentMode === 'receiver') toggleMode();
-
-        // 발신 추적 로직
-        const emergencyBtn = document.getElementById('emergencyBtn');
-        emergencyBtn.onclick = function() {
-            if (!isTracking) startTracking(); else stopTracking();
-        };
-
-        function startTracking() {
-            isTracking = true;
-            emergencyBtn.classList.add('tracking');
-            document.getElementById('trackingBadge').style.display = 'block';
-            document.getElementById('statusMsg').innerText = "📍 위치 추적 시작!";
-
-            watchId = navigator.geolocation.watchPosition((pos) => {
-                const lat = pos.coords.latitude; const lon = pos.coords.longitude;
-                geocoder.coord2Address(lon, lat, (res, status) => {
-                    let addr = (status === kakao.maps.services.Status.OK) ? res[0].address.address_name : '주소 정보 없음';
-                    set(ref(db, 'emergency_global'), {
-                        sender: sID, address: addr, lat: lat, lon: lon,
-                        mapUrl: `https://map.kakao.com/link/map/긴급구조,${lat},${lon}`,
-                        time: new Date().toLocaleTimeString(), timestamp: serverTimestamp()
-                    });
-                    document.getElementById('statusMsg').innerText = "✅ 전송 중: " + addr.substring(0, 15) + "...";
-                });
-            }, null, { enableHighAccuracy: true });
-        }
-
-        function stopTracking() {
-            isTracking = false;
-            if (watchId) navigator.geolocation.clearWatch(watchId);
-            remove(ref(db, 'emergency_global'));
-            emergencyBtn.classList.remove('tracking');
-            document.getElementById('trackingBadge').style.display = 'none';
-            document.getElementById('statusMsg').innerText = "✅ 상황 종료됨";
-        }
-
-        // 수신 리스너 로직
-        const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
-        siren.loop = true;
-        let sirenReady = false;
-        document.getElementById('soundBtn').onclick = () => { siren.play().then(() => { siren.pause(); sirenReady = true; document.getElementById('soundBtn').innerText = "✅ 소리 준비 완료"; document.getElementById('soundBtn').style.background = "#10b981"; }); };
-
-        function startListening() {
-            const fList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            onValue(ref(db, 'emergency_global'), (snap) => {
-                const data = snap.val();
-                if (!data) { hideEmergency(); return; }
-                if (fList.length === 0 || fList.includes(data.sender)) showEmergency(data);
-            });
-        }
-
-        function showEmergency(data) {
-            if(sirenReady) siren.play();
-            document.getElementById('receiverScreen').classList.add('emergency');
-            document.getElementById('receiverTitle').innerText = "🚨 긴급 상황!!";
-            document.getElementById('emergencyCard').style.display = "block";
-            document.getElementById('friendName').innerText = data.sender;
-            document.getElementById('address').innerText = data.address;
-            document.getElementById('time').innerText = "업데이트: " + data.time;
-            document.getElementById('mapLink').href = data.mapUrl;
-            document.getElementById('resetBtn').style.display = "block";
-            
-            const pos = new kakao.maps.LatLng(data.lat, data.lon);
-            window.kakaoMap.setCenter(pos); window.marker.setPosition(pos);
-        }
-
-        function hideEmergency() {
-            siren.pause();
-            document.getElementById('receiverScreen').classList.remove('emergency');
-            document.getElementById('receiverTitle').innerText = "✅ 현재 안전합니다";
-            document.getElementById('emergencyCard').style.display = "none";
-            document.getElementById('resetBtn').style.display = "none";
-        }
-
-        document.getElementById('resetBtn').onclick = () => remove(ref(db, 'emergency_global'));
-
-        // 지도 초기화
-        const mapContainer = document.getElementById('map');
-        window.kakaoMap = new kakao.maps.Map(mapContainer, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
-        window.marker = new kakao.maps.Marker({ position: window.kakaoMap.getCenter() });
-        window.marker.setMap(window.kakaoMap);
-
-        // 설정 관리 (간소화)
-        window.showSettings = () => {
-            if (currentMode === 'sender') document.getElementById('senderSettings').classList.add('active');
-            else document.getElementById('receiverSettings').classList.add('active');
-        };
-        window.hideSettings = () => {
-            document.querySelectorAll('.settings-screen').forEach(s => s.classList.remove('active'));
-        };
-        // 친구 추가/삭제 로직은 기존 localStorage 방식 그대로 사용하시면 됩니다.
-    </script>
-</body>
-</html>
+        <div class="header-title">구조 요청 모드</div>
+        <div class="icon-btn" onclick="showSettings()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2
