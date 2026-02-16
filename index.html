@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>블랙아웃 가디언 V20.3 - Vivid Red</title>
+    <title>블랙아웃 가디언 V20.4 - Extreme Alert</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -136,7 +136,7 @@
             margin: 40px 0;
         }
         
-        /* ========== 형광 마젠타-레드-옐로우 C자형 고리 ========== */
+        /* ========== ⚡ 극강의 비상 신호: 연두-빨강-노랑 C자형 고리 ========== */
         .radar-ring {
             position: absolute;
             width: 100%;
@@ -146,7 +146,7 @@
             animation: spin-ring 2s linear infinite;
         }
         
-        /* 형광 3색 C자형 고리 (자주→빨강→노랑 순서) */
+        /* 형광 3색 C자형 고리 (연두→빨강→노랑 순서) */
         .radar-ring::before {
             content: '';
             position: absolute;
@@ -159,8 +159,8 @@
                 from 0deg,
                 transparent 0deg,
                 transparent 45deg,
-                #FF00FF 45deg,
-                #FF00FF 135deg,
+                #39FF14 45deg,
+                #39FF14 135deg,
                 #FF0033 135deg,
                 #FF0033 225deg,
                 #FFFF00 225deg,
@@ -187,7 +187,7 @@
             100% { transform: rotate(360deg); } 
         }
         
-        /* ========== 🔴 밝고 쨍한 빨강 SOS 버튼 (심폐소생술 완료!) ========== */
+        /* ========== 밝고 쨍한 빨강 SOS 버튼 ========== */
         .btn-emergency { 
             width: 260px; 
             height: 260px; 
@@ -475,7 +475,7 @@
     <!-- ========== 발신 화면 ========== -->
     <div id="senderScreen" class="app-screen active">
         <div class="radar-container">
-            <!-- 형광 마젠타→빨강→노랑 C자형 고리 -->
+            <!-- 극강의 비상 신호: 연두→빨강→노랑 C자형 고리 -->
             <div class="radar-ring"></div>
             
             <button id="emergencyBtn" class="btn-emergency">
