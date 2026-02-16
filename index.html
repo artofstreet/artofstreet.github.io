@@ -45,29 +45,54 @@
 
         /* [발신] 구조 요청 모드 */
         #senderScreen { justify-content: center; padding: 20px; }
-        .radar-box { position: relative; width: 280px; height: 280px; display: flex; align-items: center; justify-content: center; margin-bottom: 30px; }
-        .outer-glow {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%; padding: 8px;
-            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
-            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 8px), #fff calc(100% - 7px));
-            animation: rotate 4s linear infinite;
-            filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.4));
+        
+        /* 빛 번짐이 극대화된 네온 링 컨테이너 */
+        .radar-box { 
+            position: relative; width: 320px; height: 320px; 
+            display: flex; align-items: center; justify-content: center; 
+            margin-bottom: 20px;
         }
+
+        /* 바깥쪽 강렬한 광채 (더 밝게 번짐) */
+        .outer-glow {
+            position: absolute; width: 90%; height: 90%; border-radius: 50%;
+            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
+            box-shadow: 
+                0 0 40px 10px rgba(255, 0, 0, 0.5),
+                0 0 60px 20px rgba(0, 255, 0, 0.3),
+                0 0 80px 30px rgba(0, 0, 255, 0.4);
+            filter: blur(10px);
+            animation: rotate 4s linear infinite;
+            opacity: 0.8;
+        }
+
+        /* 안쪽 선명한 무지개 띠 */
+        .inner-ring {
+            position: absolute; width: 85%; height: 85%; border-radius: 50%;
+            background: conic-gradient(from 0deg, #ff0000, #ff7f00, #ffff00, #00ff00, #00ffff, #0000ff, #8b00ff, #ff0000);
+            padding: 6px; 
+            -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 7px), #fff calc(100% - 6px));
+            animation: rotate 4s linear infinite;
+            z-index: 5;
+        }
+
         @keyframes rotate { 100% { transform: rotate(360deg); } }
 
+        /* 중앙 SOS 버튼 */
         .inner-circle {
-            width: 235px; height: 235px; background: #111827; border-radius: 50%;
+            width: 230px; height: 230px; background: #111827; border-radius: 50%;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            box-shadow: inset 0 0 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.9); border: 1px solid rgba(255,255,255,0.1);
             cursor: pointer; z-index: 10;
         }
-        .sos-main { font-size: 64px; font-weight: 900; }
+        .sos-main { font-size: 64px; font-weight: 900; color: white; }
         .sos-sub { font-size: 20px; color: #94a3b8; margin-top: 5px; }
 
+        /* 실시간 추적 배지 (빨간 네온) */
         .tracking-badge {
-            background: rgba(220, 38, 38, 0.15); color: #ff4d4d; padding: 12px 30px; border-radius: 50px; border: 2px solid #ef4444;
-            font-size: 18px; font-weight: 800; margin-top: 30px; box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
-            animation: blink 1.5s infinite;
+            background: rgba(220, 38, 38, 0.2); color: #ff4d4d; padding: 12px 30px; border-radius: 50px; border: 2px solid #ef4444;
+            font-size: 18px; font-weight: 800; margin-top: 40px; box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+            animation: blink 1.5s infinite; display: flex; align-items: center; gap: 10px;
         }
         @keyframes blink { 50% { opacity: 0.4; } }
 
@@ -111,6 +136,7 @@
     <main id="senderScreen" class="app-screen active">
         <div class="radar-box">
             <div class="outer-glow"></div>
+            <div class="inner-ring"></div>
             <div class="inner-circle" id="sosBtn">
                 <div class="sos-main">SOS</div>
                 <div class="sos-sub">구조요청</div>
@@ -136,7 +162,7 @@
         </div>
         <div class="card">
             <h3>👥 연결 관리</h3>
-            <p style="font-size:14px; opacity:0.7; margin:10px 0;">상대의 ID를 입력하여 연결하세요.</p>
+            <p style="font-size:14px; opacity:0.7; margin:10px 0;">보호자/가족의 ID를 입력하세요.</p>
             <input type="text" id="friendInput" class="input-box" placeholder="예: SZ-A1B2">
             <button class="btn-add" onclick="window.addFriend()">연결 추가하기</button>
         </div>
@@ -165,7 +191,7 @@
         let isTracking = false;
         let watchId = null;
 
-        // [수정 핵심] 모든 기능을 window 객체에 연결하여 클릭 작동 보장
+        // [버튼 연결 보장] 전역 윈도우 객체에 함수 할당
         window.toggleMode = function() {
             currentMode = (currentMode === 'sender') ? 'receiver' : 'sender';
             document.getElementById('headerTitle').innerText = (currentMode === 'sender') ? '구조 요청 모드' : '가족 보호 모드';
@@ -179,24 +205,24 @@
         window.showSettings = () => document.getElementById('settingsOverlay').classList.add('active');
         window.hideSettings = () => document.getElementById('settingsOverlay').classList.remove('active');
 
-        // 발신 버튼
+        // 발신 기능
         document.getElementById('sosBtn').onclick = function() {
             if(!isTracking) {
                 isTracking = true;
                 this.parentElement.classList.add('tracking');
-                document.getElementById('trackingBadge').style.display = 'block';
+                document.getElementById('trackingBadge').style.display = 'flex';
                 if(navigator.vibrate) navigator.vibrate([200, 100, 200]);
 
                 watchId = navigator.geolocation.watchPosition(pos => {
                     const lat = pos.coords.latitude, lon = pos.coords.longitude;
                     geocoder.coord2Address(lon, lat, (res, status) => {
-                        let addr = (status === kakao.maps.services.Status.OK) ? res[0].address.address_name : '위치 확인 중';
+                        let addr = (status === kakao.maps.services.Status.OK) ? res[0].address.address_name : '위치 파악 중';
                         set(ref(db, 'emergency_global'), { sender: myID, lat, lon, address: addr, time: new Date().toLocaleTimeString() });
                     });
-                });
+                }, null, { enableHighAccuracy: true });
             } else {
                 isTracking = false;
-                navigator.geolocation.clearWatch(watchId);
+                if (watchId) navigator.geolocation.clearWatch(watchId);
                 remove(ref(db, 'emergency_global'));
                 this.parentElement.classList.remove('tracking');
                 document.getElementById('trackingBadge').style.display = 'none';
@@ -204,11 +230,11 @@
             }
         };
 
-        // 수신 및 지도
+        // 수신 기능
         const map = new kakao.maps.Map(document.getElementById('map'), { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
         const marker = new kakao.maps.Marker({ position: map.getCenter() });
         marker.setMap(map);
-        window.kakaoMap = map;
+        window.kakaoMap = map; window.marker = marker;
 
         const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
         siren.loop = true;
@@ -219,6 +245,7 @@
         };
 
         function startListening() {
+            const fList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
             onValue(ref(db, 'emergency_global'), (snap) => {
                 const data = snap.val();
                 if(data) {
@@ -237,7 +264,7 @@
         function hideEmergency() {
             siren.pause();
             document.getElementById('receiverScreen').classList.remove('emergency');
-            document.getElementById('receiverTitle').innerText = "가족 보호 센터";
+            document.getElementById('receiverTitle').innerText = "✅ 현재 안전합니다";
             document.getElementById('recvStatus').innerText = "가족의 신호를 기다리는 중...";
             document.getElementById('stopSiren').style.display = "none";
         }
