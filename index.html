@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>블랙아웃 가디언 V20.0 - Final</title>
+    <title>블랙아웃 가디언 V20.1 - Fluorescent Trinity</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -136,7 +136,7 @@
             margin: 40px 0;
         }
         
-        /* ========== 🎯 C자형 터진 고리 (4분의 1 뚫림) ========== */
+        /* ========== 🌈 형광 3원색 C자형 고리 (Fluorescent Trinity) ========== */
         .radar-ring {
             position: absolute;
             width: 100%;
@@ -146,7 +146,7 @@
             animation: spin-ring 2s linear infinite;
         }
         
-        /* C자형 고리 (270도만 표시, 90도는 투명) */
+        /* 형광 3색 C자형 고리 (270도만 표시, 90도는 투명) */
         .radar-ring::before {
             content: '';
             position: absolute;
@@ -159,12 +159,12 @@
                 from 0deg,
                 transparent 0deg,
                 transparent 45deg,
-                #ff0844 45deg,
-                #ff0844 135deg,
-                #ffcc00 135deg,
-                #ffcc00 225deg,
-                #ff0844 225deg,
-                #ff0844 315deg,
+                #00FFFF 45deg,
+                #00FFFF 135deg,
+                #FF00FF 135deg,
+                #FF00FF 225deg,
+                #FFFF00 225deg,
+                #FFFF00 315deg,
                 transparent 315deg,
                 transparent 360deg
             );
@@ -475,7 +475,7 @@
     <!-- ========== 발신 화면 ========== -->
     <div id="senderScreen" class="app-screen active">
         <div class="radar-container">
-            <!-- C자형 터진 고리 (90도 뚫림) -->
+            <!-- 형광 3원색 C자형 고리 (Cyan → Magenta → Yellow) -->
             <div class="radar-ring"></div>
             
             <button id="emergencyBtn" class="btn-emergency">
