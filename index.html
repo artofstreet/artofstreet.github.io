@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#1e3a8a">
-    <title>블랙아웃 가디언 V19.4 - 엇갈린 띠</title>
+    <title>블랙아웃 가디언 V19.5 - Tactical Mode</title>
     
     <link rel="manifest" href="manifest-sender.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -136,111 +136,172 @@
             margin: 40px 0;
         }
         
-        /* ========== 🌈 엇갈린 무지개 띠 3개 (Staggered Arcs) ========== */
-        .radar-ring {
+        /* ========== 🎯 전술 레이저 스캔 라인 (Tactical Laser Lines) ========== */
+        
+        /* 외곽 레이저 라인 1 - 긴 호 */
+        .laser-arc-1 {
             position: absolute;
             width: 100%;
             height: 100%;
             pointer-events: none;
         }
         
-        /* 첫 번째 호 (Arc 1) */
-        .radar-ring::before {
+        .laser-arc-1::before {
             content: '';
             position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
             border-radius: 50%;
             background: conic-gradient(
                 from 0deg,
                 transparent 0deg,
-                transparent 20deg,
-                #ff0000 30deg,
-                #ff7f00 50deg,
-                #ffff00 70deg,
-                #00ff00 90deg,
-                rgba(0, 255, 0, 0.5) 110deg,
-                transparent 120deg,
+                transparent 5deg,
+                #00ff41 10deg,
+                #00ff41 75deg,
+                rgba(0, 255, 65, 0.3) 80deg,
+                transparent 85deg,
                 transparent 360deg
             );
-            animation: spin-arc1 4s linear infinite;
-            filter: blur(2px) brightness(1.3);
+            animation: tactical-scan-1 3.5s linear infinite, jitter-1 0.15s infinite;
         }
         
-        /* 두 번째 호 (Arc 2) */
-        .radar-ring::after {
-            content: '';
-            position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 120deg,
-                transparent 0deg,
-                transparent 20deg,
-                #0000ff 30deg,
-                #4b0082 50deg,
-                #9400d3 70deg,
-                #ff0000 90deg,
-                rgba(255, 0, 0, 0.5) 110deg,
-                transparent 120deg,
-                transparent 360deg
-            );
-            animation: spin-arc2 4s linear infinite;
-            animation-delay: -1.33s;
-            filter: blur(2px) brightness(1.3);
-        }
-        
-        /* 세 번째 호 (Arc 3) - 별도 엘리먼트 필요 */
-        .radar-ring-extra {
+        /* 중간 레이저 라인 2 - 중간 호 */
+        .laser-arc-2 {
             position: absolute;
             width: 100%;
             height: 100%;
             pointer-events: none;
         }
         
-        .radar-ring-extra::before {
+        .laser-arc-2::before {
             content: '';
             position: absolute;
-            top: -10px;
-            left: -10px;
-            right: -10px;
-            bottom: -10px;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
             border-radius: 50%;
             background: conic-gradient(
-                from 240deg,
+                from 110deg,
                 transparent 0deg,
-                transparent 20deg,
-                #ffff00 30deg,
-                #00ff00 50deg,
-                #0000ff 70deg,
-                #9400d3 90deg,
-                rgba(148, 0, 211, 0.5) 110deg,
-                transparent 120deg,
+                transparent 5deg,
+                #ff0044 10deg,
+                #ff0044 50deg,
+                rgba(255, 0, 68, 0.3) 55deg,
+                transparent 60deg,
                 transparent 360deg
             );
-            animation: spin-arc3 4s linear infinite;
-            animation-delay: -2.67s;
-            filter: blur(2px) brightness(1.3);
+            animation: tactical-scan-2 2.8s linear infinite, jitter-2 0.12s infinite;
         }
         
-        @keyframes spin-arc1 { 
+        /* 내부 레이저 라인 3 - 짧은 호 */
+        .laser-arc-3 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .laser-arc-3::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 230deg,
+                transparent 0deg,
+                transparent 5deg,
+                #ffcc00 10deg,
+                #ffcc00 40deg,
+                rgba(255, 204, 0, 0.3) 45deg,
+                transparent 50deg,
+                transparent 360deg
+            );
+            animation: tactical-scan-3 4.2s linear infinite, jitter-3 0.18s infinite;
+        }
+        
+        /* 추가 레이저 라인 4 - 매우 짧은 호 */
+        .laser-arc-4 {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .laser-arc-4::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: -8px;
+            right: -8px;
+            bottom: -8px;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 310deg,
+                transparent 0deg,
+                transparent 5deg,
+                #00d4ff 10deg,
+                #00d4ff 30deg,
+                rgba(0, 212, 255, 0.3) 35deg,
+                transparent 40deg,
+                transparent 360deg
+            );
+            animation: tactical-scan-4 3.1s linear infinite, jitter-4 0.14s infinite;
+        }
+        
+        /* 회전 애니메이션 (각각 다른 속도) */
+        @keyframes tactical-scan-1 { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         }
         
-        @keyframes spin-arc2 { 
+        @keyframes tactical-scan-2 { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
         }
         
-        @keyframes spin-arc3 { 
+        @keyframes tactical-scan-3 { 
             0% { transform: rotate(0deg); } 
             100% { transform: rotate(360deg); } 
+        }
+        
+        @keyframes tactical-scan-4 { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        /* 미세한 떨림 효과 (Jitter) - 긴장감 배가 */
+        @keyframes jitter-1 { 
+            0%, 100% { transform: translate(0, 0) rotate(0deg); } 
+            25% { transform: translate(0.5px, -0.5px) rotate(0.3deg); } 
+            50% { transform: translate(-0.5px, 0.5px) rotate(-0.3deg); } 
+            75% { transform: translate(0.5px, 0.5px) rotate(0.2deg); } 
+        }
+        
+        @keyframes jitter-2 { 
+            0%, 100% { transform: translate(0, 0) rotate(0deg); } 
+            25% { transform: translate(-0.3px, 0.3px) rotate(-0.2deg); } 
+            50% { transform: translate(0.3px, -0.3px) rotate(0.2deg); } 
+            75% { transform: translate(-0.3px, -0.3px) rotate(-0.1deg); } 
+        }
+        
+        @keyframes jitter-3 { 
+            0%, 100% { transform: translate(0, 0) rotate(0deg); } 
+            25% { transform: translate(0.4px, 0.4px) rotate(0.1deg); } 
+            50% { transform: translate(-0.4px, 0.4px) rotate(-0.1deg); } 
+            75% { transform: translate(0.4px, -0.4px) rotate(0.2deg); } 
+        }
+        
+        @keyframes jitter-4 { 
+            0%, 100% { transform: translate(0, 0) rotate(0deg); } 
+            25% { transform: translate(-0.2px, -0.2px) rotate(-0.1deg); } 
+            50% { transform: translate(0.2px, 0.2px) rotate(0.1deg); } 
+            75% { transform: translate(-0.2px, 0.2px) rotate(-0.2deg); } 
         }
         
         /* ========== SOS 버튼 ========== */
@@ -531,9 +592,11 @@
     <!-- ========== 발신 화면 ========== -->
     <div id="senderScreen" class="app-screen active">
         <div class="radar-container">
-            <!-- 엇갈린 무지개 띠 3개 -->
-            <div class="radar-ring"></div>
-            <div class="radar-ring-extra"></div>
+            <!-- 전술 레이저 스캔 라인 4개 (각기 다른 길이, 속도, 떨림) -->
+            <div class="laser-arc-1"></div>
+            <div class="laser-arc-2"></div>
+            <div class="laser-arc-3"></div>
+            <div class="laser-arc-4"></div>
             
             <button id="emergencyBtn" class="btn-emergency">
                 <div class="sos-text">SOS</div>
