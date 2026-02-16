@@ -3,135 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>워드 가디언 Pro</title>
+    <title>워드 가디언 Pro - 건강 식단 편</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        :root { --main-pink: #ff8b94; --dark-pink: #ff6b81; --bg-pink: #fff0f3; }
+        :root { --main-pink: #ff8b94; --text-color: #555; }
+        
+        /* 1. 배경: 사진처럼 부드러운 핑크와 가장자리 꽃무늬 패턴 */
         body { 
             margin: 0; padding: 0; overflow: hidden; 
-            background: radial-gradient(circle, #ffffff 0%, #ffe3e8 100%);
+            background-color: #fff0f3;
+            background-image: radial-gradient(#ffe3e8 20%, transparent 20%), radial-gradient(#ffe3e8 20%, transparent 20%);
+            background-position: 0 0, 20px 20px; background-size: 40px 40px;
             font-family: 'Jua', sans-serif; touch-action: none;
         }
-        /* 배경 패턴 */
-        body::before {
-            content: ""; position: absolute; width: 100%; height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10zM0 20c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10-10-4.477-10-10z' fill='%23ffc0cb' fill-opacity='0.1'/%3E%3C/svg%3E");
-            z-index: -1;
+
+        #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
+
+        /* 2. 상단 점수판 (사진 속 디자인 그대로) */
+        #ui-top {
+            position: absolute; top: 10px; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 10;
         }
-
-        #game-container { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; }
-
-        /* 상단 점수판 */
         #score-panel {
-            margin-top: 30px; background: white; padding: 15px 40px; border-radius: 50px;
-            box-shadow: 0 10px 25px rgba(255, 107, 129, 0.2);
-            border: 4px solid var(--main-pink); z-index: 10;
+            background: white; padding: 10px 40px; border-radius: 0 0 30px 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 2px solid #eee; border-top: none;
         }
-        #score-label { font-size: 14px; color: #aaa; text-align: center; margin-bottom: -5px; }
-        #score-display { font-size: 36px; color: #d63384; display: flex; align-items: center; }
+        #score-label { font-size: 14px; color: #aaa; text-align: center; margin-bottom: 2px; }
+        #score-value-box { display: flex; align-items: center; font-size: 34px; color: #555; }
 
-        /* 중앙 근육 당근 캐릭터 */
-        #goal-character {
-            margin-top: 20px; font-size: 120px; z-index: 5;
-            filter: drop-shadow(0 15px 10px rgba(0,0,0,0.1));
-            animation: float 3s ease-in-out infinite;
+        /* 3. 중앙의 주인공 (근육 당근 캐릭터) */
+        #hero-carrot {
+            position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 120px; z-index: 5; filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+            animation: breathe 3s ease-in-out infinite;
         }
-        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-15px) scale(1.05); } }
+        @keyframes breathe { 0%, 100% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -55%) scale(1.05); } }
 
-        /* 게임 아이템 스타일 */
+        /* 4. 떨어지는 아이템 (아이콘 + 영어 단어) */
         .item { 
-            position: absolute; display: flex; flex-direction: column; align-items: center;
-            z-index: 8; cursor: pointer; transition: transform 0.1s;
+            position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 8; cursor: pointer;
         }
-        .item-bubble {
-            background: white; padding: 10px; border-radius: 50%;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.1); border: 3px solid white;
-            display: flex; justify-content: center; align-items: center;
-            font-size: 40px; position: relative;
+        .item-circle {
+            background: white; width: 70px; height: 70px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 45px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1); border: 3px solid white; position: relative;
         }
-        .item-label { background: white; padding: 2px 10px; border-radius: 10px; font-size: 14px; margin-top: 5px; color: #555; border: 1px solid #eee; }
-        
-        /* 날개 애니메이션 */
-        .good-item .item-bubble::before, .good-item .item-bubble::after {
-            content: "👼"; position: absolute; font-size: 20px; top: 10px; z-index: -1;
-            animation: wing 0.5s ease-in-out infinite alternate;
+        .item-text { 
+            background: rgba(255,255,255,0.9); padding: 2px 12px; border-radius: 15px;
+            font-size: 14px; color: #666; margin-top: 5px; border: 1px solid #eee; font-weight: bold;
         }
-        .good-item .item-bubble::before { left: -15px; }
-        .good-item .item-bubble::after { right: -15px; transform: scaleX(-1); }
-        @keyframes wing { from { transform: rotate(-20deg); } to { transform: rotate(20deg); } }
 
-        /* 폭발 효과 */
-        .pow {
-            position: absolute; font-size: 50px; font-weight: bold; color: #ffeb3b;
-            text-shadow: 4px 4px 0 #f44336, -1px -1px 0 #f44336;
-            z-index: 20; pointer-events: none; animation: pow-pop 0.5s forwards;
+        /* 건강식 날개 애니메이션 */
+        .good::before, .good::after {
+            content: "✨"; position: absolute; font-size: 20px; top: 0; animation: wing-move 0.6s infinite alternate;
         }
-        @keyframes pow-pop { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.5); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+        .good::before { left: -15px; } .good::after { right: -15px; }
+        @keyframes wing-move { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
-        /* 하단 데드라인 바 */
+        /* 5. 하단 데드라인 바 (사진 속 디자인) */
         #deadline-container {
-            position: absolute; bottom: 20px; width: 90%; height: 35px;
-            background: #ffe3e8; border: 4px solid #ff6b81; border-radius: 20px; overflow: hidden;
+            position: absolute; bottom: 30px; left: 10%; width: 80%; height: 35px;
+            background: #6d1e1e; border-radius: 20px; border: 4px solid #ff8b94; overflow: hidden;
         }
         #deadline-fill {
-            width: 100%; height: 100%; background: linear-gradient(90deg, #ff6b81, #ff8b94);
-            background-image: linear-gradient(45deg, rgba(255,255,255,.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.2) 50%, rgba(255,255,255,.2) 75%, transparent 75%, transparent);
-            background-size: 30px 30px; animation: move-stripes 1s linear infinite;
+            width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94);
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 10px, transparent 10px, transparent 20px);
         }
-        @keyframes move-stripes { from { background-position: 0 0; } to { background-position: 30px 0; } }
-        #deadline-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 18px; }
+        #deadline-label {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: white; font-size: 18px; letter-spacing: 2px;
+        }
+
+        /* 6. 타격 효과 (POW!) */
+        .pow {
+            position: absolute; font-size: 60px; color: #ffeb3b; font-weight: bold;
+            text-shadow: 4px 4px 0 #f44336, -2px -2px 0 #f44336; z-index: 20;
+            pointer-events: none; animation: pow-anim 0.4s forwards;
+        }
+        @keyframes pow-anim { 0% { transform: scale(0); rotate: -20deg; } 100% { transform: scale(1.2) rotate(10deg); opacity: 0; } }
 
         #start-btn {
-            position: absolute; top: 65%; padding: 20px 60px; font-size: 28px;
+            position: absolute; top: 65%; padding: 20px 60px; font-size: 26px;
             background: linear-gradient(to bottom, #ff8b94, #ff6b81);
             color: white; border: 5px solid white; border-radius: 50px;
             cursor: pointer; font-family: 'Jua'; box-shadow: 0 10px 0 #c23653;
         }
-        #start-btn:active { transform: translateY(5px); box-shadow: 0 5px 0 #c23653; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="score-panel">
-        <div id="score-label">HEALTH SCORE</div>
-        <div id="score-display"><span id="score-text">0</span> <span style="font-size:24px; margin-left:10px;">💪</span></div>
+    <div id="ui-top">
+        <div id="score-panel">
+            <div id="score-label">Health Score:</div>
+            <div id="score-value-box"><span id="score-text">0</span> <span style="font-size:24px; margin-left:10px;">💪</span></div>
+        </div>
     </div>
 
-    <div id="goal-character">🥕</div>
+    <div id="hero-carrot">🥕</div>
 
     <div id="deadline-container">
         <div id="deadline-fill"></div>
-        <div id="deadline-text">DEADLINE</div>
+        <div id="deadline-label">deadline</div>
     </div>
 
-    <button id="start-btn">도전 시작!</button>
+    <button id="start-btn">실험 시작!</button>
 </div>
 
 <script>
     const container = document.getElementById('game-container');
     const scoreText = document.getElementById('score-text');
     const startBtn = document.getElementById('start-btn');
-    const goalChar = document.getElementById('goal-character');
+    const hero = document.getElementById('hero-carrot');
 
-    let score = 0, gameActive = false, speed = 2.8;
+    let score = 0, gameActive = false, speed = 2.5;
 
-    const goods = [{n:'브로콜리', i:'🥦'}, {n:'사과', i:'🍎'}, {n:'당근', i:'🥕'}];
-    const bads = [{n:'도넛', i:'🍩'}, {n:'콜라', i:'🥤'}, {n:'튀김', i:'🍟'}];
+    // 사진 속 등장하는 아이템 리스트 (영어 단어 포함)
+    const goodItems = [
+        { eng: 'Broccoli', ico: '🥦' },
+        { eng: 'Apple', ico: '🍎' },
+        { eng: 'Carrot', ico: '🥕' }
+    ];
+    const badItems = [
+        { eng: 'Donut', ico: '🍩' },
+        { eng: 'Soda', ico: '🥤' },
+        { eng: 'Fried', ico: '🍟' }
+    ];
 
     function spawn() {
         if (!gameActive) return;
         const isGood = Math.random() > 0.45;
-        const data = (isGood ? goods : bads)[Math.floor(Math.random() * 3)];
+        const data = (isGood ? goodItems : badItems)[Math.floor(Math.random() * 3)];
         
         const item = document.createElement('div');
-        item.className = `item ${isGood ? 'good-item' : 'bad-item'}`;
-        item.innerHTML = `<div class="item-bubble">${data.i}</div><div class="item-label">${data.n}</div>`;
+        item.className = `item ${isGood ? 'good' : 'bad'}`;
+        item.innerHTML = `<div class="item-circle">${data.ico}</div><div class="item-text">${data.eng}</div>`;
         item.style.left = Math.random() * (window.innerWidth - 80) + 'px';
-        item.style.top = '-100px';
+        item.style.top = '-120px';
         container.appendChild(item);
 
-        let y = -100;
+        let y = -120;
         function fall() {
             if (!gameActive) { item.remove(); return; }
             y += speed; item.style.top = y + 'px';
@@ -143,16 +153,17 @@
             e.stopPropagation();
             if (isGood) {
                 score += 20;
-                goalChar.style.transform = `scale(${1 + score/1000})`;
-                goalChar.innerText = score > 200 ? '💪🥕💪' : '🥕';
+                hero.innerText = score > 300 ? '💪🥕💪' : '🥕'; // 일정 점수 이상이면 근육 당근으로 변신
+                hero.style.transform = 'translate(-50%, -50%) scale(1.3)';
+                setTimeout(() => hero.style.transform = 'translate(-50%, -50%) scale(1)', 200);
             } else {
                 score += 10;
                 const pow = document.createElement('div');
                 pow.className = 'pow'; pow.innerText = 'POW!';
-                pow.style.left = e.pageX - 50 + 'px'; pow.style.top = e.pageY - 50 + 'px';
+                pow.style.left = e.pageX - 40 + 'px'; pow.style.top = e.pageY - 60 + 'px';
                 container.appendChild(pow);
-                setTimeout(() => pow.remove(), 500);
-                if(navigator.vibrate) navigator.vibrate(50);
+                setTimeout(() => pow.remove(), 400);
+                if(navigator.vibrate) navigator.vibrate(40);
             }
             scoreText.innerText = score;
             item.style.transform = 'scale(0)';
@@ -160,12 +171,12 @@
             speed += 0.03;
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, Math.max(500, 2000 - score * 3));
+        setTimeout(spawn, Math.max(600, 2000 - score * 3));
     }
 
     function gameOver() {
         gameActive = false;
-        alert(`도전 종료! 최종 건강 점수: ${score}`);
+        alert(`실험 종료! 최종 건강 점수: ${score}`);
         location.reload();
     }
 
