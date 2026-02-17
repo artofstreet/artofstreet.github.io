@@ -1,1054 +1,767 @@
 <!DOCTYPE html>
-<html lang="ko" style="background: #0f172a;">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f172a">
-    <title>ArtOfStreet 안전지대 V20.9 - Sreusama Edition</title>
-    
-    <link rel="manifest" href="manifest-sender.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
-    
-    <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            -webkit-user-select: none; 
-            user-select: none; 
-            -webkit-touch-callout: none; 
-            -webkit-tap-highlight-color: transparent; 
-            outline: none !important; 
-        }
-        html, body { 
-            width: 100%; 
-            height: 100%; 
-            overflow: hidden; 
-            position: fixed; 
-            touch-action: manipulation; 
-        }
-        body { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
-            color: white; 
-        }
-        
-        /* ========== 상단 헤더 ========== */
-        .top-header { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            height: 80px; 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-            box-shadow: none; 
-            z-index: 9999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: none;
-        }
-        
-        .header-title {
-            font-size: 26px;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .settings-btn { 
-            position: absolute; 
-            top: 20px; 
-            left: 20px;
-            width: 60px; 
-            height: 40px; 
-            background: rgba(30, 41, 59, 0.8); 
-            border: none; 
-            border-radius: 12px; 
-            font-size: 22px; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(10px);
-        }
-        .settings-btn:active { 
-            transform: scale(0.9); 
-            background: rgba(255,255,255,0.25); 
-        }
-        
-        .mode-toggle-btn { 
-            position: absolute; 
-            top: 20px; 
-            right: 20px;
-            width: 60px; 
-            height: 40px; 
-            background: rgba(30, 41, 59, 0.8); 
-            border: none; 
-            border-radius: 12px; 
-            cursor: pointer; 
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            backdrop-filter: blur(10px);
-        }
-        .mode-toggle-btn:active { 
-            transform: scale(0.9); 
-            background: rgba(255,255,255,0.25); 
-        }
-        
-        /* ========== 메인 화면 ========== */
-        .app-screen { 
-            display: none; 
-            width: 100%; 
-            height: calc(100% - 80px); 
-            position: absolute; 
-            top: 80px; 
-            left: 0; 
-            overflow-y: auto; 
-            touch-action: pan-y; 
-        }
-        .app-screen.active { display: flex; }
-        
-        #senderScreen { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 20px; 
-        }
-        
-        /* ========== 레이더 컨테이너 ========== */
-        .radar-container { 
-            position: relative; 
-            width: 280px; 
-            height: 280px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            margin: 40px 0;
-        }
-        
-        /* ========== ⚡ 스르사마의 4분의1 터진 가느다란 띠 (보라-빨강-노랑) ========== */
-        .radar-ring {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            pointer-events: none;
-            animation: spin-ring 1.5s linear infinite;
-        }
-        
-        .radar-ring::before {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg,
-                transparent 0deg,
-                transparent 90deg,   /* 4분의 1 터진 공간 */
-                #FF00FF 90deg,       /* 형광 보라 */
-                #FF00FF 180deg,
-                #FF0000 180deg,      /* 형광 빨강 */
-                #FF0000 270deg,
-                #FFFF00 270deg,      /* 형광 노랑 */
-                #FFFF00 360deg
-            );
-        }
-        
-        /* 안쪽을 완벽하게 파내서 가느다란 실선만 남기는 안전한 기법 */
-        .radar-ring::after {
-            content: '';
-            position: absolute;
-            top: 3px; left: 3px; right: 3px; bottom: 3px;
-            background: #0f172a; /* 배경색과 맞춰서 투명한 척 하기 */
-            border-radius: 50%;
-        }
-        
-        @keyframes spin-ring { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
-        
-        /* ========== 🔴 밝고 쨍한 빨강 SOS 버튼 (완벽 중앙 정렬) ========== */
-        .btn-emergency { 
-            width: 255px;  /* 띠와 밀착되도록 간격 좁힘 */
-            height: 255px; 
-            background: radial-gradient(circle, #FF4444 0%, #FF0000 100%); 
-            border-radius: 50%; 
-            border: none; 
-            color: white; 
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); 
-            cursor: pointer; 
-            z-index: 10; 
-            transition: all 0.2s ease; 
-            touch-action: manipulation;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center; /* 텍스트 정중앙 배치 */
-            padding: 0;
-            position: relative;
-        }
-        
-        .btn-emergency:active { 
-            transform: scale(0.95); 
-            box-shadow: 0 0 50px rgba(255, 0, 0, 0.9); 
-        }
-        
-        .btn-emergency.tracking { 
-            animation: pulse-button 1.5s ease-in-out infinite; 
-        }
-        
-        @keyframes pulse-button { 
-            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,0,0,0.5); } 
-            50% { transform: scale(1.05); box-shadow: 0 0 60px rgba(255,0,0,0.9); } 
-        }
-        
-        .sos-text {
-            font-size: 68px;
-            font-weight: 900;
-            color: white;
-            letter-spacing: 4px;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            line-height: 1;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
-        
-        .request-text {
-            font-size: 24px;
-            font-weight: 700;
-            color: rgba(255,255,255,0.95);
-            letter-spacing: 1px;
-            line-height: 1;
-            margin: 8px 0 0 0;
-            padding: 0;
-            text-align: center;
-        }
-        
-        #statusMsg { 
-            margin-top: 30px; 
-            font-size: 22px; 
-            color: #60a5fa; 
-            font-weight: 600; 
-            text-align: center;
-        }
-        
-        .tracking-badge { 
-            background: rgba(255, 51, 51, 0.9); 
-            padding: 12px 28px; 
-            border-radius: 25px; 
-            font-size: 20px; 
-            margin-top: 20px; 
-            display: inline-block; 
-            animation: blink 1s infinite; 
-            border: 2px solid rgba(255,255,255,0.3);
-        }
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        
-        /* ========== 수신 화면 ========== */
-        #receiverScreen { 
-            background: linear-gradient(135deg, #064e3b 0%, #047857 100%) !important; 
-            flex-direction: column; 
-            align-items: center; 
-            padding: 20px; 
-        }
-        #receiverScreen.emergency { 
-            background: linear-gradient(135deg, #991b1b 0%, #dc2626 100%) !important; 
-            animation: blink-bg 0.5s infinite alternate; 
-        }
-        @keyframes blink-bg { from { opacity: 1; } to { opacity: 0.8; } }
-        
-        .receiver-title { 
-            font-size: 32px; 
-            margin: 25px 0; 
-            font-weight: 900; 
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-        }
-        
-        .btn-box, .btn-white { 
-            padding: 20px; 
-            width: 90%; 
-            max-width: 400px; 
-            font-size: 24px; 
-            font-weight: bold; 
-            border: none; 
-            cursor: pointer; 
-            transition: all 0.2s;
-            border-radius: 15px;
-        }
-        .btn-box { 
-            background: rgba(0,0,0,0.2); 
-            color: white; 
-            margin: 10px 0; 
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-        .btn-white { 
-            background: white; 
-            color: #047857; 
-            margin-top: 20px; 
-            font-weight: 900;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-        }
-        .btn-white:active { transform: scale(0.95); }
-        
-        #map { 
-            width: 100%; 
-            max-width: 500px; 
-            height: 350px; 
-            border-radius: 20px; 
-            margin: 20px 0; 
-            border: 3px solid rgba(255,255,255,0.3); 
-            background: #e0e0e0; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        }
-        
-        .emergency-card { 
-            background: rgba(255,255,255,0.15); 
-            padding: 25px; 
-            border-radius: 20px; 
-            width: 90%; 
-            max-width: 400px; 
-            margin-top: 25px; 
-            border: 2px solid rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-        }
-        
-        .live-badge { 
-            background: #dc2626; 
-            padding: 8px 20px; 
-            border-radius: 20px; 
-            font-size: 18px; 
-            display: inline-block; 
-            animation: pulse-button 1.5s infinite; 
-            border: 2px solid rgba(255,255,255,0.5);
-        }
-        
-        /* ========== 설정 화면 ========== */
-        .settings-screen { 
-            display: none; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            padding: 0; 
-            overflow-y: auto; 
-            z-index: 10000; 
-        }
-        .settings-screen.active { display: block; }
-        
-        /* ========== 설정 전용 헤더 ========== */
-        .settings-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 80px;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            z-index: 10001;
-        }
-        
-        .settings-back-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 22px;
-            font-weight: 900;
-            color: white;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 10px 15px;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-        .settings-back-btn:active {
-            transform: scale(0.95);
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .settings-title-center {
-            font-size: 28px;
-            font-weight: 900;
-            color: white;
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-        
-        .settings-done-btn {
-            font-size: 22px;
-            font-weight: 900;
-            color: white;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 10px 20px;
-            border-radius: 10px;
-            transition: all 0.2s;
-        }
-        .settings-done-btn:active {
-            transform: scale(0.95);
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .settings-content {
-            padding: 100px 20px 20px;
-        }
-        
-        .settings-screen { 
-            display: none; 
-            position: absolute; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
-            padding: 0; 
-            overflow-y: auto; 
-            z-index: 10000; 
-        }
-        .settings-screen.active { display: block; }
-        
-        .settings-screen.sender-settings { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-        }
-        .settings-screen.receiver-settings { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); 
-        }
-        
-        .card { 
-            background: rgba(255,255,255,0.1); 
-            padding: 28px; 
-            border-radius: 20px; 
-            width: 100%; 
-            max-width: 450px; 
-            margin: 0 auto 35px; 
-            border: 2px solid rgba(255,255,255,0.2); 
-            backdrop-filter: blur(10px);
-        }
-        
-        .btn-copy {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            padding: 15px 25px;
-            font-size: 22px;
-            font-weight: 900;
-            border-radius: 12px;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-            margin-top: 15px;
-            width: 100%;
-        }
-        .btn-copy:active { transform: scale(0.96); }
-        
-        .id-guide-text {
-            font-size: 20px;
-            font-weight: 700;
-            color: #60a5fa;
-            text-align: center;
-            margin-top: 15px;
-            line-height: 1.5;
-        }
-        
-        .section-title { 
-            font-size: 26px; 
-            margin-bottom: 20px; 
-            font-weight: 900; 
-        }
-        
-        .id-display { 
-            background: rgba(59, 130, 246, 0.2); 
-            padding: 20px; 
-            border-radius: 15px; 
-            margin: 15px 0; 
-            text-align: center; 
-            border: 2px solid rgba(59, 130, 246, 0.3);
-        }
-        
-        .id-text { 
-            font-size: 42px; 
-            color: #60a5fa; 
-            font-weight: 900; 
-            letter-spacing: 4px; 
-        }
-        
-        .input-box { 
-            width: 100%; 
-            padding: 22px; 
-            border-radius: 12px; 
-            border: 2px solid rgba(255,255,255,0.3); 
-            font-size: 26px; 
-            margin: 20px 0; 
-            text-align: center; 
-            background: rgba(255,255,255,0.1);
-            color: white;
-            font-weight: 700;
-        }
-        
-        .btn-add { 
-            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%); 
-            color: white; 
-            padding: 22px; 
-            width: 100%; 
-            font-size: 26px; 
-            font-weight: 900; 
-            border-radius: 12px; 
-            border: none; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
-            margin-top: 10px;
-        }
-        .btn-add:active { transform: scale(0.96); }
-        
-        .friend-item { 
-            background: rgba(255,255,255,0.2); 
-            padding: 22px 28px; 
-            border-radius: 15px; 
-            margin: 18px 0; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            font-size: 24px; 
-            font-weight: 900; 
-            border: 2px solid rgba(255,255,255,0.2);
-        }
-        
-        .btn-delete { 
-            background: #dc2626; 
-            color: white; 
-            border: none; 
-            padding: 14px 26px; 
-            border-radius: 25px; 
-            cursor: pointer; 
-            font-size: 22px; 
-            font-weight: 900; 
-            transition: all 0.2s; 
-        }
-        .btn-delete:active { transform: scale(0.88); }
-        
-        .btn-back {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            padding: 18px;
-            width: 100%;
-            max-width: 450px;
-            font-size: 22px;
-            font-weight: bold;
-            border-radius: 12px;
-            border: 2px solid rgba(255,255,255,0.3);
-            cursor: pointer;
-            transition: all 0.2s;
-            margin: 20px auto;
-            display: block;
-        }
-        .btn-back:active { transform: scale(0.96); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SOS 지원모드</title>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --green-base: #2ECC71;
+    --green-light: #4AE88A;
+    --green-header: #3DDC78;
+    --green-dark: #1A9A50;
+    --pink-alert: #FF3E8B;
+    --pink-light: #FF6FAD;
+    --white: #FFFFFF;
+  }
+
+  body {
+    background: #1a1a2e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .phone-frame {
+    width: 360px;
+    height: 720px;
+    background: var(--green-base);
+    border-radius: 0;
+    overflow: hidden;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 2px rgba(255,255,255,0.1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: background 0.15s ease;
+  }
+
+  /* ALERT FLASH ANIMATION */
+  .phone-frame.alerting {
+    animation: flashBg 0.6s ease-in-out infinite;
+  }
+
+  @keyframes flashBg {
+    0%, 100% { background: var(--green-base); }
+    50% { background: var(--pink-alert); }
+  }
+
+  /* HEADER */
+  .header {
+    background: #4CD970;
+    padding: 14px 18px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    border-radius: 0;
+  }
+
+  .mode-switch-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .mode-switch-btn:hover { background: rgba(0,0,0,0.1); }
+
+  .mode-switch-btn .dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.9);
+  }
+
+  .mode-switch-tooltip {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(0,0,0,0.85);
+    color: white;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .mode-switch-btn:hover .mode-switch-tooltip {
+    opacity: 1;
+  }
+
+  .header-icon-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+  }
+
+  .header-center {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .header-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.2px;
+  }
+
+  .header-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #00FF7F;
+    box-shadow: 0 0 6px #00FF7F;
+    animation: dotPulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes dotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+  }
+
+  /* MAIN CONTENT */
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    gap: 24px;
+    position: relative;
+  }
+
+  /* RADAR */
+  .radar-container {
+    width: 200px;
+    height: 200px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .radar-base {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0,50,20,0.8) 0%, rgba(0,30,10,0.9) 100%);
+    border: 2px solid rgba(0,255,100,0.4);
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(0,255,100,0.3), inset 0 0 30px rgba(0,0,0,0.5);
+  }
+
+  /* Radar circles */
+  .radar-circle {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(0,255,100,0.25);
+  }
+  .radar-circle:nth-child(1) { width: 45px; height: 45px; }
+  .radar-circle:nth-child(2) { width: 90px; height: 90px; }
+  .radar-circle:nth-child(3) { width: 135px; height: 135px; }
+  .radar-circle:nth-child(4) { width: 178px; height: 178px; }
+
+  /* Cross lines */
+  .radar-line-h, .radar-line-v {
+    position: absolute;
+    background: rgba(0,255,100,0.2);
+  }
+  .radar-line-h { width: 100%; height: 1px; }
+  .radar-line-v { width: 1px; height: 100%; }
+
+  /* Sweep */
+  .radar-sweep {
+    width: 90px;
+    height: 90px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-origin: left center;
+    margin-top: -1px;
+    animation: sweep 2.5s linear infinite;
+  }
+
+  .radar-sweep::before {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 88px 88px 0 0;
+    border-color: transparent;
+    border-right-color: transparent;
+    background: conic-gradient(from 0deg, rgba(0,255,100,0) 0deg, rgba(0,255,100,0.6) 60deg, rgba(0,255,100,0) 60deg);
+    width: 88px;
+    height: 88px;
+    border-radius: 0 0 0 100%;
+    transform: rotate(-90deg);
+    top: -88px;
+    left: 0;
+  }
+
+  @keyframes sweep {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  /* Radar center dot */
+  .radar-center {
+    width: 8px;
+    height: 8px;
+    background: #00FF7F;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 5;
+    box-shadow: 0 0 10px #00FF7F;
+  }
+
+  /* Radar blips */
+  .radar-blip {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #00FF7F;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00FF7F;
+    z-index: 4;
+    animation: blipFade 2.5s ease-out infinite;
+  }
+  .blip1 { top: 38px; left: 110px; animation-delay: 0.8s; }
+  .blip2 { top: 70px; left: 55px; animation-delay: 1.6s; }
+  .blip3 { top: 120px; left: 125px; animation-delay: 0.3s; }
+
+  @keyframes blipFade {
+    0% { opacity: 0; transform: scale(0.5); }
+    20% { opacity: 1; transform: scale(1.5); }
+    60% { opacity: 0.6; transform: scale(1); }
+    100% { opacity: 0; }
+  }
+
+  /* STANDBY TEXT */
+  .standby-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .standby-label::before, .standby-label::after {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  /* SOUND/VIBRATE TOGGLE */
+  .mode-toggle {
+    background: rgba(0,0,0,0.15);
+    border-radius: 50px;
+    display: flex;
+    padding: 4px;
+    gap: 4px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .mode-btn {
+    padding: 10px 20px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    color: rgba(255,255,255,0.6);
+    background: transparent;
+  }
+
+  .mode-btn.active {
+    background: #1A6B3C;
+    color: #FFFFFF;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+  }
+
+  .mode-btn.active.vibrate-mode {
+    background: #1A6B3C;
+    color: #FFFFFF;
+  }
+
+  /* SPEAKER / VIBRATE ICON */
+  .sound-icon, .vibrate-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Speaker icon SVG animation */
+  .wave-animate {
+    animation: waveAnim 1s ease-in-out infinite;
+  }
+  .wave-animate2 {
+    animation: waveAnim 1s ease-in-out infinite 0.2s;
+  }
+  @keyframes waveAnim {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  /* Vibrate animation */
+  .vibrate-shake {
+    animation: vibrateShake 0.15s ease-in-out infinite;
+  }
+  @keyframes vibrateShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px) rotate(-2deg); }
+    75% { transform: translateX(2px) rotate(2deg); }
+  }
+
+  /* ALERT OVERLAY */
+  .alert-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: rgba(220, 30, 80, 0.97);
+    z-index: 20;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    overflow-y: auto;
+  }
+
+  .alert-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .alert-header-bar {
+    width: 100%;
+    background: rgba(0,0,0,0.3);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .alert-siren-icon {
+    font-size: 22px;
+    animation: alertTextPulse 0.6s ease-in-out infinite;
+  }
+
+  .alert-title-text {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 18px;
+    color: white;
+    letter-spacing: 1px;
+    flex: 1;
+  }
+
+  .alert-close-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: 'Noto Sans KR', sans-serif;
+  }
+
+  .alert-body {
+    width: 100%;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .alert-flash-text {
+    font-family: 'Black Han Sans', sans-serif;
+    font-size: 22px;
+    color: white;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(255,255,255,0.6);
+    animation: alertTextPulse 0.6s ease-in-out infinite;
+  }
+
+  .location-card {
+    background: rgba(0,0,0,0.25);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+
+  .location-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .location-address {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.5;
+  }
+
+  .location-coords {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    font-family: monospace;
+  }
+
+  .map-container {
+    width: 100%;
+    height: 200px;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.2);
+    position: relative;
+    background: #1a2035;
+  }
+
+  .map-container iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .map-ping {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .map-ping::before {
+    content: '📍';
+    font-size: 28px;
+    display: block;
+    animation: pinBounce 1s ease-in-out infinite;
+  }
+
+  @keyframes pinBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+
+  .time-stamp {
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    text-align: right;
+  }
+
+  @keyframes alertTextPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  /* TEST BUTTON */
+  .test-btn {
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.4);
+    color: white;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 10px 28px;
+    border-radius: 30px;
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  .test-btn:hover { background: rgba(255,255,255,0.25); }
+  .test-btn:active { transform: scale(0.96); }
+</style>
 </head>
 <body>
+<div class="phone-frame" id="phoneFrame">
 
-    <div class="top-header">
-        <div class="settings-btn" onclick="showSettings()">⚙️</div>
-        <div class="header-title" id="headerTitle">SOS 요청 모드</div>
-        <div class="mode-toggle-btn" onclick="toggleMode()">⇄</div>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-icon-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="rgba(255,255,255,0.75)" stroke-width="2"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="rgba(255,255,255,0.75)" stroke-width="2"/>
+      </svg>
+    </div>
+    <div class="header-center">
+      <span class="header-label" id="headerLabel">SOS 지원 모드</span>
+      <div class="header-status-dot"></div>
+    </div>
+    <div class="mode-switch-btn" onclick="switchMode()" title="전환모드">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M7 16H20M20 16L17 13M20 16L17 19" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M17 8H4M4 8L7 5M4 8L7 11" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div class="mode-switch-tooltip">전환 모드</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="content">
+
+    <!-- RADAR -->
+    <div class="radar-container">
+      <div class="radar-base" id="radarBase">
+        <div class="radar-circle"></div>
+        <div class="radar-circle"></div>
+        <div class="radar-circle"></div>
+        <div class="radar-circle"></div>
+        <div class="radar-line-h"></div>
+        <div class="radar-line-v"></div>
+        <div class="radar-sweep">
+          <div style="width:88px;height:88px;background:conic-gradient(from 270deg, rgba(0,255,100,0) 0deg, rgba(0,255,100,0.5) 50deg, rgba(0,255,100,0) 70deg);border-radius:50%;position:absolute;top:-44px;left:-44px;"></div>
+        </div>
+        <div class="radar-center"></div>
+        <div class="radar-blip blip1"></div>
+        <div class="radar-blip blip2"></div>
+        <div class="radar-blip blip3"></div>
+      </div>
     </div>
 
-    <div id="senderScreen" class="app-screen active">
-        <div class="radar-container">
-            <div class="radar-ring"></div>
-            
-            <button id="emergencyBtn" class="btn-emergency">
-                <div class="sos-text">SOS</div>
-                <div class="request-text">구조요청</div>
-            </button>
-        </div>
-        <p id="statusMsg"></p>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
+
+
+
+
+    <!-- MODE TOGGLE -->
+    <div class="mode-toggle">
+      <button class="mode-btn active" id="soundBtn" onclick="setMode('sound')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M5 9H9L15 4V20L9 15H5V9Z" fill="currentColor"/>
+          <path d="M18 9C19.5 10.5 20 11.7 20 12C20 12.3 19.5 13.5 18 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        소리 켜기
+      </button>
+      <button class="mode-btn" id="vibrateBtn" onclick="setMode('vibrate')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="5" width="1.5" height="4" rx="0.75" fill="currentColor"/>
+          <rect x="2" y="11" width="1.5" height="4" rx="0.75" fill="currentColor"/>
+          <rect x="20.5" y="5" width="1.5" height="4" rx="0.75" fill="currentColor"/>
+          <rect x="20.5" y="11" width="1.5" height="4" rx="0.75" fill="currentColor"/>
+          <rect x="5" y="3" width="14" height="18" rx="2.5" fill="currentColor"/>
+        </svg>
+        진동
+      </button>
     </div>
 
-    <div id="receiverScreen" class="app-screen">
-        <h1 id="receiverTitle" class="receiver-title">✅ 현재 안전합니다</h1>
-        <button id="btn1" class="btn-box">대기 중...</button>
-        <button id="btn2" class="btn-box">수신 대기 중</button>
-        <div id="map"></div>
-        <button id="soundBtn" class="btn-white" style="background:#dc2626; color:white;">🔊 소리 켜기 (필수!)</button>
-        <div id="emergencyCard" class="emergency-card" style="display:none;">
-            <span class="live-badge">🔴 LIVE</span>
-            <p id="friendName" style="font-size:26px; font-weight:bold; margin:15px 0;"></p>
-            <p id="address" style="font-size:22px; margin:12px 0;"></p>
-            <p id="time" style="font-size:18px; opacity:0.8;"></p>
-            <a href="#" id="mapLink" class="btn-white" style="display:block; background:#3b82f6; color:white; text-decoration:none; text-align:center; margin-top:20px;" target="_blank">🗺️ 실시간 위치 확인</a>
-        </div>
-        <button id="resetBtn" class="btn-white" style="display:none; background:#dc2626; color:white;">상황 종료</button>
-    </div>
+    <!-- TEST ALERT BTN -->
+    <button class="test-btn" onclick="triggerAlert()">🚨 경보</button>
 
-    <div id="senderSettings" class="settings-screen sender-settings">
-        <div class="settings-header">
-            <button class="settings-back-btn" onclick="hideSettings()">← 뒤로</button>
-            <div class="settings-title-center">SOS 요청 설정</div>
-            <button class="settings-done-btn" onclick="hideSettings()">완료</button>
-        </div>
-        <div class="settings-content">
-            <div class="card">
-                <p class="section-title" style="color:white;">내 안전 ID</p>
-                <div class="id-display"><div class="id-text" id="senderId">로딩중...</div></div>
-                <button class="btn-copy" onclick="copySenderId()">ID 복사하기</button>
-                <p class="id-guide-text">이 ID를 나를 지켜줄 보호자에게 알려주세요.</p>
-            </div>
-            <div class="card">
-                <p class="section-title" style="color:white;">👥 내 보호자 등록</p>
-                <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-                <button class="btn-add" onclick="addSenderFriend()">보호자 추가</button>
-            </div>
-            <div class="card">
-                <p class="section-title" style="color:white;">등록된 보호자 목록</p>
-                <p style="background:rgba(59,130,246,0.3); padding:10px 20px; border-radius:15px; font-size:22px; font-weight:900; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(59,130,246,0.3);">
-                    <span id="senderCount">0</span>/5명
-                </p>
-                <div id="senderFriendList"></div>
-            </div>
-        </div>
-    </div>
+  </div>
 
-    <div id="receiverSettings" class="settings-screen receiver-settings">
-        <div class="settings-header">
-            <button class="settings-back-btn" onclick="hideSettings()">← 뒤로</button>
-            <div class="settings-title-center">SOS 지원 설정</div>
-            <button class="settings-done-btn" onclick="hideSettings()">완료</button>
-        </div>
-        <div class="settings-content">
-            <div class="card">
-                <p class="section-title" style="color:white;">내 안전 ID</p>
-                <div class="id-display"><div class="id-text" id="receiverId">로딩중...</div></div>
-                <button class="btn-copy" onclick="copyReceiverId()">ID 복사하기</button>
-                <p class="id-guide-text">이 ID를 내가 보호할 사람에게 알려주세요.</p>
-            </div>
-            <div class="card">
-                <p class="section-title" style="color:white;">🛡️ 보호대상자 추가</p>
-                <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-                <button class="btn-add" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onclick="addReceiverFriend()">보호대상자 등록</button>
-            </div>
-            <div class="card">
-                <p class="section-title" style="color:white;">등록된 보호대상자</p>
-                <p style="background:rgba(16,185,129,0.3); padding:10px 20px; border-radius:15px; font-size:22px; font-weight:900; display:inline-block; margin:12px 0; color:white; border:2px solid rgba(16,185,129,0.4);">
-                    <span id="receiverCount">0</span>/5명
-                </p>
-                <div id="receiverFriendList"></div>
-            </div>
-        </div>
+  <!-- ALERT OVERLAY -->
+  <div class="alert-overlay" id="alertOverlay">
+    <div class="alert-header-bar">
+      <div class="alert-siren-icon">🚨</div>
+      <div class="alert-title-text">SOS 경보 발생!</div>
+      <button class="alert-close-btn" onclick="stopAlert()">확인</button>
     </div>
+    <div class="alert-body">
+      <div class="alert-flash-text">도움 요청 신호 수신 중...</div>
 
-    <script>
-        let senderId = localStorage.getItem('safeZoneID_SND');
-        if (!senderId) { 
-            senderId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); 
-            localStorage.setItem('safeZoneID_SND', senderId); 
+      <!-- 위치 주소 -->
+      <div class="location-card">
+        <div class="location-label">📍 현재 위치</div>
+        <div class="location-address" id="alertAddress">위치 정보 불러오는 중...</div>
+        <div class="location-coords" id="alertCoords">--</div>
+        <div class="time-stamp" id="alertTime">--</div>
+      </div>
+
+      <!-- 지도 -->
+      <div class="map-container" id="mapContainer">
+        <iframe id="mapIframe" src="" allowfullscreen loading="lazy"></iframe>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  let currentMode = 'sound';
+  let appMode = 'sos';
+  let alerting = false;
+  let alertTimer = null;
+  let sirenTimer = null;
+  let audioCtx = null;
+  let vibrateInterval = null;
+
+  function switchMode() {
+    appMode = appMode === 'sos' ? 'normal' : 'sos';
+    const label = document.getElementById('headerLabel');
+    const frame = document.getElementById('phoneFrame');
+    if (appMode === 'normal') {
+      label.textContent = '일반 모드';
+      frame.style.background = '#3DDC78';
+    } else {
+      label.textContent = 'SOS 지원 모드';
+      frame.style.background = '#2ECC71';
+    }
+  }
+
+
+  function setMode(mode) {
+    currentMode = mode;
+    const soundBtn = document.getElementById('soundBtn');
+    const vibrateBtn = document.getElementById('vibrateBtn');
+
+    if (mode === 'sound') {
+      soundBtn.classList.add('active');
+      soundBtn.classList.remove('vibrate-mode');
+      vibrateBtn.classList.remove('active', 'vibrate-mode');
+    } else {
+      vibrateBtn.classList.add('active', 'vibrate-mode');
+      soundBtn.classList.remove('active');
+    }
+  }
+
+  function playSiren() {
+    function sirenLoop() {
+      if (!alerting) return;
+      try {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function tone(freq, start, dur) {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + start);
+          osc.frequency.linearRampToValueAtTime(freq * 1.5, audioCtx.currentTime + start + dur * 0.5);
+          osc.frequency.linearRampToValueAtTime(freq, audioCtx.currentTime + start + dur);
+          gain.gain.setValueAtTime(0.3, audioCtx.currentTime + start);
+          gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + start + dur);
+          osc.start(audioCtx.currentTime + start);
+          osc.stop(audioCtx.currentTime + start + dur);
         }
-        document.getElementById('senderId').innerText = senderId;
+        for (let i = 0; i < 4; i++) tone(700, i * 0.5, 0.45);
+        sirenTimer = setTimeout(sirenLoop, 2200);
+      } catch(e) {}
+    }
+    sirenLoop();
+  }
 
-        let receiverId = localStorage.getItem('safeZoneID_RCV');
-        if (!receiverId) { 
-            receiverId = 'SZ-' + Math.random().toString(36).substr(2, 4).toUpperCase(); 
-            localStorage.setItem('safeZoneID_RCV', receiverId); 
-        }
-        document.getElementById('receiverId').innerText = receiverId;
+  function triggerAlert() {
+    if (alerting) return;
+    alerting = true;
+    const frame = document.getElementById('phoneFrame');
+    const overlay = document.getElementById('alertOverlay');
+    frame.classList.add('alerting');
+    overlay.classList.add('visible');
 
-        let currentMode = localStorage.getItem('currentMode') || 'sender';
-        window.startListening = null;
-        
-        window.toggleMode = function() {
-            const senderScreen = document.getElementById('senderScreen');
-            const receiverScreen = document.getElementById('receiverScreen');
-            const headerTitle = document.getElementById('headerTitle');
-            
-            if (currentMode === 'sender') {
-                currentMode = 'receiver';
-                headerTitle.innerText = 'SOS 지원 모드';
-                senderScreen.classList.remove('active'); 
-                receiverScreen.classList.add('active');
-                setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
-                setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
-            } else {
-                currentMode = 'sender';
-                headerTitle.innerText = 'SOS 요청 모드';
-                receiverScreen.classList.remove('active'); 
-                senderScreen.classList.add('active');
-            }
-            localStorage.setItem('currentMode', currentMode);
-        };
-        
-        window.addEventListener('load', () => {
-            if (currentMode === 'receiver') {
-                document.getElementById('headerTitle').innerText = 'SOS 지원 모드';
-                document.getElementById('senderScreen').classList.remove('active');
-                document.getElementById('receiverScreen').classList.add('active');
-                setTimeout(() => { if (window.kakaoMap) window.kakaoMap.relayout(); }, 100);
-                setTimeout(() => { if (window.startListening) window.startListening(); }, 2000);
-            }
-        });
+    if (currentMode === 'sound') {
+      playSiren();
+    } else {
+      vibrateInterval = setInterval(() => {
+        if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+      }, 800);
+    }
 
-        window.showSettings = function() {
-            document.querySelector('.top-header').style.display = 'none';
-            if (currentMode === 'sender') { 
-                document.getElementById('senderSettings').classList.add('active'); 
-                loadSenderFriends(); 
-            } else { 
-                document.getElementById('receiverSettings').classList.add('active'); 
-                loadReceiverFriends(); 
-            }
-        };
-        
-        window.hideSettings = function() {
-            document.querySelector('.top-header').style.display = 'flex';
-            document.getElementById('senderSettings').classList.remove('active');
-            document.getElementById('receiverSettings').classList.remove('active');
-        };
+    // 위치 정보 가져오기
+    const now = new Date();
+    document.getElementById('alertTime').textContent =
+      `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
 
-        window.copySenderId = function() {
-            const id = localStorage.getItem('safeZoneID_SND');
-            if (id) {
-                navigator.clipboard.writeText(id).then(() => {
-                    alert('✅ ID가 복사되었습니다!\n\n' + id + '\n\n이 ID를 보호자에게 전달해주세요.');
-                }).catch(() => {
-                    alert('📋 내 안전 ID\n\n' + id + '\n\n위 ID를 직접 복사해서 보호자에게 전달해주세요.');
-                });
-            }
-        };
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude.toFixed(6);
+          const lng = pos.coords.longitude.toFixed(6);
+          document.getElementById('alertCoords').textContent = `위도 ${lat}  경도 ${lng}`;
 
-        window.copyReceiverId = function() {
-            const id = localStorage.getItem('safeZoneID_RCV');
-            if (id) {
-                navigator.clipboard.writeText(id).then(() => {
-                    alert('✅ ID가 복사되었습니다!\n\n' + id);
-                }).catch(() => {
-                    alert('📋 내 안전 ID\n\n' + id + '\n\n위 ID를 직접 복사해주세요.');
-                });
-            }
-        };
-
-        window.addSenderFriend = function() {
-            const input = document.getElementById('senderFriendInput');
-            let id = input.value.trim().toUpperCase();
-            if (!id) { alert('❌ ID를 입력해주세요!'); return; }
-            if (!id.startsWith('SZ-')) id = 'SZ-' + id;
-            
-            let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            if (list.length >= 5) { alert('❌ 최대 5명까지 등록할 수 있습니다!'); return; }
-            if (list.includes(id)) { alert('❌ 이미 등록된 보호자입니다!'); return; }
-            
-            list.push(id); 
-            localStorage.setItem('friendList_SND', JSON.stringify(list));
-            input.value = ''; 
-            alert('✅ 보호자가 등록되었습니다!\n\n' + id); 
-            loadSenderFriends();
-        };
-        
-        window.deleteSenderFriend = function(id) {
-            if (!confirm('⚠️ 이 보호자를 삭제하시겠습니까?\n\n' + id)) return;
-            let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            list = list.filter(f => f !== id); 
-            localStorage.setItem('friendList_SND', JSON.stringify(list)); 
-            loadSenderFriends();
-        };
-        
-        function loadSenderFriends() {
-            const list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            document.getElementById('senderCount').innerText = list.length;
-            const cont = document.getElementById('senderFriendList');
-            if (list.length === 0) { 
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; font-weight:900; color:white;">등록된 보호자가 없습니다</p>'; 
-                return; 
-            }
-            cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');
-        }
-
-        window.addReceiverFriend = function() {
-            const input = document.getElementById('receiverFriendInput');
-            let id = input.value.trim().toUpperCase();
-            if (!id) { alert('❌ ID를 입력해주세요!'); return; }
-            if (!id.startsWith('SZ-')) id = 'SZ-' + id;
-            
-            let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            if (list.length >= 5) { alert('❌ 최대 5명까지 등록할 수 있습니다!'); return; }
-            if (list.includes(id)) { alert('❌ 이미 등록된 보호대상자입니다!'); return; }
-            
-            list.push(id); 
-            localStorage.setItem('friendList_RCV', JSON.stringify(list));
-            input.value = ''; 
-            alert('✅ 보호대상자가 등록되었습니다!\n\n' + id); 
-            loadReceiverFriends();
-            setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
-        };
-        
-        window.deleteReceiverFriend = function(id) {
-            if (!confirm('⚠️ 이 보호대상자를 삭제하시겠습니까?\n\n' + id)) return;
-            let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            list = list.filter(f => f !== id); 
-            localStorage.setItem('friendList_RCV', JSON.stringify(list)); 
-            loadReceiverFriends();
-        };
-        
-        function loadReceiverFriends() {
-            const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            document.getElementById('receiverCount').innerText = list.length;
-            const cont = document.getElementById('receiverFriendList');
-            if (list.length === 0) { 
-                cont.innerHTML = '<p style="text-align:center; opacity:0.7; margin-top:18px; font-size:22px; font-weight:900; color:white;">등록된 보호대상자가 없습니다</p>'; 
-                return; 
-            }
-            cont.innerHTML = list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');
-        }
-    </script>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, serverTimestamp, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const geocoder = new kakao.maps.services.Geocoder();
-
-        window.isTracking = false;
-        let watchId = null;
-        const statusMsg = document.getElementById('statusMsg');
-        const trackingBadge = document.getElementById('trackingBadge');
-        const emergencyBtn = document.getElementById('emergencyBtn');
-
-        emergencyBtn.addEventListener('touchstart', function(e) {
-            if (navigator.vibrate) {
-                navigator.vibrate([500, 100, 500, 100, 800]);
-            }
-        }, { passive: false });
-        
-        emergencyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if (!window.isTracking) { 
-                startTracking(); 
-            } else { 
-                stopTracking(); 
-            }
-        });
-
-        function startTracking() {
-            const myID = localStorage.getItem('safeZoneID_SND')?.trim().toUpperCase();
-            if (!myID) { 
-                alert('❌ ID 없음'); 
-                return; 
-            }
-            
-            const emergencyRef = ref(db, 'emergency_global');
-            const sendTime = new Date().toLocaleTimeString();
-            
-            set(emergencyRef, {
-                sender: myID,
-                address: '위치 확인 중...',
-                lat: 37.5665,
-                lon: 126.9780,
-                mapUrl: 'https://map.kakao.com/',
-                time: sendTime,
-                timestamp: serverTimestamp(),
-                status: 'emergency'
-            }).then(() => {
-                statusMsg.innerText = "✅ 긴급 신호 전송됨!";
-                
-                if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200]);
-                }
-            }).catch(err => {
-                alert('❌ 전송 실패!\n\n' + err.message);
-                return;
+          // Reverse geocoding via nominatim
+          fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`)
+            .then(r => r.json())
+            .then(data => {
+              const addr = data.display_name || '주소를 찾을 수 없습니다';
+              document.getElementById('alertAddress').textContent = addr;
+            })
+            .catch(() => {
+              document.getElementById('alertAddress').textContent = `위도 ${lat}, 경도 ${lng}`;
             });
-            
-            statusMsg.innerText = "📍 위치 확인 중...";
-            
-            watchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    
-                    geocoder.coord2Address(lon, lat, (result, status) => {
-                        let addr = '주소 확인 불가';
-                        if (status === kakao.maps.services.Status.OK && result[0]) {
-                            addr = result[0].road_address ? 
-                                result[0].road_address.address_name : 
-                                result[0].address.address_name;
-                        }
-                        
-                        set(emergencyRef, {
-                            sender: myID,
-                            address: addr,
-                            lat: lat,
-                            lon: lon,
-                            mapUrl: `https://map.kakao.com/link/map/긴급구조,${lat},${lon}`,
-                            time: new Date().toLocaleTimeString(),
-                            timestamp: serverTimestamp(),
-                            status: 'emergency'
-                        });
-                        
-                        statusMsg.innerText = "✅ " + addr.substring(0, 25) + "...";
-                    });
-                },
-                (error) => { 
-                    statusMsg.innerText = "⚠️ 위치 불가 (신호 전송됨)"; 
-                },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-            );
-            
-            window.isTracking = true;
-            emergencyBtn.classList.add('tracking');
-            trackingBadge.style.display = 'inline-block';
-        }
-        
-        function stopTracking() {
-            if (watchId) { 
-                navigator.geolocation.clearWatch(watchId); 
-                watchId = null; 
-            }
-            
-            remove(ref(db, 'emergency_global'));
-            
-            window.isTracking = false;
-            emergencyBtn.classList.remove('tracking');
-            trackingBadge.style.display = 'none';
-            statusMsg.innerText = "✅ 추적 종료";
-        }
 
-        window.startTracking = startTracking;
-        window.stopTracking = stopTracking;
+          // OpenStreetMap embed
+          const zoom = 16;
+          document.getElementById('mapIframe').src =
+            `https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(lng)-0.005},${parseFloat(lat)-0.005},${parseFloat(lng)+0.005},${parseFloat(lat)+0.005}&layer=mapnik&marker=${lat},${lng}`;
+        },
+        (err) => {
+          // 위치 권한 거부 시 기본 서울 위치
+          document.getElementById('alertAddress').textContent = '서울특별시 중구 세종대로 110';
+          document.getElementById('alertCoords').textContent = '위도 37.566535  경도 126.977969';
+          document.getElementById('mapIframe').src =
+            'https://www.openstreetmap.org/export/embed.html?bbox=126.972969,37.561535,126.982969,37.571535&layer=mapnik&marker=37.566535,126.977969';
+        }
+      );
+    } else {
+      document.getElementById('alertAddress').textContent = '서울특별시 중구 세종대로 110';
+      document.getElementById('alertCoords').textContent = '위도 37.566535  경도 126.977969';
+      document.getElementById('mapIframe').src =
+        'https://www.openstreetmap.org/export/embed.html?bbox=126.972969,37.561535,126.982969,37.571535&layer=mapnik&marker=37.566535,126.977969';
+    }
 
-        const siren = new Audio('https://actions.google.com/sounds/v1/alarms/siren_wailing.ogg');
-        siren.loop = true;
-        siren.volume = 1.0;
-        let sirenReady = false;
-        
-        let kakaoMap, marker;
-        let currentEmergency = null;
-        
-        const mapContainer = document.getElementById('map');
-        const mapOption = { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 };
-        kakaoMap = new kakao.maps.Map(mapContainer, mapOption);
-        window.kakaoMap = kakaoMap;
-        
-        marker = new kakao.maps.Marker({ position: kakaoMap.getCenter() });
-        marker.setMap(kakaoMap);
-        
-        const soundBtn = document.getElementById('soundBtn');
-        
-        soundBtn.onclick = function() {
-            siren.play().then(() => {
-                siren.pause(); 
-                siren.currentTime = 0;
-                sirenReady = true;
-                soundBtn.innerText = "✅ 소리 켜짐!";
-                soundBtn.style.background = '#10b981';
-                alert('✅ 사이렌 준비 완료!');
-            }).catch(e => {
-                alert('⚠️ 다시 눌러주세요!');
-            });
-        };
-        
-        window.startListening = function() {
-            const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            
-            const globalRef = ref(db, 'emergency_global');
-            
-            onValue(globalRef, (snap) => {
-                const data = snap.val();
-                
-                if (!data) {
-                    if (currentEmergency) hideEmergency();
-                    return;
-                }
-                
-                const senderID = data.sender;
-                
-                if (friendList.length === 0 || friendList.includes(senderID)) {
-                    showEmergency(senderID, data);
-                }
-            });
-        };
-        
-        function showEmergency(fid, data) {
-            if (currentEmergency !== fid) {
-                if (sirenReady) {
-                    siren.play().catch(e => console.error(e));
-                } else {
-                    alert('🔊 "소리 켜기" 버튼을 먼저 눌러주세요!');
-                }
-                
-                currentEmergency = fid;
-                
-                if(navigator.vibrate) {
-                    navigator.vibrate([300, 100, 300, 100, 300, 100, 600]);
-                    setTimeout(() => navigator.vibrate([400, 100, 400, 100, 800]), 1500);
-                }
-            }
-            
-            const screen = document.getElementById('receiverScreen');
-            screen.classList.add('emergency');
-            
-            document.getElementById('receiverTitle').innerText = "🚨 긴급 상황!!";
-            document.getElementById('btn1').style.display = "none";
-            document.getElementById('btn2').style.display = "none";
-            soundBtn.style.display = "none";
-            
-            document.getElementById('emergencyCard').style.display = "block";
-            document.getElementById('friendName').innerText = fid;
-            document.getElementById('address').innerText = data.address;
-            document.getElementById('time').innerText = "업데이트: " + data.time;
-            document.getElementById('mapLink').href = data.mapUrl;
-            document.getElementById('resetBtn').style.display = "block";
-            
-            const pos = new kakao.maps.LatLng(data.lat, data.lon);
-            kakaoMap.setCenter(pos); 
-            marker.setPosition(pos);
-        }
-        
-        function hideEmergency() {
-            siren.pause(); 
-            siren.currentTime = 0; 
-            currentEmergency = null;
-            
-            const screen = document.getElementById('receiverScreen');
-            screen.classList.remove('emergency');
-            
-            document.getElementById('receiverTitle').innerText = "✅ 현재 안전합니다";
-            document.getElementById('btn1').style.display = "block";
-            document.getElementById('btn2').style.display = "block";
-            soundBtn.style.display = "block";
-            document.getElementById('emergencyCard').style.display = "none";
-            document.getElementById('resetBtn').style.display = "none";
-        }
-        
-        document.getElementById('resetBtn').onclick = function() {
-            remove(ref(db, 'emergency_global'));
-            hideEmergency();
-        };
-    </script>
+    alertTimer = null;
+  }
+
+  function stopAlert() {
+    alerting = false;
+    const frame = document.getElementById('phoneFrame');
+    const overlay = document.getElementById('alertOverlay');
+    frame.classList.remove('alerting');
+    overlay.classList.remove('visible');
+    if (alertTimer) { clearTimeout(alertTimer); alertTimer = null; }
+    if (sirenTimer) { clearTimeout(sirenTimer); sirenTimer = null; }
+    if (vibrateInterval) { clearInterval(vibrateInterval); vibrateInterval = null; }
+    if (navigator.vibrate) navigator.vibrate(0);
+    if (audioCtx) { try { audioCtx.close(); } catch(e){} audioCtx = null; }
+    document.getElementById('mapIframe').src = '';
+  }
+</script>
 </body>
 </html>
