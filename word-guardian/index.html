@@ -3,42 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Word Guardian - Long Play Edition</title>
+    <title>Word Guardian - Voice Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; padding: 0; overflow: hidden; background: #fff0f3; font-family: 'Jua', sans-serif; touch-action: none; }
         #game-view { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle, #ffffff, #ffe3e8); }
 
-        /* 상단 UI: 더 직관적인 체력바와 점수판 */
+        /* 상단 UI 패널 */
         #ui-header { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
         #info-panel { 
             background: white; padding: 15px 30px; border-radius: 0 0 40px 40px; 
             box-shadow: 0 10px 25px rgba(214, 51, 132, 0.1); border: 3px solid #ffb6c1; 
-            display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 250px;
+            display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 260px;
         }
         #score-box { font-size: 28px; color: #d63384; font-weight: bold; }
-        
-        /* 에너지바 스타일의 생명력 측정기 */
-        #hp-container { width: 200px; height: 15px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
+        #hp-container { width: 220px; height: 15px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
         #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94); transition: width 0.3s; }
 
-        /* 중앙 가이드 캐릭터 */
+        /* 캐릭터 및 데드라인 */
         #hero-carrot { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; opacity: 0.1; z-index: 1; }
-
-        /* 떨어지는 단어 유닛 */
-        .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
-        .unit-icon { font-size: 60px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); }
-        .unit-text { background: white; padding: 5px 18px; border-radius: 25px; font-size: 22px; color: #333; font-weight: bold; border: 3px solid #ff8b94; margin-top: 8px; box-shadow: 0 5px 0 #ffccd5; }
-
-        /* 회복 아이템 효과 */
-        .heal-effect { color: #4caf50 !important; border-color: #4caf50 !important; }
-
-        /* POW! 효과 */
-        .pow { position: absolute; font-size: 85px; color: #ffeb3b; font-weight: 900; text-shadow: 6px 6px 0 #f44336; z-index: 200; pointer-events: none; animation: pop 0.4s forwards; }
-        @keyframes pop { 0% { transform: scale(0) rotate(-20deg); } 100% { transform: scale(1.5) rotate(15deg); opacity: 0; } }
-
-        /* 하단 데드라인 */
         #line { position: absolute; bottom: 30px; width: 94%; left: 3%; height: 16px; background: #6d1e1e; border-radius: 15px; border: 4px solid #ff4d4d; }
+
+        /* 떨어지는 단어 */
+        .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
+        .unit-icon { font-size: 65px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); }
+        .unit-text { background: white; padding: 6px 20px; border-radius: 25px; font-size: 24px; color: #333; font-weight: bold; border: 3.5px solid #ff8b94; margin-top: 8px; }
 
         /* 시작 버튼 */
         #start-btn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); padding: 25px 80px; font-size: 36px; background: linear-gradient(to bottom, #ff8b94, #ff6b81); color: white; border: 6px solid white; border-radius: 70px; cursor: pointer; box-shadow: 0 12px 0 #c23653; z-index: 1000; }
@@ -52,139 +41,8 @@
         <div id="info-panel">
             <div id="score-box">건강 점수: <span id="score-num">0</span></div>
             <div id="hp-container"><div id="hp-bar"></div></div>
-            <div style="font-size:14px; color:#ff6b81;">🥕 당근을 모아 체력을 유지하세요!</div>
+            <div style="font-size:14px; color:#ff6b81;">🔊 당근을 치면 발음이 나옵니다!</div>
         </div>
     </div>
     <div id="hero-carrot">🥕</div>
     <div id="line"></div>
-    <button id="start-btn">장거리 도전!</button>
-</div>
-
-<script>
-    const view = document.getElementById('game-view');
-    const scoreNum = document.getElementById('score-num');
-    const hpBar = document.getElementById('hp-bar');
-    const startBtn = document.getElementById('start-btn');
-
-    let score = 0, active = false, hp = 100;
-    let speed = 3.2; // 시작 속도를 더 안정적으로 조정
-    let spawnRate = 900; 
-
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function playSound(type) {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-
-        if (type === 'hit') {
-            osc.frequency.setValueAtTime(523, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.1);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
-        } else if (type === 'heal') {
-            osc.frequency.setValueAtTime(659, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1046, audioCtx.currentTime + 0.2);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
-        } else {
-            osc.type = 'square';
-            osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-        }
-    }
-
-    const targetData = { en: 'CARROT', em: '🥕' };
-    const distractors = [
-        { en: 'APPLE', em: '🍎' }, { en: 'PIZZA', em: '🍕' },
-        { en: 'SODA', em: '🥤' }, { en: 'DONUT', em: '🍩' },
-        { en: 'CAKE', em: '🍰' }
-    ];
-
-    function updateHP(amount) {
-        hp = Math.min(100, Math.max(0, hp + amount));
-        hpBar.style.width = hp + "%";
-        if (hp <= 0) gameOver();
-    }
-
-    function spawn() {
-        if (!active) return;
-
-        // 한 번에 더 많은 아이템이 쏟아지도록 설정
-        const count = Math.random() > 0.4 ? 2 : 1; 
-        
-        for(let i=0; i < count; i++) {
-            const isTarget = Math.random() > 0.55; 
-            const data = isTarget ? targetData : distractors[Math.floor(Math.random() * distractors.length)];
-            
-            const unit = document.createElement('div');
-            unit.className = 'unit';
-            unit.innerHTML = `<div class="unit-icon">${data.em}</div><div class="unit-text">${data.en}</div>`;
-            unit.style.left = (Math.random() * (window.innerWidth - 120)) + 'px';
-            unit.style.top = '-180px';
-            view.appendChild(unit);
-
-            let y = -180;
-            function fall() {
-                if (!active) { unit.remove(); return; }
-                y += speed;
-                unit.style.top = y + 'px';
-
-                if (y > window.innerHeight - 80) {
-                    if (isTarget) { 
-                        updateHP(-15); // 당근 놓치면 체력 크게 감소
-                        playSound('miss');
-                    }
-                    unit.remove();
-                } else { requestAnimationFrame(fall); }
-            }
-
-            unit.onclick = (e) => {
-                e.stopPropagation();
-                if (isTarget) {
-                    score += 100;
-                    updateHP(5); // 당근을 맞히면 체력 소폭 회복! (오래 할 수 있는 비결)
-                    playSound('hit');
-                    if (navigator.vibrate) navigator.vibrate(30);
-                    speed += 0.02; // 속도 상승폭을 낮춰서 난이도 조절
-                } else {
-                    playSound('miss');
-                    updateHP(-10); // 오답 클릭 시 체력 감소
-                    if (navigator.vibrate) navigator.vibrate(80);
-                    const pow = document.createElement('div');
-                    pow.className = 'pow'; pow.innerText = 'POW!';
-                    pow.style.left = (e.pageX - 50) + 'px'; pow.style.top = (e.pageY - 70) + 'px';
-                    view.appendChild(pow);
-                    setTimeout(() => pow.remove(), 400);
-                }
-                scoreNum.innerText = score;
-                unit.remove();
-            };
-            requestAnimationFrame(fall);
-        }
-
-        setTimeout(spawn, Math.max(300, spawnRate - (score / 30)));
-    }
-
-    function gameOver() {
-        active = false;
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        alert(`장거리 도전 종료!\n총감독님의 건강 점수: ${score}`);
-        location.reload();
-    }
-
-    startBtn.onclick = () => {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        startBtn.style.display = 'none';
-        active = true;
-        score = 0; hp = 100;
-        updateHP(0);
-        spawn();
-    };
-</script>
-</body>
-</html>
