@@ -3,10 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ArtOfStreet - 흥미진진 워드 가디언</title>
+    <title>ArtOfStreet - 동화 속 워드 가디언</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #fff0f3; font-family: 'Jua', sans-serif; touch-action: none; transition: background 0.3s; }
+        /* 1. 배경 디자인 업그레이드 (프로 키즈 스타일) */
+        body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            /* 기본 배경: 부드러운 핑크빛 동화 나라 */
+            background: radial-gradient(circle at center top, #ffffff, #ffe3e8 60%, #ffc0cb 100%);
+            /* 은은한 패턴 추가로 고급스러움 더하기 */
+            background-image: radial-gradient(circle at center top, #ffffff, #ffe3e8 60%, #ffc0cb 100%),
+                              url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            font-family: 'Jua', sans-serif; touch-action: none; transition: background 0.5s ease-in-out; 
+        }
+        
+        /* 피버 타임 배경 클래스 (황금빛 마법 시간) */
+        body.fever-mode {
+            background: radial-gradient(circle at center, #fffde7, #fff59d 60%, #ffd54f 100%);
+             background-image: radial-gradient(circle at center, #fffde7, #fff59d 60%, #ffd54f 100%),
+                              url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.5'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
         #game-view { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 
         /* 상단 UI */
@@ -17,20 +34,20 @@
             display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 280px;
         }
         #score-box { font-size: 30px; color: #d63384; font-weight: bold; }
-        #combo-display { font-size: 20px; color: #ff6b81; font-weight: bold; height: 24px; transition: transform 0.2s; }
-        #hp-container { width: 220px; height: 12px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
+        #combo-display { font-size: 22px; color: #ff6b81; font-weight: bold; height: 26px; transition: transform 0.2s; text-shadow: 1px 1px 2px white; }
+        #hp-container { width: 220px; height: 14px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
         #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94); transition: width 0.3s; }
 
         /* 중앙 캐릭터 */
-        #hero-carrot { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; opacity: 0.15; z-index: 1; transition: all 0.3s; }
+        #hero-carrot { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 160px; opacity: 0.15; z-index: 1; transition: all 0.3s; filter: drop-shadow(0 10px 20px rgba(255, 182, 193, 0.4)); }
 
         /* 게임 유닛 */
         .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
-        .unit-icon { font-size: 65px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); }
-        .unit-text { background: white; padding: 5px 20px; border-radius: 20px; font-size: 24px; color: #333; font-weight: bold; border: 3px solid #ff8b94; margin-top: 5px; box-shadow: 0 5px 0 #ffccd5; }
+        .unit-icon { font-size: 70px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.15)); }
+        .unit-text { background: white; padding: 6px 22px; border-radius: 25px; font-size: 26px; color: #333; font-weight: bold; border: 3.5px solid #ff8b94; margin-top: 5px; box-shadow: 0 6px 0 #ffccd5; }
 
         /* 시작 버튼 */
-        #start-btn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); padding: 25px 80px; font-size: 36px; background: #ff6b81; color: white; border: 6px solid white; border-radius: 70px; cursor: pointer; box-shadow: 0 12px 0 #c23653; z-index: 9999 !important; }
+        #start-btn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); padding: 25px 80px; font-size: 36px; background: #ff6b81; color: white; border: 6px solid white; border-radius: 70px; cursor: pointer; box-shadow: 0 12px 0 #c23653; z-index: 9999 !important; font-family: 'Jua'; }
     </style>
 </head>
 <body>
@@ -44,7 +61,7 @@
         </div>
     </div>
     <div id="hero-carrot">🥕</div>
-    <button id="start-btn">실험 시작!</button>
+    <button id="start-btn">동화 속으로 출발!</button>
 </div>
 
 <script>
@@ -54,12 +71,12 @@
     const hpBar = document.getElementById('hp-bar');
     const startBtn = document.getElementById('start-btn');
     const hero = document.getElementById('hero-carrot');
+    const body = document.body;
 
     let score = 0, active = false, hp = 100, combo = 0;
     let speed = 3.5;
     let fever = false;
 
-    // 음성 합성 (TTS)
     function speak(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
@@ -87,16 +104,19 @@
         const unit = document.createElement('div');
         unit.className = 'unit';
         unit.innerHTML = `<div class="unit-icon">${data.em}</div><div class="unit-text">${data.en}</div>`;
-        unit.style.left = (Math.random() * (window.innerWidth - 120)) + 'px';
-        unit.style.top = '-180px';
+        unit.style.left = (Math.random() * (window.innerWidth - 130)) + 'px';
+        unit.style.top = '-200px';
         view.appendChild(unit);
 
-        let y = -180;
+        let y = -200;
         function fall() {
             if (!active) { unit.remove(); return; }
             y += speed; unit.style.top = y + 'px';
             if (y > window.innerHeight - 80) {
-                if (data.ok) { updateHP(-15); combo = 0; comboDisplay.innerText = ''; fever = false; document.body.style.background = '#fff0f3'; }
+                if (data.ok) { 
+                    updateHP(-15); combo = 0; comboDisplay.innerText = ''; 
+                    fever = false; body.classList.remove('fever-mode');
+                }
                 unit.remove();
             } else { requestAnimationFrame(fall); }
         }
@@ -109,24 +129,22 @@
                 let bonus = fever ? 200 : 100;
                 score += bonus;
                 updateHP(6);
-                comboDisplay.innerText = combo + " COMBO!";
+                comboDisplay.innerText = combo + " COMBO! ✨";
                 comboDisplay.style.transform = "scale(1.5)";
                 setTimeout(() => comboDisplay.style.transform = "scale(1)", 100);
 
-                // 피버 모드 로직 (5콤보 이상)
                 if (combo >= 5) {
-                    if(!fever) speak("Fever Time! Go Ria!");
+                    if(!fever) speak("Fever Time!");
                     fever = true;
-                    document.body.style.background = "#fff9c4"; // 황금빛 배경
+                    body.classList.add('fever-mode'); // 황금빛 배경 적용
                 }
-
                 hero.innerText = score > 500 ? '💪🥕💪' : '🥕';
                 hero.style.opacity = Math.min(0.6, 0.15 + (score/2000));
                 speed += 0.03;
             } else {
                 updateHP(-12); combo = 0; fever = false;
-                comboDisplay.innerText = "OOPS!";
-                document.body.style.background = "#fff0f3";
+                comboDisplay.innerText = "OOPS! 💥";
+                body.classList.remove('fever-mode'); // 배경 원래대로
                 if (navigator.vibrate) navigator.vibrate(80);
             }
             scoreNum.innerText = score;
@@ -138,7 +156,7 @@
 
     function end() {
         active = false;
-        alert(`학습 완료!\n총감독님 점수: ${score}\n오늘도 안전지대에서 건강하세요!`);
+        alert(`게임 종료!\n총감독님 점수: ${score}\n동화 속 건강 여행을 마쳤습니다!`);
         location.reload();
     }
 
@@ -146,7 +164,7 @@
         startBtn.style.display = 'none';
         active = true; score = 0; hp = 100; combo = 0; fever = false;
         updateHP(0); spawn();
-        speak("Hello Ria, Let's start!");
+        speak("Let's go!");
     };
 </script>
 </body>
