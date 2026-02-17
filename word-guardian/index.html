@@ -3,100 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ArtOfStreet - 프리미엄 워드 가디언</title>
+    <title>ArtOfStreet - 주식 용어 스나이퍼</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        /* 1. 배경 디자인 고급화 (프리미엄 스튜디오 스타일) */
+        /* 1. 주식 시장 느낌의 고급스러운 네이비 & 블루 배경 */
         body { 
             margin: 0; padding: 0; overflow: hidden; 
-            /* 기본 배경: 깊이감 있는 부드러운 핑크 그라데이션 */
-            background: linear-gradient(135deg, #fff5f7 0%, #ffc2d1 100%);
-            font-family: 'Jua', sans-serif; touch-action: none; transition: background 0.5s ease-in-out;
-            position: relative;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            font-family: 'Jua', sans-serif; touch-action: none;
         }
-        /* 고급스러운 빛 효과 레이어 추가 (Bokeh 효과) */
         body::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background-image: 
-                radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.7) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255, 230, 230, 0.5) 0%, transparent 40%);
-            pointer-events: none; z-index: 0;
+            content: ''; position: absolute; inset: 0;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.8) 0%, transparent 70%);
+            z-index: 0;
         }
-        
-        /* 피버 타임 배경 (황금빛 고급스러움) */
-        body.fever-mode {
-            background: linear-gradient(135deg, #fffde7 0%, #ffd54f 100%);
-        }
-        body.fever-mode::before {
-             background-image: 
-                radial-gradient(circle at 50% 20%, rgba(255, 255, 150, 0.8) 0%, transparent 60%),
-                radial-gradient(circle at 20% 80%, rgba(255, 255, 200, 0.6) 0%, transparent 40%);
-        }
-
         #game-view { position: relative; width: 100vw; height: 100vh; overflow: hidden; z-index: 1; }
 
-        /* 상단 UI - 텍스트 변경됨 */
+        /* 2. 상단 UI: "투자 수익"으로 변경 */
         #ui-header { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
         #info-panel { 
             background: rgba(255, 255, 255, 0.95); padding: 12px 35px; border-radius: 0 0 35px 35px; 
-            box-shadow: 0 8px 20px rgba(214, 51, 132, 0.15); border: 3px solid #ffb6c1; 
+            box-shadow: 0 8px 20px rgba(25, 118, 210, 0.15); border: 3px solid #90caf9; 
             display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 260px;
-            backdrop-filter: blur(5px); /* 유리 효과 */
         }
-        #score-box { font-size: 28px; color: #d63384; font-weight: bold; display: flex; align-items: center; }
-        #combo-display { font-size: 20px; color: #ff6b81; font-weight: bold; height: 24px; transition: transform 0.2s; text-shadow: 1px 1px 1px white; }
-        #hp-container { width: 220px; height: 12px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
-        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94); transition: width 0.3s; }
+        #score-box { font-size: 28px; color: #1565c0; font-weight: bold; }
+        #hp-container { width: 220px; height: 12px; background: #eee; border-radius: 10px; border: 2px solid #90caf9; overflow: hidden; }
+        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #1e88e5, #64b5f6); transition: width 0.3s; }
 
-        /* 중앙 캐릭터 제거됨 (요청사항 반영) */
-
-        /* 게임 유닛 (더 깔끔하게) */
+        /* 3. 주식 유닛 디자인 */
         .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
         .unit-icon { font-size: 68px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.12)); }
-        .unit-text { background: white; padding: 5px 20px; border-radius: 20px; font-size: 22px; color: #333; font-weight: bold; border: 3px solid #ff8b94; margin-top: 4px; box-shadow: 0 4px 0 #ffccd5; }
+        .unit-text { background: white; padding: 5px 20px; border-radius: 20px; font-size: 22px; color: #333; font-weight: bold; border: 3px solid #1e88e5; margin-top: 4px; box-shadow: 0 4px 0 #bbdefb; }
 
-        /* 2. 시작 버튼 디자인 개선 (크기 축소 및 고급화) */
+        /* 시작 버튼 */
         #start-btn { 
             position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); 
-            /* 크기 대폭 축소 및 세련된 비율 */
             padding: 18px 50px; font-size: 26px; 
-            background: linear-gradient(to bottom, #ff8b94, #ff6b81); /* 그라데이션 적용 */
-            color: white; 
-            border: 4px solid white; /* 테두리 두께 조절 */
-            border-radius: 50px; 
-            cursor: pointer; 
-            box-shadow: 0 8px 0 #c23653, 0 15px 20px rgba(0,0,0,0.15); /* 그림자 개선 */
+            background: linear-gradient(to bottom, #42a5f5, #1e88e5); 
+            color: white; border: 4px solid white; border-radius: 50px; 
+            cursor: pointer; box-shadow: 0 8px 0 #1565c0, 0 15px 20px rgba(0,0,0,0.15);
             z-index: 9999 !important; font-family: 'Jua';
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-            transition: all 0.1s;
         }
-        #start-btn:active { transform: translate(-50%, -48%); box-shadow: 0 4px 0 #c23653; }
     </style>
 </head>
 <body>
-
 <div id="game-view">
     <div id="ui-header">
         <div id="info-panel">
-            <div id="score-box">건강 음식 :&nbsp;<span id="score-num">0</span></div>
-            <div id="combo-display"></div>
+            <div id="score-box">투자 수익 :&nbsp;<span id="score-num">0</span></div>
             <div id="hp-container"><div id="hp-bar"></div></div>
+            <div style="font-size:14px; color:#1e88e5; margin-top:5px;">⚠️ 'Overnight'과 'Greed'를 피하세요!</div>
         </div>
     </div>
-    <button id="start-btn">게임 시작</button>
+    <button id="start-btn">투자 시작</button>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
     const scoreNum = document.getElementById('score-num');
-    const comboDisplay = document.getElementById('combo-display');
     const hpBar = document.getElementById('hp-bar');
     const startBtn = document.getElementById('start-btn');
-    const body = document.body;
 
-    let score = 0, active = false, hp = 100, combo = 0;
-    let speed = 3.5;
-    let fever = false;
+    let score = 0, active = false, hp = 100;
+    let speed = 3.3;
 
     function speak(text) {
         if ('speechSynthesis' in window) {
@@ -107,10 +76,15 @@
         }
     }
 
-    const words = [
-        { en: 'CARROT', em: '🥕', ok: true }, { en: 'APPLE', em: '🍎', ok: true },
-        { en: 'BROCCOLI', em: '🥦', ok: true }, { en: 'DONUT', em: '🍩', ok: false },
-        { en: 'PIZZA', em: '🍕', ok: false }, { en: 'SODA', em: '🥤', ok: false }
+    // 주식 용어 데이터 세팅 (총감독님 관심 종목 및 원칙 반영)
+    const stockWords = [
+        { en: 'TSLA', em: '🚗', ok: true },     // 테슬라
+        { en: 'AMZN', em: '📦', ok: true },     // 아마존
+        { en: 'PROFIT', em: '💰', ok: true },   // 익절
+        { en: 'BULL', em: '🐂', ok: true },     // 상승장
+        { en: 'OVERNIGHT', em: '🌑', ok: false }, // 오버나잇 (금지 원칙)
+        { en: 'GREED', em: '👹', ok: false },     // 욕심 (금지 원칙)
+        { en: 'BEAR', em: '🐻', ok: false }      // 하락장
     ];
 
     function updateHP(amt) {
@@ -121,7 +95,7 @@
 
     function spawn() {
         if (!active) return;
-        const data = words[Math.floor(Math.random() * words.length)];
+        const data = stockWords[Math.floor(Math.random() * stockWords.length)];
         const unit = document.createElement('div');
         unit.className = 'unit';
         unit.innerHTML = `<div class="unit-icon">${data.em}</div><div class="unit-text">${data.en}</div>`;
@@ -134,10 +108,7 @@
             if (!active) { unit.remove(); return; }
             y += speed; unit.style.top = y + 'px';
             if (y > window.innerHeight - 80) {
-                if (data.ok) { 
-                    updateHP(-15); combo = 0; comboDisplay.innerText = ''; 
-                    fever = false; body.classList.remove('fever-mode');
-                }
+                if (data.ok) updateHP(-15);
                 unit.remove();
             } else { requestAnimationFrame(fall); }
         }
@@ -146,44 +117,28 @@
             e.stopPropagation();
             speak(data.en);
             if (data.ok) {
-                combo++;
-                let bonus = fever ? 200 : 100;
-                score += bonus;
-                updateHP(6);
-                comboDisplay.innerText = combo + " COMBO! ✨";
-                comboDisplay.style.transform = "scale(1.3)";
-                setTimeout(() => comboDisplay.style.transform = "scale(1)", 100);
-
-                if (combo >= 5) {
-                    if(!fever) speak("Fever Time!");
-                    fever = true;
-                    body.classList.add('fever-mode');
-                }
-                speed += 0.03;
+                score += 100; updateHP(5); speed += 0.04;
             } else {
-                updateHP(-12); combo = 0; fever = false;
-                comboDisplay.innerText = "OOPS! 💥";
-                body.classList.remove('fever-mode');
-                if (navigator.vibrate) navigator.vibrate(80);
+                updateHP(-20); // 오버나잇이나 욕심은 큰 타격!
+                if (navigator.vibrate) navigator.vibrate(100);
             }
             scoreNum.innerText = score;
             unit.remove();
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, Math.max(350, 1100 - (score / 35)));
+        setTimeout(spawn, Math.max(400, 1100 - (score / 40)));
     }
 
     function end() {
         active = false;
-        alert(`게임 종료!\n최종 건강 음식 점수: ${score}`);
+        alert(`투자 종료!\n최종 수익: ${score}\n원칙을 지키는 투자가 최고입니다!`);
         location.reload();
     }
 
     startBtn.onclick = () => {
         startBtn.style.display = 'none';
-        active = true; score = 0; hp = 100; combo = 0; fever = false;
-        updateHP(0); spawn();
-        speak("Start!");
+        active = true; score = 0; hp = 100; updateHP(0); spawn();
+        speak("Stock Market Open!");
     };
 </script>
 </body>
