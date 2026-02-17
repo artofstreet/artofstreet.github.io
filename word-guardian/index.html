@@ -3,45 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ArtOfStreet - 교육용 금광 탐험</title>
+    <title>ArtOfStreet - 흥미진진 워드 가디언</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        body { margin: 0; padding: 0; overflow: hidden; background: #fff0f3; font-family: 'Jua', sans-serif; touch-action: none; }
-        #game-view { position: relative; width: 100vw; height: 100vh; transition: background 0.5s; }
+        body { margin: 0; padding: 0; overflow: hidden; background: #fff0f3; font-family: 'Jua', sans-serif; touch-action: none; transition: background 0.3s; }
+        #game-view { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 
-        /* 상단 교육용 UI */
+        /* 상단 UI */
         #ui-header { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
         #info-panel { 
             background: white; padding: 15px 30px; border-radius: 0 0 40px 40px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 3px solid #ffb6c1; 
-            display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 300px;
+            display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 280px;
         }
-        #score-box { font-size: 28px; color: #d63384; }
-        #combo-box { font-size: 18px; color: #ff6b81; font-weight: bold; height: 20px; }
-        #hp-container { width: 240px; height: 14px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
+        #score-box { font-size: 30px; color: #d63384; font-weight: bold; }
+        #combo-display { font-size: 20px; color: #ff6b81; font-weight: bold; height: 24px; transition: transform 0.2s; }
+        #hp-container { width: 220px; height: 12px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
         #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94); transition: width 0.3s; }
 
-        /* 시작 버튼 */
-        #start-btn { 
-            position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); 
-            padding: 25px 80px; font-size: 32px; 
-            background: #ff6b81; color: white; border: 6px solid white; border-radius: 70px; 
-            cursor: pointer; box-shadow: 0 10px 0 #c23653; 
-            z-index: 9999 !important; font-family: 'Jua', sans-serif;
-        }
+        /* 중앙 캐릭터 */
+        #hero-carrot { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; opacity: 0.15; z-index: 1; transition: all 0.3s; }
 
-        /* 교육용 단어 유닛 (한글+영어) */
+        /* 게임 유닛 */
         .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
-        .unit-icon { font-size: 70px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
-        .unit-label { 
-            background: white; padding: 5px 20px; border-radius: 20px; 
-            border: 3px solid #ff8b94; margin-top: 5px; text-align: center;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .text-en { font-size: 24px; color: #333; font-weight: bold; display: block; }
-        .text-ko { font-size: 14px; color: #888; display: block; }
-        
-        #line { position: absolute; bottom: 30px; width: 94%; left: 3%; height: 14px; background: #6d1e1e; border-radius: 10px; border: 4px solid #ff4d4d; z-index: 10; }
+        .unit-icon { font-size: 65px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.1)); }
+        .unit-text { background: white; padding: 5px 20px; border-radius: 20px; font-size: 24px; color: #333; font-weight: bold; border: 3px solid #ff8b94; margin-top: 5px; box-shadow: 0 5px 0 #ffccd5; }
+
+        /* 시작 버튼 */
+        #start-btn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); padding: 25px 80px; font-size: 36px; background: #ff6b81; color: white; border: 6px solid white; border-radius: 70px; cursor: pointer; box-shadow: 0 12px 0 #c23653; z-index: 9999 !important; }
     </style>
 </head>
 <body>
@@ -49,69 +38,47 @@
 <div id="game-view">
     <div id="ui-header">
         <div id="info-panel">
-            <div id="score-box">학습 점수: <span id="score-num">0</span></div>
-            <div id="combo-box"></div>
+            <div id="score-box">Health Score: <span id="score-num">0</span></div>
+            <div id="combo-display"></div>
             <div id="hp-container"><div id="hp-bar"></div></div>
-            <div style="font-size:14px; color:#ff6b81;">💡 건강한 음식 영단어를 공부해요!</div>
         </div>
     </div>
-    <div id="line"></div>
-    <button id="start-btn">금광 찾기 시작!</button>
+    <div id="hero-carrot">🥕</div>
+    <button id="start-btn">실험 시작!</button>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
     const scoreNum = document.getElementById('score-num');
-    const comboText = document.getElementById('combo-box');
+    const comboDisplay = document.getElementById('combo-display');
     const hpBar = document.getElementById('hp-bar');
     const startBtn = document.getElementById('start-btn');
+    const hero = document.getElementById('hero-carrot');
 
     let score = 0, active = false, hp = 100, combo = 0;
     let speed = 3.5;
-    let audioCtx;
+    let fever = false;
 
+    // 음성 합성 (TTS)
     function speak(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US';
-            window.speechSynthesis.speak(utterance);
-        }
-    }
-
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playSound(type) {
-        if (!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        if (type === 'hit') {
-            osc.frequency.setValueAtTime(523 + (combo * 10), audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-        } else {
-            osc.type = 'square'; osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.1);
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.lang = 'en-US';
+            window.speechSynthesis.speak(msg);
         }
     }
 
     const words = [
-        { en: 'CARROT', ko: '당근', em: '🥕', healthy: true },
-        { en: 'APPLE', ko: '사과', em: '🍎', healthy: true },
-        { en: 'BROCCOLI', ko: '브로콜리', em: '🥦', healthy: true },
-        { en: 'DONUT', ko: '도넛', em: '🍩', healthy: false },
-        { en: 'PIZZA', ko: '피자', em: '🍕', healthy: false },
-        { en: 'SODA', ko: '콜라', em: '🥤', healthy: false }
+        { en: 'CARROT', em: '🥕', ok: true }, { en: 'APPLE', em: '🍎', ok: true },
+        { en: 'BROCCOLI', em: '🥦', ok: true }, { en: 'DONUT', em: '🍩', ok: false },
+        { en: 'PIZZA', em: '🍕', ok: false }, { en: 'SODA', em: '🥤', ok: false }
     ];
 
-    function updateHP(amount) {
-        hp = Math.min(100, Math.max(0, hp + amount));
+    function updateHP(amt) {
+        hp = Math.min(100, Math.max(0, hp + amt));
         hpBar.style.width = hp + "%";
-        if (hp <= 0 && active) gameOver();
+        if (hp <= 0 && active) end();
     }
 
     function spawn() {
@@ -119,60 +86,67 @@
         const data = words[Math.floor(Math.random() * words.length)];
         const unit = document.createElement('div');
         unit.className = 'unit';
-        unit.innerHTML = `
-            <div class="unit-icon">${data.em}</div>
-            <div class="unit-label">
-                <span class="text-en">${data.en}</span>
-                <span class="text-ko">${data.ko}</span>
-            </div>
-        `;
-        unit.style.left = (Math.random() * (window.innerWidth - 130)) + 'px';
-        unit.style.top = '-200px';
+        unit.innerHTML = `<div class="unit-icon">${data.em}</div><div class="unit-text">${data.en}</div>`;
+        unit.style.left = (Math.random() * (window.innerWidth - 120)) + 'px';
+        unit.style.top = '-180px';
         view.appendChild(unit);
 
-        let y = -200;
+        let y = -180;
         function fall() {
             if (!active) { unit.remove(); return; }
             y += speed; unit.style.top = y + 'px';
             if (y > window.innerHeight - 80) {
-                if (data.healthy) { 
-                    updateHP(-12); playSound('miss'); combo = 0; comboText.innerText = '';
-                }
+                if (data.ok) { updateHP(-15); combo = 0; comboDisplay.innerText = ''; fever = false; document.body.style.background = '#fff0f3'; }
                 unit.remove();
             } else { requestAnimationFrame(fall); }
         }
+
         unit.onclick = (e) => {
             e.stopPropagation();
             speak(data.en);
-            if (data.healthy) {
+            if (data.ok) {
                 combo++;
-                score += (100 + (combo * 10)); 
-                updateHP(6); playSound('hit');
-                comboText.innerText = combo + " COMBO!";
-                view.style.background = `radial-gradient(circle, #ffffff, #ffe3e8 ${100 - combo}%)`;
-                if (navigator.vibrate) navigator.vibrate(20 + combo);
-                speed += 0.02;
+                let bonus = fever ? 200 : 100;
+                score += bonus;
+                updateHP(6);
+                comboDisplay.innerText = combo + " COMBO!";
+                comboDisplay.style.transform = "scale(1.5)";
+                setTimeout(() => comboDisplay.style.transform = "scale(1)", 100);
+
+                // 피버 모드 로직 (5콤보 이상)
+                if (combo >= 5) {
+                    if(!fever) speak("Fever Time! Go Ria!");
+                    fever = true;
+                    document.body.style.background = "#fff9c4"; // 황금빛 배경
+                }
+
+                hero.innerText = score > 500 ? '💪🥕💪' : '🥕';
+                hero.style.opacity = Math.min(0.6, 0.15 + (score/2000));
+                speed += 0.03;
             } else {
-                playSound('miss'); updateHP(-10); combo = 0; comboText.innerText = '';
+                updateHP(-12); combo = 0; fever = false;
+                comboDisplay.innerText = "OOPS!";
+                document.body.style.background = "#fff0f3";
                 if (navigator.vibrate) navigator.vibrate(80);
             }
-            scoreNum.innerText = score; unit.remove();
+            scoreNum.innerText = score;
+            unit.remove();
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, Math.max(350, 1100 - (score / 40)));
+        setTimeout(spawn, Math.max(350, 1100 - (score / 35)));
     }
 
-    function gameOver() {
+    function end() {
         active = false;
-        alert(`학습 결과\n오늘의 학습 점수: ${score}\n꾸준한 학습이 금광으로 가는 길입니다!`);
+        alert(`학습 완료!\n총감독님 점수: ${score}\n오늘도 안전지대에서 건강하세요!`);
         location.reload();
     }
 
     startBtn.onclick = () => {
-        initAudio();
         startBtn.style.display = 'none';
-        active = true; score = 0; hp = 100; combo = 0;
+        active = true; score = 0; hp = 100; combo = 0; fever = false;
         updateHP(0); spawn();
+        speak("Hello Ria, Let's start!");
     };
 </script>
 </body>
