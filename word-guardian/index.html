@@ -3,53 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Word Guardian - Hyper Speed</title>
+    <title>Word Guardian - Endurance Edition</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; padding: 0; overflow: hidden; background: #fff0f3; font-family: 'Jua', sans-serif; touch-action: none; }
         #game-view { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle, #ffffff, #ffe3e8); }
 
-        /* 상단 점수판 */
-        #ui-header { position: absolute; top: 0; width: 100%; display: flex; justify-content: center; z-index: 100; }
-        #score-box { background: white; padding: 10px 30px; border-radius: 0 0 30px 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 3px solid #ff8b94; font-size: 30px; color: #d63384; }
+        /* 상단 UI 정보창 */
+        #ui-header { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
+        #info-panel { 
+            background: white; padding: 10px 40px; border-radius: 0 0 30px 30px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); border: 3px solid #ff8b94; 
+            display: flex; gap: 30px; align-items: center;
+        }
+        .info-item { font-size: 24px; color: #d63384; font-weight: bold; }
+        #lives-display { color: #ff4d4d; }
 
-        /* 중앙 가이드 당근 */
-        #guide-carrot { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 150px; opacity: 0.2; z-index: 1; }
+        /* 중앙 가이드 가이드 */
+        #hero-carrot { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 140px; opacity: 0.15; z-index: 1; }
 
         /* 떨어지는 단어 유닛 */
-        .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; will-change: transform; }
-        .unit-icon { font-size: 50px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1)); }
-        .unit-text { background: white; padding: 2px 12px; border-radius: 15px; font-size: 20px; color: #333; font-weight: bold; border: 2px solid #ff8b94; margin-top: 5px; }
+        .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
+        .unit-icon { font-size: 55px; filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1)); }
+        .unit-text { background: white; padding: 4px 15px; border-radius: 20px; font-size: 18px; color: #333; font-weight: bold; border: 2px solid #ff8b94; margin-top: 5px; }
 
-        /* 타격 효과 */
-        .pow { position: absolute; font-size: 80px; color: #ffeb3b; font-weight: 900; text-shadow: 4px 4px 0 #f44336; z-index: 200; pointer-events: none; animation: pop 0.3s forwards; }
+        /* 효과 */
+        .pow { position: absolute; font-size: 70px; color: #ffeb3b; font-weight: 900; text-shadow: 4px 4px 0 #f44336; z-index: 200; pointer-events: none; animation: pop 0.3s forwards; }
         @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1.3); opacity: 0; } }
 
-        /* 하단 가이드라인 */
-        #line { position: absolute; bottom: 20px; width: 90%; left: 5%; height: 10px; background: #6d1e1e; border-radius: 10px; border: 3px solid #ff4d4d; }
+        /* 하단 라인 */
+        #line { position: absolute; bottom: 30px; width: 90%; left: 5%; height: 12px; background: #6d1e1e; border-radius: 10px; border: 3px solid #ff4d4d; }
 
-        #start-btn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); padding: 20px 60px; font-size: 35px; background: #ff6b81; color: white; border: 5px solid white; border-radius: 60px; cursor: pointer; box-shadow: 0 10px 0 #c23653; z-index: 1000; }
+        /* 시작 버튼 */
+        #start-btn { position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); padding: 20px 60px; font-size: 30px; background: #ff6b81; color: white; border: 5px solid white; border-radius: 60px; cursor: pointer; box-shadow: 0 10px 0 #c23653; z-index: 1000; }
     </style>
 </head>
 <body>
 
 <div id="game-view">
     <div id="ui-header">
-        <div id="score-box">SCORE: <span id="score-num">0</span></div>
+        <div id="info-panel">
+            <div class="info-item">SCORE: <span id="score-num">0</span></div>
+            <div class="info-item" id="lives-display">LIVES: <span id="lives-num">❤️❤️❤️</span></div>
+        </div>
     </div>
-    <div id="guide-carrot">🥕</div>
+    <div id="hero-carrot">🥕</div>
     <div id="line"></div>
-    <button id="start-btn">지금 시작!</button>
+    <button id="start-btn">실험 시작!</button>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
     const scoreNum = document.getElementById('score-num');
+    const livesNum = document.getElementById('lives-num');
     const startBtn = document.getElementById('start-btn');
 
-    let score = 0, active = false;
-    let speed = 6.0; // 시작 속도 (대폭 상향!)
-    let spawnRate = 800; // 생성 주기 (더 짧게!)
+    let score = 0, active = false, lives = 3;
+    let speed = 4.0; 
+    let spawnRate = 900; 
 
     const targetData = { en: 'CARROT', em: '🥕' };
     const distractors = [
@@ -58,14 +69,18 @@
         { en: 'BREAD', em: '🍞' }, { en: 'CAKE', em: '🍰' }
     ];
 
+    function updateLives() {
+        livesNum.innerText = "❤️".repeat(lives);
+    }
+
     function spawn() {
         if (!active) return;
 
-        // 동시에 여러 개 출현 (2~3개씩 쏟아짐)
-        const burst = Math.floor(Math.random() * 2) + 1; 
+        // 동시에 여러 개 출현 확률 업
+        const count = Math.random() > 0.6 ? 2 : 1;
         
-        for(let i=0; i < burst; i++) {
-            const isTarget = Math.random() > 0.6; // 40% 확률로 정답 출현
+        for(let i=0; i < count; i++) {
+            const isTarget = Math.random() > 0.65; 
             const data = isTarget ? targetData : distractors[Math.floor(Math.random() * distractors.length)];
             
             const unit = document.createElement('div');
@@ -82,8 +97,12 @@
                 unit.style.top = y + 'px';
 
                 if (y > window.innerHeight - 80) {
-                    if (isTarget) { gameOver(); } // 정답 당근을 놓치면 끝!
-                    else { unit.remove(); }
+                    if (isTarget) { 
+                        lives--; // 당근 놓치면 생명 감소
+                        updateLives();
+                        if (lives <= 0) gameOver();
+                    }
+                    unit.remove();
                 } else { requestAnimationFrame(fall); }
             }
 
@@ -92,10 +111,9 @@
                 if (isTarget) {
                     score += 100;
                     scoreNum.innerText = score;
-                    speed += 0.2; // 맞출수록 더 광속으로!
+                    speed += 0.05; // 너무 급격히 빨라지지 않게 조정
                     unit.remove();
                 } else {
-                    // 오답 클릭 시 POW! 효과와 함께 감점
                     const pow = document.createElement('div');
                     pow.className = 'pow'; pow.innerText = 'POW!';
                     pow.style.left = (e.pageX - 40) + 'px'; pow.style.top = (e.pageY - 60) + 'px';
@@ -109,19 +127,21 @@
             requestAnimationFrame(fall);
         }
 
-        // 다음 생성 대기 시간 (점점 짧아짐)
-        setTimeout(spawn, Math.max(300, spawnRate - (score / 20)));
+        setTimeout(spawn, Math.max(400, spawnRate - (score / 15)));
     }
 
     function gameOver() {
         active = false;
-        alert(`실험 종료!\n'CARROT'을 하나 놓쳤습니다!\n최종 점수: ${score}`);
+        alert(`실험 종료! 리아님의 최종 건강 점수: ${score}`);
         location.reload();
     }
 
     startBtn.onclick = () => {
         startBtn.style.display = 'none';
         active = true;
+        score = 0;
+        lives = 3;
+        updateLives();
         spawn();
     };
 </script>
