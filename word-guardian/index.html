@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ArtOfStreet - 교육용 워드 가디언</title>
+    <title>ArtOfStreet - 교육용 금광 탐험</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         body { margin: 0; padding: 0; overflow: hidden; background: #fff0f3; font-family: 'Jua', sans-serif; touch-action: none; }
-        #game-view { position: relative; width: 100vw; height: 100vh; background: radial-gradient(circle, #ffffff, #ffe3e8); z-index: 1; }
+        #game-view { position: relative; width: 100vw; height: 100vh; transition: background 0.5s; }
 
-        /* 교육용 UI 패널 */
+        /* 상단 교육용 UI */
         #ui-header { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
         #info-panel { 
             background: white; padding: 15px 30px; border-radius: 0 0 40px 40px; 
-            box-shadow: 0 10px 25px rgba(214, 51, 132, 0.1); border: 3px solid #ffb6c1; 
-            display: flex; flex-direction: column; gap: 8px; align-items: center; min-width: 280px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 3px solid #ffb6c1; 
+            display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 300px;
         }
-        #score-box { font-size: 26px; color: #d63384; }
-        #hp-container { width: 220px; height: 12px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
+        #score-box { font-size: 28px; color: #d63384; }
+        #combo-box { font-size: 18px; color: #ff6b81; font-weight: bold; height: 20px; }
+        #hp-container { width: 240px; height: 14px; background: #eee; border-radius: 10px; border: 2px solid #ff8b94; overflow: hidden; }
         #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94); transition: width 0.3s; }
 
-        /* 시작 버튼 (절대 사라지지 않도록 최상단 배치) */
+        /* 시작 버튼 */
         #start-btn { 
             position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); 
             padding: 25px 80px; font-size: 32px; 
@@ -29,10 +30,16 @@
             z-index: 9999 !important; font-family: 'Jua', sans-serif;
         }
 
-        /* 교육용 단어 유닛 (크고 선명하게) */
+        /* 교육용 단어 유닛 (한글+영어) */
         .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
         .unit-icon { font-size: 70px; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
-        .unit-text { background: white; padding: 5px 25px; border-radius: 25px; font-size: 26px; color: #333; font-weight: bold; border: 3px solid #ff8b94; margin-top: 5px; }
+        .unit-label { 
+            background: white; padding: 5px 20px; border-radius: 20px; 
+            border: 3px solid #ff8b94; margin-top: 5px; text-align: center;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .text-en { font-size: 24px; color: #333; font-weight: bold; display: block; }
+        .text-ko { font-size: 14px; color: #888; display: block; }
         
         #line { position: absolute; bottom: 30px; width: 94%; left: 3%; height: 14px; background: #6d1e1e; border-radius: 10px; border: 4px solid #ff4d4d; z-index: 10; }
     </style>
@@ -43,27 +50,29 @@
     <div id="ui-header">
         <div id="info-panel">
             <div id="score-box">학습 점수: <span id="score-num">0</span></div>
+            <div id="combo-box"></div>
             <div id="hp-container"><div id="hp-bar"></div></div>
-            <div style="font-size:14px; color:#ff6b81;">🥕 당근(CARROT)을 찾아 터치하세요!</div>
+            <div style="font-size:14px; color:#ff6b81;">💡 건강한 음식 영단어를 공부해요!</div>
         </div>
     </div>
     <div id="line"></div>
-    <button id="start-btn">학습 시작!</button>
+    <button id="start-btn">금광 찾기 시작!</button>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
     const scoreNum = document.getElementById('score-num');
+    const comboText = document.getElementById('combo-box');
     const hpBar = document.getElementById('hp-bar');
     const startBtn = document.getElementById('start-btn');
 
-    let score = 0, active = false, hp = 100;
+    let score = 0, active = false, hp = 100, combo = 0;
     let speed = 3.5;
     let audioCtx;
 
     function speak(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel(); // 겹치지 않게 이전 음성 취소
+            window.speechSynthesis.cancel();
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'en-US';
             window.speechSynthesis.speak(utterance);
@@ -80,7 +89,7 @@
         const gain = audioCtx.createGain();
         osc.connect(gain); gain.connect(audioCtx.destination);
         if (type === 'hit') {
-            osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(523 + (combo * 10), audioCtx.currentTime);
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
             osc.start(); osc.stop(audioCtx.currentTime + 0.1);
         } else {
@@ -90,10 +99,13 @@
         }
     }
 
-    const targetData = { en: 'CARROT', em: '🥕' };
-    const distractors = [
-        { en: 'APPLE', em: '🍎' }, { en: 'BROCCOLI', em: '🥦' },
-        { en: 'PIZZA', em: '🍕' }, { en: 'DONUT', em: '🍩' }
+    const words = [
+        { en: 'CARROT', ko: '당근', em: '🥕', healthy: true },
+        { en: 'APPLE', ko: '사과', em: '🍎', healthy: true },
+        { en: 'BROCCOLI', ko: '브로콜리', em: '🥦', healthy: true },
+        { en: 'DONUT', ko: '도넛', em: '🍩', healthy: false },
+        { en: 'PIZZA', ko: '피자', em: '🍕', healthy: false },
+        { en: 'SODA', ko: '콜라', em: '🥤', healthy: false }
     ];
 
     function updateHP(amount) {
@@ -104,50 +116,62 @@
 
     function spawn() {
         if (!active) return;
-        const isTarget = Math.random() > 0.6; 
-        const data = isTarget ? targetData : distractors[Math.floor(Math.random() * distractors.length)];
+        const data = words[Math.floor(Math.random() * words.length)];
         const unit = document.createElement('div');
         unit.className = 'unit';
-        unit.innerHTML = `<div class="unit-icon">${data.em}</div><div class="unit-text">${data.en}</div>`;
+        unit.innerHTML = `
+            <div class="unit-icon">${data.em}</div>
+            <div class="unit-label">
+                <span class="text-en">${data.en}</span>
+                <span class="text-ko">${data.ko}</span>
+            </div>
+        `;
         unit.style.left = (Math.random() * (window.innerWidth - 130)) + 'px';
-        unit.style.top = '-180px';
+        unit.style.top = '-200px';
         view.appendChild(unit);
 
-        let y = -180;
+        let y = -200;
         function fall() {
             if (!active) { unit.remove(); return; }
             y += speed; unit.style.top = y + 'px';
             if (y > window.innerHeight - 80) {
-                if (isTarget) { updateHP(-15); playSound('miss'); }
+                if (data.healthy) { 
+                    updateHP(-12); playSound('miss'); combo = 0; comboText.innerText = '';
+                }
                 unit.remove();
             } else { requestAnimationFrame(fall); }
         }
         unit.onclick = (e) => {
             e.stopPropagation();
-            if (isTarget) {
-                score += 100; updateHP(8); playSound('hit'); speak('Carrot');
-                if (navigator.vibrate) navigator.vibrate(30);
-                speed += 0.04;
+            speak(data.en);
+            if (data.healthy) {
+                combo++;
+                score += (100 + (combo * 10)); 
+                updateHP(6); playSound('hit');
+                comboText.innerText = combo + " COMBO!";
+                view.style.background = `radial-gradient(circle, #ffffff, #ffe3e8 ${100 - combo}%)`;
+                if (navigator.vibrate) navigator.vibrate(20 + combo);
+                speed += 0.02;
             } else {
-                playSound('miss'); updateHP(-10); speak(data.en); // 오답도 발음 공부!
+                playSound('miss'); updateHP(-10); combo = 0; comboText.innerText = '';
                 if (navigator.vibrate) navigator.vibrate(80);
             }
             scoreNum.innerText = score; unit.remove();
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, Math.max(400, 1000 - (score / 30)));
+        setTimeout(spawn, Math.max(350, 1100 - (score / 40)));
     }
 
     function gameOver() {
         active = false;
-        alert(`학습 완료!\n오늘의 학습 점수: ${score}\n꾸준한 학습은 건강한 뇌를 만듭니다!`);
+        alert(`학습 결과\n오늘의 학습 점수: ${score}\n꾸준한 학습이 금광으로 가는 길입니다!`);
         location.reload();
     }
 
     startBtn.onclick = () => {
         initAudio();
         startBtn.style.display = 'none';
-        active = true; score = 0; hp = 100;
+        active = true; score = 0; hp = 100; combo = 0;
         updateHP(0); spawn();
     };
 </script>
