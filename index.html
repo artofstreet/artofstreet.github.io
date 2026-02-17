@@ -46,7 +46,7 @@
 
         .header-center { display: flex; align-items: center; gap: 8px; }
         .header-title { 
-            font-size: 15px; font-weight: 700; letter-spacing: 0.2px;
+            font-size: 18px; font-weight: 700; letter-spacing: 0.2px;
             transition: color 0.3s; white-space: nowrap;
         }
         .header-dot {
@@ -116,7 +116,7 @@
             50%{transform:scale(1.05);box-shadow:0 0 60px rgba(255,0,0,0.9);} 
         }
         
-        .sos-text { font-family:'Black Han Sans',sans-serif; font-size:68px; font-weight:900; color:white; letter-spacing:4px; text-shadow:0 4px 10px rgba(0,0,0,0.5); line-height:1; }
+        .sos-text { font-family: 'Black Han Sans', sans-serif; font-size: 64px; font-weight: 400; color: white; letter-spacing: 6px; text-shadow: 0 3px 12px rgba(0,0,0,0.4); line-height: 1; }
         .request-text { font-size:22px; font-weight:700; color:rgba(255,255,255,0.95); letter-spacing:1px; margin-top:8px; }
         
         #statusMsg { margin-top: 20px; font-size: 20px; color: #60a5fa; font-weight: 600; text-align: center; }
@@ -202,10 +202,10 @@
 
         .card { background:rgba(255,255,255,0.1); padding:22px; border-radius:20px; width:100%; max-width:450px; margin:0 auto 20px; border:2px solid rgba(255,255,255,0.2); backdrop-filter:blur(10px); }
         .section-title { font-size:22px; margin-bottom:12px; font-weight:bold; }
-        .id-display { background:rgba(59,130,246,0.2); padding:16px; border-radius:15px; margin:12px 0; text-align:center; border:2px solid rgba(59,130,246,0.3); }
-        .id-text { font-size:34px; color:#60a5fa; font-weight:900; letter-spacing:4px; }
+        .id-display { background:rgba(0,0,0,0.2); padding:16px; border-radius:15px; margin:12px 0; text-align:center; border:2px solid rgba(255,255,255,0.3); }
+        .id-text { font-size:34px; color:#FFFFFF; font-weight:900; letter-spacing:4px; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
         .input-box { width:100%; padding:16px; border-radius:12px; border:2px solid rgba(255,255,255,0.3); font-size:22px; margin:12px 0; text-align:center; background:rgba(255,255,255,0.1); color:white; }
-        .btn-add { background:linear-gradient(135deg,#2563eb 0%,#1e40af 100%); color:white; padding:16px; width:100%; font-size:22px; font-weight:bold; border-radius:12px; border:none; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 15px rgba(37,99,235,0.4); }
+        .btn-add { background:#1A5C34; color:white; padding:16px; width:100%; font-size:22px; font-weight:bold; border-radius:12px; border:none; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 15px rgba(0,0,0,0.25); }
         .btn-add:active { transform:scale(0.96); }
         .friend-item { background:rgba(255,255,255,0.2); padding:16px 20px; border-radius:15px; margin:10px 0; display:flex; justify-content:space-between; align-items:center; font-size:20px; font-weight:bold; border:2px solid rgba(255,255,255,0.2); }
         .btn-delete { background:#dc2626; color:white; border:none; padding:8px 18px; border-radius:25px; cursor:pointer; font-size:18px; font-weight:bold; transition:all 0.2s; }
@@ -313,46 +313,95 @@
 
     <!-- ========== 설정 화면 (발신) ========== -->
     <div id="senderSettings" class="settings-screen sender-settings">
-        <h1 style="font-size:28px;margin-bottom:20px;text-align:center;color:white;font-weight:900;">발신소 설정</h1>
+        <h1 style="font-size:28px;margin-bottom:20px;text-align:center;color:white;font-weight:900;">설정</h1>
         <div class="card">
-            <p class="section-title" style="color:white;">내 안전 ID</p>
+            <p class="section-title" style="color:white;">내 고유 ID</p>
             <div class="id-display"><div class="id-text" id="senderId">로딩중...</div></div>
+            <div style="display:flex;gap:10px;margin-top:12px;">
+                <button onclick="copySenderId()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#1A5C34;color:white;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    📋 복사하기
+                </button>
+                <button onclick="shareSenderKakao()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#FEE500;color:#3C1E1E;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    💬 카카오 공유
+                </button>
+            </div>
+            <div id="senderCopyToast" style="display:none;text-align:center;margin-top:10px;font-size:15px;font-weight:700;color:#60a5fa;">✅ ID가 복사되었습니다!</div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">👥 친구 등록하기</p>
+            <p class="section-title" style="color:white;">👥 보호자 등록하기</p>
             <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addSenderFriend()">친구 추가</button>
+            <button class="btn-add" onclick="addSenderFriend()">등록하기</button>
+            <button onclick="startSenderQrScan()" style="width:100%;padding:14px;border-radius:12px;border:2px dashed rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);color:white;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">
+                📷 QR 코드로 등록하기
+            </button>
+            <div id="senderQrScanArea" style="display:none;margin-top:12px;">
+                <video id="senderQrVideo" style="width:100%;border-radius:12px;background:#000;" autoplay playsinline></video>
+                <button onclick="stopSenderQrScan()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:none;background:rgba(220,38,38,0.8);color:white;font-size:16px;font-weight:700;cursor:pointer;">❌ 스캔 취소</button>
+                <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:14px;margin-top:6px;">상대방의 QR 코드를 카메라에 비춰주세요</p>
+            </div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">등록된 친구 목록</p>
+            <p class="section-title" style="color:white;">등록된 보호자 목록</p>
             <p style="background:rgba(59,130,246,0.3);padding:6px 16px;border-radius:15px;font-size:18px;display:inline-block;margin:10px 0;color:white;border:2px solid rgba(59,130,246,0.3);">
                 <span id="senderCount">0</span>/5명
             </p>
             <div id="senderFriendList"></div>
         </div>
-        <button class="btn-back" onclick="hideSettings()">← 돌아가기</button>
+        <div class="card" style="text-align:center;">
+            <p class="section-title" style="color:white;">📱 내 QR 코드</p>
+            <p style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:12px;">상대방이 이 QR을 스캔하면 자동으로 등록됩니다</p>
+            <div id="senderQrCode" style="display:inline-block;background:white;padding:12px;border-radius:12px;"></div>
+        </div>
+        <button class="btn-back" onclick="hideSettings()" style="display:none;"></button>
     </div>
 
     <!-- ========== 설정 화면 (지원) ========== -->
     <div id="receiverSettings" class="settings-screen receiver-settings">
-        <h1 style="font-size:28px;margin-bottom:20px;text-align:center;color:white;font-weight:900;">지원소 설정</h1>
+        <h1 style="font-size:28px;margin-bottom:20px;text-align:center;color:white;font-weight:900;">설정</h1>
         <div class="card">
             <p class="section-title" style="color:white;">내 고유 ID</p>
             <div class="id-display"><div class="id-text" id="receiverId">로딩중...</div></div>
+            <!-- 복사 / 카카오 공유 버튼 -->
+            <div style="display:flex;gap:10px;margin-top:12px;">
+                <button onclick="copyReceiverId()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#1A6B3C;color:white;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    📋 복사하기
+                </button>
+                <button onclick="shareKakao()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#FEE500;color:#3C1E1E;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                    💬 카카오 공유
+                </button>
+            </div>
+            <div id="copyToast" style="display:none;text-align:center;margin-top:10px;font-size:15px;font-weight:700;color:#00FF7F;">✅ ID가 복사되었습니다!</div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">👥 친구 등록하기</p>
+            <p class="section-title" style="color:white;">🛡️ 보호대상자 등록하기</p>
+            <!-- 직접 입력 -->
             <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addReceiverFriend()">친구 추가</button>
+            <button class="btn-add" onclick="addReceiverFriend()">등록하기</button>
+            <!-- QR 스캔 -->
+            <button onclick="startQrScan()" style="width:100%;padding:14px;border-radius:12px;border:2px dashed rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);color:white;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">
+                📷 QR 코드로 등록하기
+            </button>
+            <!-- QR 스캐너 영역 -->
+            <div id="qrScanArea" style="display:none;margin-top:12px;">
+                <video id="qrVideo" style="width:100%;border-radius:12px;background:#000;" autoplay playsinline></video>
+                <button onclick="stopQrScan()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:none;background:rgba(220,38,38,0.8);color:white;font-size:16px;font-weight:700;cursor:pointer;">❌ 스캔 취소</button>
+                <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:14px;margin-top:6px;">상대방의 QR 코드를 카메라에 비춰주세요</p>
+            </div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">등록된 친구 목록</p>
+            <p class="section-title" style="color:white;">보호대상자 목록</p>
             <p style="background:rgba(59,130,246,0.3);padding:6px 16px;border-radius:15px;font-size:18px;display:inline-block;margin:10px 0;color:white;border:2px solid rgba(59,130,246,0.3);">
                 <span id="receiverCount">0</span>/5명
             </p>
             <div id="receiverFriendList"></div>
         </div>
-        <button class="btn-back" onclick="hideSettings()">← 돌아가기</button>
+        <!-- QR 내 ID 보여주기 -->
+        <div class="card" style="text-align:center;">
+            <p class="section-title" style="color:white;">📱 내 QR 코드</p>
+            <p style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:12px;">상대방이 이 QR을 스캔하면 자동으로 등록됩니다</p>
+            <div id="myQrCode" style="display:inline-block;background:white;padding:12px;border-radius:12px;"></div>
+        </div>
+        <button class="btn-back" onclick="hideSettings()" style="display:none;"></button>
     </div>
 
     <script>
@@ -407,12 +456,25 @@
 
         /* ===== 설정 ===== */
         window.showSettings = function() {
-            if (currentMode === 'sender') { document.getElementById('senderSettings').classList.add('active'); loadSenderFriends(); }
-            else { document.getElementById('receiverSettings').classList.add('active'); loadReceiverFriends(); }
+            if (currentMode === 'sender') { document.getElementById('senderSettings').classList.add('active'); loadSenderFriends(); generateSenderQR(); }
+            else { document.getElementById('receiverSettings').classList.add('active'); loadReceiverFriends(); generateMyQR(); }
+            // 전환버튼 → 돌아가기
+            document.getElementById('switchBtn').innerHTML = '<span style="font-size:15px;font-weight:900;color:white;white-space:nowrap;">돌아가기</span>';
+            document.getElementById('switchBtn').onclick = hideSettings;
+            // 톱니바퀴는 그대로 유지
+            document.getElementById('settingIconBtn').innerHTML = '⚙️';
+            document.getElementById('settingIconBtn').onclick = null;
         };
         window.hideSettings = function() {
             document.getElementById('senderSettings').classList.remove('active');
             document.getElementById('receiverSettings').classList.remove('active');
+            // 전환버튼 복원
+            document.getElementById('switchBtn').innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path id="swPath1" d="M7 16H20M20 16L17 13M20 16L17 19" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path id="swPath2" d="M17 8H4M4 8L7 5M4 8L7 11" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>`;
+            document.getElementById('switchBtn').onclick = toggleMode;
+            document.getElementById('settingIconBtn').onclick = showSettings;
         };
 
         window.addSenderFriend = function() {
@@ -466,7 +528,171 @@
                 : list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');
         }
 
-        /* ===== 지원모드 소리/진동 ===== */
+        /* ===== 발신 복사하기 ===== */
+        window.copySenderId = function() {
+            const id = localStorage.getItem('safeZoneID_SND') || '';
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(id).then(() => showSenderCopyToast());
+            } else {
+                const el = document.createElement('textarea');
+                el.value = id; document.body.appendChild(el);
+                el.select(); document.execCommand('copy');
+                document.body.removeChild(el);
+                showSenderCopyToast();
+            }
+        };
+        function showSenderCopyToast() {
+            const t = document.getElementById('senderCopyToast');
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2500);
+        }
+
+        /* ===== 발신 카카오 공유 ===== */
+        window.shareSenderKakao = function() {
+            const id = localStorage.getItem('safeZoneID_SND') || '';
+            const msg = `ArtOfStreet 안전지대 - 내 ID: ${id}\n이 ID를 앱에 등록하면 나를 보호할 수 있어요!`;
+            if (navigator.share) {
+                navigator.share({ title: 'SOS 안전지대 ID 공유', text: msg }).catch(() => {});
+            } else {
+                window.open(`https://sharer.kakao.com/talk/friends/picker/link?text=${encodeURIComponent(msg)}`, '_blank');
+            }
+        };
+
+        /* ===== 발신 QR 생성 ===== */
+        function generateSenderQR() {
+            const id = localStorage.getItem('safeZoneID_SND') || '';
+            const qrDiv = document.getElementById('senderQrCode');
+            qrDiv.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(id)}&bgcolor=ffffff&color=000000&margin=2`;
+            img.style.cssText = 'width:160px;height:160px;border-radius:8px;';
+            qrDiv.appendChild(img);
+        }
+
+        /* ===== 발신 QR 스캔 ===== */
+        let senderQrStream = null, senderQrInterval = null;
+        window.startSenderQrScan = async function() {
+            document.getElementById('senderQrScanArea').style.display = 'block';
+            try {
+                senderQrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('senderQrVideo');
+                video.srcObject = senderQrStream;
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    senderQrInterval = setInterval(async () => {
+                        try {
+                            const codes = await detector.detect(video);
+                            if (codes.length > 0) {
+                                const raw = codes[0].rawValue.trim().toUpperCase();
+                                const id = raw.startsWith('SZ-') ? raw : 'SZ-' + raw;
+                                stopSenderQrScan();
+                                document.getElementById('senderFriendInput').value = id;
+                                alert(`✅ QR 스캔 완료: ${id}\n"등록하기" 버튼을 눌러 추가하세요!`);
+                            }
+                        } catch(e) {}
+                    }, 500);
+                } else {
+                    alert('이 브라우저는 QR 스캔을 지원하지 않습니다.\n직접 ID를 입력해주세요.');
+                    stopSenderQrScan();
+                }
+            } catch(e) {
+                alert('카메라 권한이 필요합니다.');
+                document.getElementById('senderQrScanArea').style.display = 'none';
+            }
+        };
+        window.stopSenderQrScan = function() {
+            if (senderQrStream) { senderQrStream.getTracks().forEach(t => t.stop()); senderQrStream = null; }
+            if (senderQrInterval) { clearInterval(senderQrInterval); senderQrInterval = null; }
+            document.getElementById('senderQrScanArea').style.display = 'none';
+        };
+
+        /* ===== 복사하기 ===== */
+        window.copyReceiverId = function() {
+            const id = localStorage.getItem('safeZoneID_RCV') || '';
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(id).then(() => showCopyToast());
+            } else {
+                const el = document.createElement('textarea');
+                el.value = id; document.body.appendChild(el);
+                el.select(); document.execCommand('copy');
+                document.body.removeChild(el);
+                showCopyToast();
+            }
+        };
+        function showCopyToast() {
+            const t = document.getElementById('copyToast');
+            t.style.display = 'block';
+            setTimeout(() => { t.style.display = 'none'; }, 2500);
+        }
+
+        /* ===== 카카오 공유 ===== */
+        window.shareKakao = function() {
+            const id = localStorage.getItem('safeZoneID_RCV') || '';
+            const msg = `ArtOfStreet 안전지대 - 내 ID: ${id}\n이 ID를 앱에 등록하면 나를 보호할 수 있어요!`;
+            if (navigator.share) {
+                navigator.share({ title: 'SOS 안전지대 ID 공유', text: msg })
+                    .catch(() => {});
+            } else {
+                const kakaoUrl = `https://sharer.kakao.com/talk/friends/picker/link?app_key=5d19f896badf6fdab5297f129bffaf1e&text=${encodeURIComponent(msg)}`;
+                window.open(kakaoUrl, '_blank');
+            }
+        };
+
+        /* ===== QR 코드 생성 (내 ID) ===== */
+        function generateMyQR() {
+            const id = localStorage.getItem('safeZoneID_RCV') || '';
+            const qrDiv = document.getElementById('myQrCode');
+            qrDiv.innerHTML = '';
+            const size = 160;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(id)}&bgcolor=ffffff&color=000000&margin=2`;
+            const img = document.createElement('img');
+            img.src = qrUrl;
+            img.style.cssText = `width:${size}px;height:${size}px;border-radius:8px;`;
+            qrDiv.appendChild(img);
+        }
+
+        /* ===== QR 스캔 ===== */
+        let qrStream = null;
+        let qrScanInterval = null;
+
+        window.startQrScan = async function() {
+            document.getElementById('qrScanArea').style.display = 'block';
+            try {
+                qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('qrVideo');
+                video.srcObject = qrStream;
+                // BarcodeDetector API 지원 시 사용
+                if ('BarcodeDetector' in window) {
+                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+                    qrScanInterval = setInterval(async () => {
+                        try {
+                            const codes = await detector.detect(video);
+                            if (codes.length > 0) {
+                                const raw = codes[0].rawValue.trim().toUpperCase();
+                                const id = raw.startsWith('SZ-') ? raw : 'SZ-' + raw;
+                                stopQrScan();
+                                document.getElementById('receiverFriendInput').value = id;
+                                alert(`✅ QR 스캔 완료: ${id}\n"등록하기" 버튼을 눌러 추가하세요!`);
+                            }
+                        } catch(e) {}
+                    }, 500);
+                } else {
+                    alert('이 브라우저는 QR 스캔을 지원하지 않습니다.\n직접 ID를 입력해주세요.');
+                    stopQrScan();
+                }
+            } catch(e) {
+                alert('카메라 권한이 필요합니다.');
+                document.getElementById('qrScanArea').style.display = 'none';
+            }
+        };
+
+        window.stopQrScan = function() {
+            if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+            if (qrScanInterval) { clearInterval(qrScanInterval); qrScanInterval = null; }
+            document.getElementById('qrScanArea').style.display = 'none';
+        };
+
+        /* ===== 설정 열릴 때 QR 자동 생성 ===== */
         let supAlertMode = 'sound';
         window.setSupMode = function(mode) {
             supAlertMode = mode;
