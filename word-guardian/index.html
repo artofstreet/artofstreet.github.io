@@ -3,202 +3,180 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Word Guardian Pro - ArtOfStreet</title>
+    <title>Word Guardian - Carrot Speed</title>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
-        :root { --p1: #ff8b94; --p2: #ffdde1; --p3: #ee9ca7; --dark: #6d1e1e; }
+        :root { --main-pink: #ff8b94; --bg-color: #fff0f3; }
         
-        /* 1. 기초 공사: 사진과 똑같은 핑크 애니메이션 배경 */
         body { 
             margin: 0; padding: 0; overflow: hidden; 
-            background: radial-gradient(circle at center, #ffffff 0%, #ffe3e8 100%);
+            background: radial-gradient(circle, #ffffff 0%, #ffe3e8 100%);
             font-family: 'Jua', sans-serif; touch-action: none;
         }
-        body::after {
-            content: ""; position: absolute; inset: 0;
-            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M10 10c5 0 5 5 0 5s-5-5 0-5zM50 50c5 0 5 5 0 5s-5-5 0-5zM90 20c3 0 3 3 0 3s-3-3 0-3z' fill='%23ffc0cb' fill-opacity='0.2'/%3E%3C/svg%3E");
-            z-index: -1;
-        }
 
-        #game-view { position: relative; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        #game-view { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 
-        /* 2. 상단 UI: Health Score 패널 (사진 디자인 복제) */
-        #header-ui {
+        /* 상단 UI */
+        #ui-header {
             position: absolute; top: 0; width: 100%; display: flex; justify-content: center; z-index: 100;
         }
-        #score-board {
-            background: white; padding: 15px 50px; border-radius: 0 0 40px 40px;
-            box-shadow: 0 10px 30px rgba(214, 51, 132, 0.1);
-            border: 3px solid #f8f9fa; border-top: none; text-align: center;
+        #score-panel {
+            background: white; padding: 10px 40px; border-radius: 0 0 30px 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05); border: 2px solid #eee; border-top: none;
         }
-        #label { font-size: 14px; color: #aaa; margin-bottom: 2px; letter-spacing: 1px; }
-        #value { font-size: 38px; color: #555; display: flex; align-items: center; justify-content: center; }
+        #score-val { font-size: 36px; color: #d63384; display: flex; align-items: center; }
 
-        /* 3. 중앙 빌드업: 근육 당근 캐릭터 💪🥕💪 */
-        #hero-unit {
+        /* 중앙 근육 당근 (목표) */
+        #target-carrot {
             position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
-            z-index: 10; display: flex; flex-direction: column; align-items: center;
+            font-size: 130px; z-index: 5; filter: drop-shadow(0 15px 15px rgba(0,0,0,0.1));
+            animation: pulse 2s infinite;
         }
-        #hero-body {
-            font-size: 130px; filter: drop-shadow(0 20px 15px rgba(0,0,0,0.1));
-            animation: hero-float 3s ease-in-out infinite;
-        }
-        @keyframes hero-float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-20px) rotate(2deg); } }
+        @keyframes pulse { 0% { transform: translate(-50%, -50%) scale(1); } 50% { transform: translate(-50%, -55%) scale(1.1); } 100% { transform: translate(-50%, -50%) scale(1); } }
 
-        /* 4. 아이템 디자인: 날개 달린 고퀄리티 유닛 */
-        .game-item { 
+        /* 떨어지는 아이템 디자인 */
+        .item { 
             position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50;
+            cursor: pointer; will-change: transform;
         }
         .bubble {
-            background: white; width: 85px; height: 85px; border-radius: 50%;
-            display: flex; justify-content: center; align-items: center; font-size: 45px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 4px solid white; position: relative;
+            background: white; width: 80px; height: 80px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; font-size: 40px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 4px solid white;
         }
-        .tag { 
+        .label { 
             background: rgba(255,255,255,0.9); padding: 4px 15px; border-radius: 20px;
-            font-size: 16px; color: #ff6b81; margin-top: 8px; border: 2px solid white; font-weight: bold;
+            font-size: 18px; color: #333; margin-top: 8px; border: 2px solid white; font-weight: bold;
         }
 
-        /* 건강식 전용 날개 애니메이션 (그림처럼!) */
-        .healthy .bubble::before, .healthy .bubble::after {
-            content: "☁️"; position: absolute; font-size: 30px; top: 10px; opacity: 0.7;
-            animation: wings 0.4s infinite alternate;
-        }
-        .healthy .bubble::before { left: -25px; }
-        .healthy .bubble::after { right: -25px; transform: scaleX(-1); }
-        @keyframes wings { from { transform: translateY(0); } to { transform: translateY(-15px); } }
-
-        /* 5. 하단 데드라인: 사진 속 그 디자인 */
-        #footer-ui {
-            position: absolute; bottom: 40px; width: 85%; height: 40px;
-            background: #6d1e1e; border-radius: 25px; border: 5px solid var(--p1);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2); overflow: hidden;
+        /* 하단 데드라인 */
+        #deadline {
+            position: absolute; bottom: 30px; left: 10%; width: 80%; height: 30px;
+            background: #6d1e1e; border-radius: 20px; border: 4px solid var(--main-pink); overflow: hidden;
         }
         #progress {
             width: 100%; height: 100%; background: linear-gradient(90deg, #ff4d4d, #ff8b94);
-            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.15) 0, rgba(255,255,255,0.15) 15px, transparent 15px, transparent 30px);
-            animation: bar-move 1s linear infinite;
+            background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.1) 0, rgba(255,255,255,0.1) 15px, transparent 15px, transparent 30px);
+            animation: move-bar 1s linear infinite;
         }
-        @keyframes bar-move { from { background-position: 0 0; } to { background-position: 42px 0; } }
-        #deadline-text {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: white; font-size: 20px; font-weight: bold; letter-spacing: 3px;
-        }
+        @keyframes move-bar { from { background-position: 0 0; } to { background-position: 42px 0; } }
 
-        /* 6. POW! 타격 효과 */
-        .pow-hit {
+        /* 타격 효과 */
+        .pow {
             position: absolute; font-size: 70px; color: #ffeb3b; font-weight: 900;
-            text-shadow: 5px 5px 0 #f44336, -2px -2px 0 #f44336; z-index: 200;
-            pointer-events: none; animation: pow-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            text-shadow: 4px 4px 0 #f44336; z-index: 200; pointer-events: none;
+            animation: pop 0.4s forwards;
         }
-        @keyframes pow-pop { 0% { transform: scale(0) rotate(-30deg); } 80% { transform: scale(1.3) rotate(10deg); } 100% { transform: scale(1) opacity: 0; } }
+        @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1.2); opacity: 0; } }
 
-        /* 시작 버튼 (고급 젤리 스타일) */
-        #start-cta {
-            position: absolute; top: 70%; padding: 22px 70px; font-size: 30px;
+        #start-btn {
+            position: absolute; top: 65%; padding: 20px 60px; font-size: 30px;
             background: linear-gradient(to bottom, #ff8b94, #ff6b81);
-            color: white; border: 6px solid white; border-radius: 60px;
-            cursor: pointer; font-family: 'Jua'; box-shadow: 0 12px 0 #c23653, 0 20px 30px rgba(0,0,0,0.2);
+            color: white; border: 5px solid white; border-radius: 60px;
+            cursor: pointer; font-family: 'Jua'; box-shadow: 0 10px 0 #c23653;
         }
-        #start-cta:active { transform: translateY(6px); box-shadow: 0 6px 0 #c23653; }
     </style>
 </head>
 <body>
 
 <div id="game-view">
-    <div id="header-ui">
-        <div id="score-board">
-            <div id="label">HEALTH SCORE</div>
-            <div id="value"><span id="score-num">0</span> <span style="margin-left:15px">💪</span></div>
+    <div id="ui-header">
+        <div id="score-panel">
+            <div id="score-val"><span id="score-num">0</span> <span style="margin-left:10px">🥕</span></div>
         </div>
     </div>
 
-    <div id="hero-unit">
-        <div id="hero-body">🥕</div>
-    </div>
+    <div id="target-carrot">🥕</div>
 
-    <div id="footer-ui">
+    <div id="deadline">
         <div id="progress"></div>
-        <div id="deadline-text">DEADLINE</div>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:16px;">DEADLINE</div>
     </div>
 
-    <button id="start-cta">도전 시작!</button>
+    <button id="start-btn">스피드 도전!</button>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
     const scoreNum = document.getElementById('score-num');
-    const startCta = document.getElementById('start-cta');
-    const hero = document.getElementById('hero-body');
+    const startBtn = document.getElementById('start-btn');
+    const target = document.getElementById('target-carrot');
 
-    let score = 0, active = false, speed = 3.0;
+    let score = 0, active = false;
+    let currentSpeed = 4.5; // 시작 속도 대폭 상향
 
-    const goods = [
-        { en: 'Broccoli', em: '🥦' },
-        { en: 'Apple', em: '🍎' },
-        { en: 'Carrot', em: '🥕' }
-    ];
-    const bads = [
-        { en: 'Donut', em: '🍩' },
-        { en: 'Soda', em: '🥤' },
-        { en: 'Fried', em: '🍟' }
+    // 단어 리스트
+    const correct = { en: 'Carrot', em: '🥕' };
+    const wrongs = [
+        { en: 'Apple', em: '🍎' }, { en: 'Donut', em: '🍩' },
+        { en: 'Pizza', em: '🍕' }, { en: 'Soda', em: '🥤' },
+        { en: 'Candy', em: '🍬' }, { en: 'Cake', em: '🍰' }
     ];
 
-    function createUnit() {
+    function spawn() {
         if (!active) return;
-        const isGood = Math.random() > 0.45;
-        const data = (isGood ? goods : bads)[Math.floor(Math.random() * 3)];
-        
-        const unit = document.createElement('div');
-        unit.className = `game-item ${isGood ? 'healthy' : 'unhealthy'}`;
-        unit.innerHTML = `<div class="bubble">${data.em}</div><div class="tag">${data.en}</div>`;
-        unit.style.left = Math.random() * (window.innerWidth - 100) + 'px';
-        unit.style.top = '-150px';
-        view.appendChild(unit);
 
-        let y = -150;
-        function drop() {
-            if (!active) { unit.remove(); return; }
-            y += speed; unit.style.top = y + 'px';
-            if (y > window.innerHeight - 100) { gameFinish(); }
-            else { requestAnimationFrame(drop); }
+        // 동시에 여러 개가 나오도록 반복문 추가
+        const count = Math.random() > 0.7 ? 2 : 1; // 30% 확률로 한 번에 2개 생성
+        
+        for(let i=0; i<count; i++) {
+            const isTarget = Math.random() > 0.6; // 40% 확률로 정답 등장
+            const data = isTarget ? correct : wrongs[Math.floor(Math.random() * wrongs.length)];
+            
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.innerHTML = `<div class="bubble">${data.em}</div><div class="label">${data.en}</div>`;
+            item.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+            item.style.top = '-150px';
+            view.appendChild(item);
+
+            let y = -150;
+            function fall() {
+                if (!active) { item.remove(); return; }
+                y += currentSpeed; 
+                item.style.top = y + 'px';
+                
+                if (y > window.innerHeight - 100) {
+                    if (isTarget) { gameOver(); } // 정답을 놓치면 게임 오버
+                    else { item.remove(); } // 오답은 그냥 소멸
+                } else { requestAnimationFrame(fall); }
+            }
+
+            item.onclick = (e) => {
+                e.stopPropagation();
+                if (isTarget) {
+                    score += 50;
+                    target.style.transform = 'translate(-50%, -50%) scale(1.4)';
+                    setTimeout(() => target.style.transform = 'translate(-50%, -50%) scale(1)', 200);
+                    currentSpeed += 0.1; // 정답 맞출수록 더 빨라짐
+                } else {
+                    const pow = document.createElement('div');
+                    pow.className = 'pow'; pow.innerText = 'POW!';
+                    pow.style.left = e.pageX - 50 + 'px'; pow.style.top = e.pageY - 50 + 'px';
+                    view.appendChild(pow);
+                    setTimeout(() => pow.remove(), 400);
+                    score = Math.max(0, score - 20); // 오답 클릭 시 감점
+                }
+                scoreNum.innerText = score;
+                item.remove();
+            };
+            requestAnimationFrame(fall);
         }
 
-        unit.onclick = (e) => {
-            e.stopPropagation();
-            if (isGood) {
-                score += 25;
-                hero.innerText = score > 400 ? '💪🥕💪' : '🥕';
-                hero.parentElement.style.transform = 'translate(-50%, -50%) scale(1.4)';
-                setTimeout(() => hero.parentElement.style.transform = 'translate(-50%, -50%) scale(1)', 200);
-            } else {
-                score += 15;
-                const hit = document.createElement('div');
-                hit.className = 'pow-hit'; hit.innerText = 'POW!';
-                hit.style.left = e.pageX - 60 + 'px'; hit.style.top = e.pageY - 80 + 'px';
-                view.appendChild(hit);
-                setTimeout(() => hit.remove(), 400);
-                if(navigator.vibrate) navigator.vibrate(60);
-            }
-            scoreNum.innerText = score;
-            unit.style.transform = 'scale(0)';
-            setTimeout(() => unit.remove(), 150);
-            speed += 0.04;
-        };
-        requestAnimationFrame(drop);
-        setTimeout(createUnit, Math.max(500, 2000 - score * 3.5));
+        // 생성 주기 대폭 단축 (더 많이 나옴)
+        setTimeout(spawn, Math.max(300, 1000 - (score / 10)));
     }
 
-    function gameFinish() {
+    function gameOver() {
         active = false;
-        alert(`실험 종료! 리아님의 건강 점수: ${score}`);
+        alert(`실험 종료! 정답 'Carrot'을 놓쳤습니다.\n최종 점수: ${score}`);
         location.reload();
     }
 
-    startCta.onclick = () => {
-        startCta.style.display = 'none';
+    startBtn.onclick = () => {
+        startBtn.style.display = 'none';
         active = true;
-        createUnit();
+        spawn();
     };
 </script>
 </body>
