@@ -491,7 +491,7 @@
         const emergencyBtn  = document.getElementById('emergencyBtn');
 
         emergencyBtn.addEventListener('touchstart', function() {
-            if (navigator.vibrate) navigator.vibrate([500, 100, 500, 100, 800]);
+            if (navigator.vibrate) navigator.vibrate([80]);
         }, { passive: false });
 
         emergencyBtn.addEventListener('click', function(e) {
