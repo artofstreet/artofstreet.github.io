@@ -490,33 +490,79 @@
         const trackingBadge = document.getElementById('trackingBadge');
         const emergencyBtn  = document.getElementById('emergencyBtn');
 
-        // ★ 버튼 확인음 — 진동 미지원 기기 대응
+        // ════════════════════════════════════════════
+        // ★ 오디오 엔진 — iOS/Android 전 기기 대응
+        // ════════════════════════════════════════════
+        let _audioCtx = null;
+
+        // AudioContext 싱글톤 — iOS 잠금해제 포함
+        function getAudioCtx() {
+            if (!_audioCtx) {
+                _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            // iOS Safari: suspended 상태면 resume
+            if (_audioCtx.state === 'suspended') {
+                _audioCtx.resume();
+            }
+            return _audioCtx;
+        }
+
+        // iOS 첫 터치 잠금해제 — 무음 1샘플 재생
+        function unlockAudio() {
+            try {
+                const ctx = getAudioCtx();
+                const buf = ctx.createBuffer(1, 1, 22050);
+                const src = ctx.createBufferSource();
+                src.buffer = buf;
+                src.connect(ctx.destination);
+                src.start(0);
+            } catch(e) {}
+        }
+
+        // 확인음 — 880→440Hz 짧은 딩
         function playBeep() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator();
+                const ctx = getAudioCtx();
+                const osc  = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
                 gain.connect(ctx.destination);
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(880, ctx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
-                gain.gain.setValueAtTime(0.6, ctx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.18);
+                gain.gain.setValueAtTime(0.55, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
                 osc.start(ctx.currentTime);
-                osc.stop(ctx.currentTime + 0.3);
-                osc.onended = () => ctx.close();
+                osc.stop(ctx.currentTime + 0.35);
             } catch(e) {}
         }
 
-        emergencyBtn.addEventListener('touchstart', function() {
-            if (navigator.vibrate) navigator.vibrate([150, 50, 150]);
-            playBeep();
-        }, { passive: false });
+        // ════════════════════════════════════════════
+        // ★ 이벤트 리스너 — 중복 방지 완벽 처리
+        // ════════════════════════════════════════════
+        let _touchFired = false;   // touchstart 발생 여부 추적 (mousedown 중복 차단)
+
+        // [1] touchstart: 모바일 실제 터치 — 진동 + 소리 + iOS 잠금해제
+        emergencyBtn.addEventListener('touchstart', function(e) {
+            _touchFired = true;
+            unlockAudio();   // iOS AudioContext 잠금해제
+            playBeep();      // 확인음
+            if (navigator.vibrate) navigator.vibrate([120, 40, 120]);  // 진동
+        }, { passive: true });  // passive:true → 스크롤 간섭 없음
+
+        // touchend 후 500ms 뒤 플래그 초기화
+        emergencyBtn.addEventListener('touchend', function() {
+            setTimeout(() => { _touchFired = false; }, 500);
+        }, { passive: true });
+
+        // [2] mousedown: PC/데스크탑만 — 모바일 중복 완전 차단
         emergencyBtn.addEventListener('mousedown', function() {
+            if (_touchFired) return;  // 모바일에서 ghost mousedown 차단
+            unlockAudio();
             playBeep();
         });
 
+        // [3] click: 실제 동작 처리 (소리/진동 없음 — 위에서 이미 처리)
         emergencyBtn.addEventListener('click', function(e) {
             e.preventDefault();
             if (!window.isTracking) { startTracking(); } else { stopTracking(); }
