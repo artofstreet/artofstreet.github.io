@@ -550,8 +550,10 @@
             _touchFired = true;
             unlockAudio();   // iOS AudioContext 잠금해제
             playBeep();      // 확인음
-            if (navigator.vibrate) navigator.vibrate([120, 40, 120]);  // 진동
-        }, { passive: true });  // passive:true → 스크롤 간섭 없음
+            const vib = navigator.vibrate ? navigator.vibrate([120, 40, 120]) : false;
+            // 디버그 토스트 — 이벤트 발생 + 진동 지원 여부 표시
+            showDebugToast('터치감지 ✅ | 진동지원: ' + (navigator.vibrate ? '✅' : '❌ iOS') + ' | AudioCtx: ' + (_audioCtx ? _audioCtx.state : '없음'));
+        }, { passive: true });
 
         // touchend 후 500ms 뒤 플래그 초기화
         emergencyBtn.addEventListener('touchend', function() {
@@ -570,6 +572,21 @@
             e.preventDefault();
             if (!window.isTracking) { startTracking(); } else { stopTracking(); }
         });
+
+        // 디버그 토스트
+        function showDebugToast(msg) {
+            let el = document.getElementById('_dbgToast');
+            if (!el) {
+                el = document.createElement('div');
+                el.id = '_dbgToast';
+                el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:#0f0;font-size:12px;padding:8px 14px;border-radius:20px;z-index:99999;text-align:center;max-width:90%;font-family:monospace;';
+                document.body.appendChild(el);
+            }
+            el.textContent = msg;
+            el.style.display = 'block';
+            clearTimeout(el._t);
+            el._t = setTimeout(() => el.style.display = 'none', 4000);
+        }
 
         function startTracking() {
             const myID = localStorage.getItem('safeZoneID_SND')?.trim().toUpperCase();
