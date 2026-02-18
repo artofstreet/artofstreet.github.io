@@ -496,7 +496,6 @@
 
         emergencyBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            if (navigator.vibrate) navigator.vibrate([150, 50, 150]);
             if (!window.isTracking) { startTracking(); } else { stopTracking(); }
         });
 
