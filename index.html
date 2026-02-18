@@ -495,26 +495,29 @@
         // ════════════════════════════════════════════
         let _audioCtx = null;
 
-        // AudioContext 싱글톤 — iOS 잠금해제 포함
+        // AudioContext 싱글톤 반환
         function getAudioCtx() {
             if (!_audioCtx) {
                 _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             }
-            // iOS Safari: suspended 상태면 resume
-            if (_audioCtx.state === 'suspended') {
-                _audioCtx.resume();
-            }
             return _audioCtx;
         }
 
-        // iOS 첫 터치 잠금해제 — 무음 1샘플 재생
+        // iOS 첫 터치 잠금해제 — AudioContext 생성 + resume
         function unlockAudio() {
             try {
-                const ctx = getAudioCtx();
-                const buf = ctx.createBuffer(1, 1, 22050);
-                const src = ctx.createBufferSource();
+                if (!_audioCtx) {
+                    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                // suspended 상태 resume (iOS Safari 핵심)
+                if (_audioCtx.state === 'suspended') {
+                    _audioCtx.resume().catch(() => {});
+                }
+                // 무음 버퍼 재생으로 iOS 잠금 해제
+                const buf = _audioCtx.createBuffer(1, 1, 22050);
+                const src = _audioCtx.createBufferSource();
                 src.buffer = buf;
-                src.connect(ctx.destination);
+                src.connect(_audioCtx.destination);
                 src.start(0);
             } catch(e) {}
         }
@@ -582,8 +585,10 @@
                 log: logKST, log_iso: logISO
             }).then(() => {
                 statusMsg.innerText = '✅ 도움요청 신호 발송됨';
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            }).catch(err => { alert('❌ 전송 실패!\n\n' + err.message); });
+            }).catch(err => {
+                statusMsg.innerText = '❌ 전송 실패 — 네트워크 확인';
+                console.error('Firebase 오류:', err);
+            });
             statusMsg.innerText = '📍 위치 확인 중...';
             watchId = navigator.geolocation.watchPosition(pos => {
                 const lat = pos.coords.latitude, lon = pos.coords.longitude;
