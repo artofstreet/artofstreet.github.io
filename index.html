@@ -490,9 +490,32 @@
         const trackingBadge = document.getElementById('trackingBadge');
         const emergencyBtn  = document.getElementById('emergencyBtn');
 
+        // ★ 버튼 확인음 — 진동 미지원 기기 대응
+        function playBeep() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
+                gain.gain.setValueAtTime(0.6, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.3);
+                osc.onended = () => ctx.close();
+            } catch(e) {}
+        }
+
         emergencyBtn.addEventListener('touchstart', function() {
             if (navigator.vibrate) navigator.vibrate([150, 50, 150]);
+            playBeep();
         }, { passive: false });
+        emergencyBtn.addEventListener('mousedown', function() {
+            playBeep();
+        });
 
         emergencyBtn.addEventListener('click', function(e) {
             e.preventDefault();
