@@ -1,766 +1,1005 @@
 <!DOCTYPE html>
-<html lang="ko" style="background: #0f172a;">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1e3a8a">
-    <title>ArtOfStreet 안전지대 V20.9</title>
-    
-    <link rel="manifest" href="manifest-sender.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=5d19f896badf6fdab5297f129bffaf1e&libraries=services"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <style>
-        * { 
-            margin: 0; padding: 0; box-sizing: border-box; 
-            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-            -webkit-user-select: none; user-select: none; 
-            -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; 
-            outline: none !important; 
-        }
-        html, body { 
-            width: 100%; height: 100%; overflow: hidden; 
-            position: fixed; touch-action: manipulation; 
-        }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important; color: white; }
-        
-        .top-header { 
-            position: fixed; top: 0; left: 0; right: 0; height: 54px; 
-            z-index: 9999; display: flex; align-items: center;
-            justify-content: space-between; padding: 0 16px;
-            transition: background 0.3s;
-            border: none; border-bottom: none;
-        }
-        .top-header.support-header { background: #2ECC71; box-shadow: none; }
-        .top-header.sender-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); box-shadow: none; border-bottom: none; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스마트 안심 네트워크 — 관리자 데모</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060d1a;
+  --bg2: #0c1829;
+  --bg3: #111f35;
+  --border: rgba(0,180,255,0.15);
+  --border2: rgba(0,180,255,0.3);
+  --accent: #00b4ff;
+  --accent2: #0066cc;
+  --green: #00ff88;
+  --red: #ff3333;
+  --yellow: #ffcc00;
+  --text: #e0f0ff;
+  --text2: rgba(200,230,255,0.6);
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Noto Sans KR', sans-serif;
+}
 
-        .header-icon-btn {
-            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border-radius: 8px; transition: background 0.2s; font-size: 20px;
-        }
-        .header-icon-btn:hover { background: rgba(0,0,0,0.1); }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; background:var(--bg); color:var(--text); font-family:var(--sans); overflow:hidden; }
 
-        .header-center { display: flex; align-items: center; gap: 8px; }
-        .header-title { 
-            font-size: 18px; font-weight: 700; letter-spacing: 0.2px;
-            transition: color 0.3s; white-space: nowrap;
-        }
-        .header-dot {
-            width: 8px; height: 8px; border-radius: 50%;
-            animation: dotPulse 1.5s ease-in-out infinite;
-        }
-        @keyframes dotPulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.7);} }
+/* ─── SCANLINE OVERLAY ─── */
+body::after {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+}
 
-        .switch-btn {
-            width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; border-radius: 8px; transition: background 0.2s;
-        }
-        .switch-btn:hover { background: rgba(0,0,0,0.1); }
+/* ─── SCREENS ─── */
+.screen { position:absolute; inset:0; display:none; flex-direction:column; }
+.screen.active { display:flex; }
 
-        .app-screen { 
-            display: none; width: 100%; 
-            height: calc(100% - 54px);
-            position: absolute; top: 54px; left: 0; overflow: hidden;
-        }
-        .app-screen.active { display: flex; }
+/* ─── TOPBAR ─── */
+.topbar {
+  flex-shrink:0; height:52px; background:rgba(6,13,26,0.98);
+  border-bottom:1px solid var(--border2);
+  display:flex; align-items:center; justify-content:space-between; padding:0 20px;
+  backdrop-filter:blur(10px);
+}
+.topbar-left { display:flex; align-items:center; gap:12px; }
+.logo-badge {
+  background:var(--accent2); color:white; font-family:var(--mono); font-size:10px;
+  font-weight:700; padding:3px 8px; border-radius:3px; letter-spacing:1px;
+}
+.topbar-title { font-size:14px; font-weight:700; color:var(--text); letter-spacing:0.5px; }
+.topbar-right { display:flex; align-items:center; gap:16px; }
+.live-badge {
+  display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--green);
+}
+.live-dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:livePulse 1.2s ease-in-out infinite; }
+@keyframes livePulse { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,0.4);} 50%{opacity:0.6;box-shadow:0 0 0 4px rgba(0,255,136,0);} }
+.clock { font-family:var(--mono); font-size:12px; color:var(--text2); }
 
-        #senderScreen { 
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            flex-direction: column; align-items: center; justify-content: center; padding: 20px; 
-        }
-        
-        .radar-container-sender { 
-            position: relative; width: 280px; height: 280px; 
-            display: flex; align-items: center; justify-content: center; margin: 30px 0;
-        }
-        
-        .radar-ring {
-            position: absolute; width: 100%; height: 100%; border-radius: 50%;
-            pointer-events: none; animation: spin-ring 1.5s linear infinite;
-        }
-        .radar-ring::before {
-            content: ''; position: absolute; top: -2px; left: -2px; right: -2px; bottom: -2px;
-            border-radius: 50%;
-            background: conic-gradient(
-                from 0deg, transparent 0deg, transparent 90deg,
-                #FF00FF 90deg, #FF00FF 180deg,
-                #FF0000 180deg, #FF0000 270deg,
-                #FFFF00 270deg, #FFFF00 360deg
-            );
-        }
-        .radar-ring::after {
-            content: ''; position: absolute; top: 3px; left: 3px; right: 3px; bottom: 3px;
-            background: #0f172a; border-radius: 50%;
-        }
-        @keyframes spin-ring { 0%{transform:rotate(0deg);}100%{transform:rotate(360deg);} }
-        
-        .btn-emergency { 
-            width: 255px; height: 255px;
-            background: radial-gradient(circle, #FF4444 0%, #FF0000 100%); 
-            border-radius: 50%; border: none; color: white; 
-            box-shadow: 0 0 30px rgba(255,0,0,0.6); 
-            cursor: pointer; z-index: 10; transition: all 0.2s; touch-action: manipulation;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            padding: 0; position: relative;
-        }
-        .btn-emergency:active { transform: scale(0.95); box-shadow: 0 0 50px rgba(255,0,0,0.9); }
-        .btn-emergency.tracking { animation: pulse-button 1.5s ease-in-out infinite; }
-        @keyframes pulse-button { 
-            0%,100%{transform:scale(1);box-shadow:0 0 20px rgba(255,0,0,0.5);} 
-            50%{transform:scale(1.05);box-shadow:0 0 60px rgba(255,0,0,0.9);} 
-        }
-        
-        .sos-text { font-family: 'Black Han Sans', sans-serif; font-size: 64px; font-weight: 400; color: white; letter-spacing: 6px; text-shadow: 0 3px 12px rgba(0,0,0,0.4); line-height: 1; }
-        .request-text { font-size:22px; font-weight:700; color:rgba(255,255,255,0.95); letter-spacing:1px; margin-top:8px; }
-        
-        #statusMsg { margin-top: 20px; font-size: 20px; color: #60a5fa; font-weight: 600; text-align: center; }
-        .tracking-badge { 
-            background: rgba(255,51,51,0.9); padding: 10px 24px; border-radius: 25px; 
-            font-size: 18px; margin-top: 16px; display: inline-block; 
-            animation: blink 1s infinite; border: 2px solid rgba(255,255,255,0.3);
-        }
-        @keyframes blink { 0%,100%{opacity:1;}50%{opacity:0.5;} }
+/* ─── BREADCRUMB ─── */
+.breadcrumb {
+  flex-shrink:0; height:38px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 20px; gap:6px;
+  font-family:var(--mono); font-size:11px; color:var(--text2);
+}
+.bc-item { cursor:pointer; transition:color 0.2s; }
+.bc-item:hover { color:var(--accent); }
+.bc-item.active { color:var(--accent); font-weight:600; }
+.bc-sep { color:rgba(0,180,255,0.3); }
 
-        #receiverScreen {
-            background: #2ECC71;
-            flex-direction: column; align-items: center; justify-content: center;
-            gap: 50px; padding: 20px; padding-bottom: 70px;
-            transition: background 0.15s;
-        }
-        #receiverScreen.alerting { animation: flashBg 0.6s ease-in-out infinite; }
-        @keyframes flashBg { 0%,100%{background:#2ECC71;}50%{background:#FF3E8B;} }
+/* ═══════════════════════════════════════
+   SCREEN 1 — L0 SUPER ADMIN NAVIGATION
+═══════════════════════════════════════ */
+#navScreen { background: radial-gradient(ellipse at 20% 50%, rgba(0,60,120,0.15) 0%, transparent 60%), var(--bg); }
 
-        .radar-wrap { width:230px; height:230px; display:flex; align-items:center; justify-content:center; position:relative; margin-top: -30px; }
-        .radar-base {
-            width:210px; height:210px; border-radius:50%;
-            background:radial-gradient(circle, rgba(0,50,20,0.85) 0%, rgba(0,25,10,0.95) 100%);
-            border:2px solid rgba(0,255,100,0.35); position:relative; overflow:hidden;
-            box-shadow:0 0 30px rgba(0,255,100,0.25), inset 0 0 30px rgba(0,0,0,0.5);
-        }
-        .radar-ring-sup {
-            position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-            border-radius:50%; border:1px solid rgba(0,255,100,0.2);
-        }
-        .sr1{width:44px;height:44px;} .sr2{width:88px;height:88px;}
-        .sr3{width:132px;height:132px;} .sr4{width:176px;height:176px;}
-        .radar-cross-h{position:absolute;top:50%;left:0;right:0;height:1px;background:rgba(0,255,100,0.18);transform:translateY(-50%);}
-        .radar-cross-v{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(0,255,100,0.18);transform:translateX(-50%);}
-        .radar-sweep-wrap{position:absolute;top:0;left:0;right:0;bottom:0;animation:sweepRotate 2.5s linear infinite;transform-origin:center;}
-        @keyframes sweepRotate{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
-        .radar-sweep-fan{position:absolute;top:0;left:0;right:0;bottom:0;border-radius:50%;background:conic-gradient(from 270deg,rgba(0,255,100,0) 0deg,rgba(0,255,100,0.55) 55deg,rgba(0,255,100,0) 70deg);}
-        .radar-center-dot{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:7px;height:7px;background:#00FF7F;border-radius:50%;box-shadow:0 0 10px #00FF7F;z-index:5;}
-        .blip{position:absolute;width:5px;height:5px;background:#00FF7F;border-radius:50%;box-shadow:0 0 7px #00FF7F;animation:blipFade 2.5s ease-out infinite;}
-        .sb1{top:40px;left:115px;animation-delay:0.9s;} .sb2{top:75px;left:52px;animation-delay:1.7s;} .sb3{top:122px;left:128px;animation-delay:0.4s;}
-        @keyframes blipFade{0%{opacity:0;transform:scale(0.5);}20%{opacity:1;transform:scale(1.6);}60%{opacity:0.5;transform:scale(1);}100%{opacity:0;}}
+.nav-body { flex:1; display:flex; overflow:hidden; }
 
-        .mode-toggle{background:rgba(0,0,0,0.15);border-radius:50px;display:flex;padding:4px;gap:4px;border:1px solid rgba(255,255,255,0.2);}
-        .mode-btn{padding:10px 22px;border-radius:40px;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Noto Sans KR',sans-serif;font-size:16px;font-weight:700;transition:all 0.25s;color:rgba(255,255,255,0.55);background:transparent;}
-        .mode-btn.active{background:#1A6B3C;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,0.25);}
+/* Left sidebar — level selector */
+.nav-sidebar {
+  width:200px; flex-shrink:0; background:var(--bg2);
+  border-right:1px solid var(--border); padding:16px 0;
+  display:flex; flex-direction:column; gap:2px; overflow-y:auto;
+}
+.level-tab {
+  padding:12px 20px; cursor:pointer; transition:all 0.2s;
+  display:flex; align-items:center; gap:10px;
+  border-left:3px solid transparent;
+  font-size:13px; font-weight:500; color:var(--text2);
+}
+.level-tab:hover { background:rgba(0,180,255,0.06); color:var(--text); }
+.level-tab.active { background:rgba(0,180,255,0.1); border-left-color:var(--accent); color:var(--accent); font-weight:700; }
+.level-badge {
+  font-family:var(--mono); font-size:9px; font-weight:700;
+  padding:2px 6px; border-radius:3px; background:rgba(0,180,255,0.15);
+  color:var(--accent); letter-spacing:0.5px;
+}
 
-        .sup-alert-btn{background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.4);color:white;font-family:'Noto Sans KR',sans-serif;font-size:17px;font-weight:700;padding:13px 38px;border-radius:30px;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;}
-        .sup-alert-btn:hover{background:rgba(255,255,255,0.25);}
-        .sup-alert-btn:active{transform:scale(0.96);}
+/* Main panel */
+.nav-main { flex:1; overflow:hidden; display:flex; flex-direction:column; }
 
-        .support-alert-overlay {
-            position:absolute; inset:0; display:flex; flex-direction:column;
-            background:rgba(200,20,60,0.97); z-index:50;
-            opacity:0; pointer-events:none; transition:opacity 0.3s; overflow-y:auto;
-        }
-        .support-alert-overlay.visible{opacity:1;pointer-events:all;}
+.nav-panel-header {
+  flex-shrink:0; padding:16px 24px 12px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.nav-panel-title { font-size:18px; font-weight:900; letter-spacing:-0.3px; }
+.nav-panel-count { font-family:var(--mono); font-size:12px; color:var(--text2); }
 
-        .sal-top-bar{background:rgba(0,0,0,0.3);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
-        .sal-siren{font-size:20px;animation:sPulse 0.6s ease-in-out infinite;}
-        @keyframes sPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.15);}}
-        .sal-title{font-family:'Black Han Sans',sans-serif;font-size:17px;color:white;flex:1;letter-spacing:1px;}
-        .sal-confirm{background:rgba(255,255,255,0.2);border:none;color:white;font-size:13px;font-weight:700;padding:7px 16px;border-radius:20px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;}
-        .sal-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
-        .sal-flash{font-family:'Black Han Sans',sans-serif;font-size:19px;color:white;text-align:center;animation:sPulse 0.6s ease-in-out infinite;}
-        .loc-card{background:rgba(0,0,0,0.22);border-radius:14px;padding:12px 14px;border:1px solid rgba(255,255,255,0.12);display:flex;flex-direction:column;gap:5px;}
-        .loc-lbl{font-size:11px;font-weight:700;color:rgba(255,255,255,0.55);letter-spacing:1px;}
-        .loc-addr{font-size:13px;font-weight:700;color:white;line-height:1.5;}
-        .loc-coords{font-size:11px;color:rgba(255,255,255,0.55);font-family:monospace;}
-        .loc-time{font-size:11px;color:rgba(255,255,255,0.45);text-align:right;}
-        .map-box{width:100%;height:190px;border-radius:14px;overflow:hidden;border:2px solid rgba(255,255,255,0.18);}
-        .map-box iframe{width:100%;height:100%;border:none;}
+.nav-search {
+  flex-shrink:0; padding:12px 24px;
+  display:flex; gap:10px; align-items:center;
+}
+.search-input {
+  flex:1; background:var(--bg3); border:1px solid var(--border2);
+  border-radius:8px; padding:8px 14px; color:var(--text);
+  font-family:var(--sans); font-size:13px; outline:none;
+  transition:border-color 0.2s;
+}
+.search-input:focus { border-color:var(--accent); }
+.search-input::placeholder { color:var(--text2); }
 
-        .settings-screen { display:none; position:absolute; top:54px; left:0; width:100%; height:calc(100% - 54px); padding:20px; overflow-y:auto; z-index:8888; }
-        .settings-screen.active { display:block; }
-        .settings-screen.sender-settings { background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); }
-        .settings-screen.receiver-settings { background:#2ECC71; }
+.nav-grid {
+  flex:1; overflow-y:auto; padding:12px 24px 20px;
+  display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:10px;
+  align-content:start;
+}
+.nav-grid::-webkit-scrollbar { width:4px; }
+.nav-grid::-webkit-scrollbar-track { background:transparent; }
+.nav-grid::-webkit-scrollbar-thumb { background:var(--border2); border-radius:4px; }
 
-        .card { background:rgba(255,255,255,0.1); padding:22px; border-radius:20px; width:100%; max-width:450px; margin:0 auto 20px; border:2px solid rgba(255,255,255,0.2); backdrop-filter:blur(10px); }
-        .section-title { font-size:22px; margin-bottom:12px; font-weight:bold; }
-        .id-display { background:rgba(0,0,0,0.2); padding:16px; border-radius:15px; margin:12px 0; text-align:center; border:2px solid rgba(255,255,255,0.3); }
-        .id-text { font-size:34px; color:#FFFFFF; font-weight:900; letter-spacing:4px; text-shadow: 0 2px 8px rgba(0,0,0,0.4); }
-        .input-box { width:100%; padding:16px; border-radius:12px; border:2px solid rgba(255,255,255,0.3); font-size:22px; margin:12px 0; text-align:center; background:rgba(255,255,255,0.1); color:white; }
-        .btn-add { background:#1A5C34; color:white; padding:16px; width:100%; font-size:22px; font-weight:bold; border-radius:12px; border:none; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 15px rgba(0,0,0,0.25); }
-        .btn-add:active { transform:scale(0.96); }
-        .friend-item { background:rgba(255,255,255,0.2); padding:16px 20px; border-radius:15px; margin:10px 0; display:flex; justify-content:space-between; align-items:center; font-size:20px; font-weight:bold; border:2px solid rgba(255,255,255,0.2); }
-        .btn-delete { background:#dc2626; color:white; border:none; padding:8px 18px; border-radius:25px; cursor:pointer; font-size:18px; font-weight:bold; transition:all 0.2s; }
-        .btn-delete:active { transform:scale(0.88); }
-        .btn-back { background:rgba(255,255,255,0.2); color:white; padding:16px; width:100%; max-width:450px; font-size:20px; font-weight:bold; border-radius:12px; border:2px solid rgba(255,255,255,0.3); cursor:pointer; transition:all 0.2s; margin:16px auto; display:block; }
-        .btn-back:active { transform:scale(0.96); }
-    </style>
+.nav-card {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:10px; padding:14px 16px; cursor:pointer;
+  transition:all 0.2s; position:relative; overflow:hidden;
+}
+.nav-card::before {
+  content:''; position:absolute; inset:0; background:linear-gradient(135deg, rgba(0,180,255,0.04), transparent);
+  opacity:0; transition:opacity 0.2s;
+}
+.nav-card:hover { border-color:var(--accent); transform:translateY(-1px); box-shadow:0 4px 20px rgba(0,180,255,0.12); }
+.nav-card:hover::before { opacity:1; }
+.nav-card.has-sos { border-color:rgba(255,51,51,0.5); animation:cardPulse 2s ease-in-out infinite; }
+@keyframes cardPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,51,51,0);} 50%{box-shadow:0 0 12px rgba(255,51,51,0.3);} }
+
+.card-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px; }
+.card-sub { font-family:var(--mono); font-size:10px; color:var(--text2); margin-bottom:8px; }
+.card-stats { display:flex; gap:8px; align-items:center; }
+.stat-pill {
+  font-family:var(--mono); font-size:9px; font-weight:600;
+  padding:2px 7px; border-radius:10px;
+}
+.stat-green { background:rgba(0,255,136,0.1); color:var(--green); border:1px solid rgba(0,255,136,0.2); }
+.stat-red { background:rgba(255,51,51,0.15); color:#ff6666; border:1px solid rgba(255,51,51,0.3); }
+.stat-blue { background:rgba(0,180,255,0.1); color:var(--accent); border:1px solid rgba(0,180,255,0.2); }
+.card-arrow { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--text2); font-size:14px; transition:all 0.2s; }
+.nav-card:hover .card-arrow { color:var(--accent); transform:translateY(-50%) translateX(2px); }
+
+/* Right stats panel */
+.nav-stats {
+  width:220px; flex-shrink:0; background:var(--bg2);
+  border-left:1px solid var(--border); padding:16px;
+  display:flex; flex-direction:column; gap:14px; overflow-y:auto;
+}
+.stats-section-title { font-family:var(--mono); font-size:10px; font-weight:700; color:var(--text2); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.stat-row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid var(--border); }
+.stat-label { font-size:12px; color:var(--text2); }
+.stat-value { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--text); }
+.stat-value.green { color:var(--green); }
+.stat-value.red { color:var(--red); }
+.stat-value.yellow { color:var(--yellow); }
+
+.sos-alert-mini {
+  background:rgba(255,51,51,0.1); border:1px solid rgba(255,51,51,0.3);
+  border-radius:8px; padding:10px 12px; cursor:pointer;
+  transition:all 0.2s; animation:miniPulse 1.5s ease-in-out infinite;
+}
+.sos-alert-mini:hover { background:rgba(255,51,51,0.2); }
+@keyframes miniPulse { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+.sos-mini-title { font-size:11px; font-weight:700; color:#ff6666; margin-bottom:4px; display:flex; align-items:center; gap:6px; }
+.sos-mini-body { font-size:11px; color:var(--text2); line-height:1.5; }
+
+/* ═══════════════════════════════════════
+   SCREEN 2 — L3 RADAR CONTROL
+═══════════════════════════════════════ */
+#radarScreen { background: radial-gradient(ellipse at 70% 30%, rgba(0,40,80,0.3) 0%, transparent 60%), var(--bg); }
+
+.radar-layout { flex:1; display:flex; overflow:hidden; }
+
+/* Main radar area */
+.radar-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+
+.radar-toolbar {
+  flex-shrink:0; padding:10px 20px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:12px;
+  background:var(--bg2);
+}
+.toolbar-search {
+  flex:1; max-width:320px; background:var(--bg3);
+  border:1px solid var(--border2); border-radius:8px;
+  padding:7px 14px; color:var(--text); font-family:var(--sans); font-size:13px; outline:none;
+  transition:border-color 0.2s;
+}
+.toolbar-search:focus { border-color:var(--accent); }
+.toolbar-search::placeholder { color:var(--text2); }
+
+.tb-btn {
+  padding:7px 14px; border-radius:8px; border:1px solid var(--border2);
+  background:var(--bg3); color:var(--text2); font-size:12px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; font-family:var(--sans); white-space:nowrap;
+}
+.tb-btn:hover { border-color:var(--accent); color:var(--accent); }
+.tb-btn.active { background:rgba(0,180,255,0.15); border-color:var(--accent); color:var(--accent); }
+
+.radar-canvas-wrap { flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+
+.radar-grid-bg {
+  position:absolute; inset:0; pointer-events:none;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size:40px 40px;
+}
+
+.radar-circle-wrap { position:relative; width:420px; height:420px; }
+
+.radar-ring-outer {
+  position:absolute; inset:0; border-radius:50%;
+  border:1px solid var(--border2);
+  background:radial-gradient(circle, rgba(0,20,50,0.95) 0%, rgba(2,10,30,0.98) 100%);
+  box-shadow:0 0 60px rgba(0,180,255,0.1), inset 0 0 60px rgba(0,0,0,0.5);
+}
+.radar-inner-ring {
+  position:absolute; border-radius:50%; border:1px solid rgba(0,180,255,0.1);
+}
+.rir1 { inset:15%; }
+.rir2 { inset:30%; }
+.rir3 { inset:45%; }
+.rir4 { inset:60%; }
+
+.radar-cross-h, .radar-cross-v {
+  position:absolute; background:rgba(0,180,255,0.12);
+}
+.radar-cross-h { top:50%; left:5%; right:5%; height:1px; }
+.radar-cross-v { left:50%; top:5%; bottom:5%; width:1px; }
+
+.radar-sweep {
+  position:absolute; inset:0; border-radius:50%;
+  animation:radarSpin 3s linear infinite;
+  transform-origin:center;
+}
+.radar-sweep::after {
+  content:''; position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 270deg, rgba(0,180,255,0) 0deg, rgba(0,180,255,0.5) 40deg, rgba(0,180,255,0) 55deg);
+}
+@keyframes radarSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+
+.radar-center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:8px; height:8px; border-radius:50%; background:var(--accent); box-shadow:0 0 12px var(--accent); z-index:5; }
+
+/* Dots */
+.radar-dot {
+  position:absolute; border-radius:50%; cursor:pointer; z-index:10;
+  transform:translate(-50%,-50%); transition:all 0.3s;
+  display:flex; align-items:center; justify-content:center;
+}
+.dot-normal { width:12px; height:12px; background:var(--green); box-shadow:0 0 8px var(--green); }
+.dot-sos { width:14px; height:14px; background:var(--red); box-shadow:0 0 12px var(--red); animation:dotSOS 0.7s ease-in-out infinite; }
+@keyframes dotSOS { 0%,100%{transform:translate(-50%,-50%) scale(1);} 50%{transform:translate(-50%,-50%) scale(1.5); box-shadow:0 0 20px var(--red);} }
+.dot-warning { width:12px; height:12px; background:var(--yellow); box-shadow:0 0 8px var(--yellow); animation:dotWarn 1.2s ease-in-out infinite; }
+@keyframes dotWarn { 0%,100%{opacity:1;} 50%{opacity:0.5;} }
+
+.dot-tooltip {
+  position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%);
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:8px; padding:8px 12px; min-width:160px;
+  font-size:11px; white-space:nowrap; pointer-events:none;
+  display:none; z-index:100;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+}
+.radar-dot:hover .dot-tooltip { display:block; }
+
+/* Radar legend */
+.radar-legend {
+  position:absolute; bottom:16px; left:16px;
+  display:flex; flex-direction:column; gap:5px;
+}
+.legend-row { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text2); }
+.legend-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+/* Right sidebar — detail panel */
+.radar-sidebar {
+  width:280px; flex-shrink:0; background:var(--bg2);
+  border-left:1px solid var(--border);
+  display:flex; flex-direction:column; overflow:hidden;
+}
+
+.rs-header {
+  flex-shrink:0; padding:14px 16px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.rs-title { font-size:13px; font-weight:700; }
+.rs-count { font-family:var(--mono); font-size:11px; color:var(--text2); }
+
+.rs-tabs { flex-shrink:0; display:flex; border-bottom:1px solid var(--border); }
+.rs-tab {
+  flex:1; padding:9px; text-align:center; font-size:11px; font-weight:600;
+  color:var(--text2); cursor:pointer; transition:all 0.2s;
+  border-bottom:2px solid transparent;
+}
+.rs-tab.active { color:var(--accent); border-bottom-color:var(--accent); background:rgba(0,180,255,0.05); }
+
+.rs-content { flex:1; overflow-y:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.rs-content::-webkit-scrollbar { width:3px; }
+.rs-content::-webkit-scrollbar-thumb { background:var(--border2); border-radius:3px; }
+
+/* Resident card in sidebar */
+.res-card {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:8px; padding:10px 12px; cursor:pointer;
+  transition:all 0.2s;
+}
+.res-card:hover { border-color:var(--border2); background:rgba(0,180,255,0.04); }
+.res-card.sos-card { border-color:rgba(255,51,51,0.4); background:rgba(255,20,20,0.06); animation:cardPulse 1.5s infinite; }
+.res-header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; }
+.res-name { font-size:12px; font-weight:700; }
+.res-status { font-family:var(--mono); font-size:9px; font-weight:700; padding:2px 7px; border-radius:10px; }
+.res-id { font-family:var(--mono); font-size:10px; color:var(--text2); margin-bottom:2px; }
+.res-addr { font-size:11px; color:var(--text2); }
+
+/* Detail popup overlay */
+.detail-popup {
+  position:fixed; inset:0; z-index:8000; display:none;
+  align-items:center; justify-content:center;
+  background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);
+}
+.detail-popup.visible { display:flex; }
+.detail-card {
+  background:var(--bg3); border:1px solid var(--border2);
+  border-radius:16px; padding:24px; width:380px; max-width:90vw;
+  box-shadow:0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(0,180,255,0.1);
+  animation:popIn 0.2s ease-out;
+}
+@keyframes popIn { from{transform:scale(0.9);opacity:0;} to{transform:scale(1);opacity:1;} }
+.dc-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.dc-title { font-size:16px; font-weight:900; }
+.dc-close { cursor:pointer; color:var(--text2); font-size:20px; line-height:1; transition:color 0.2s; }
+.dc-close:hover { color:white; }
+.dc-id { font-family:var(--mono); font-size:11px; color:var(--accent); margin-bottom:16px; }
+.dc-rows { display:flex; flex-direction:column; gap:0; border:1px solid var(--border); border-radius:8px; overflow:hidden; margin-bottom:16px; }
+.dc-row { display:flex; border-bottom:1px solid var(--border); }
+.dc-row:last-child { border-bottom:none; }
+.dc-label { width:90px; flex-shrink:0; padding:9px 12px; background:rgba(0,180,255,0.05); font-size:11px; font-weight:600; color:var(--text2); display:flex; align-items:center; }
+.dc-val { padding:9px 12px; font-size:12px; color:var(--text); flex:1; display:flex; align-items:center; }
+.dc-actions { display:flex; gap:10px; }
+.dc-btn {
+  flex:1; padding:10px; border-radius:8px; border:none; cursor:pointer;
+  font-family:var(--sans); font-size:12px; font-weight:700; transition:all 0.2s;
+}
+.dc-btn-track { background:rgba(0,180,255,0.15); border:1px solid var(--border2); color:var(--accent); }
+.dc-btn-track:hover { background:rgba(0,180,255,0.25); }
+.dc-btn-disconnect { background:rgba(255,51,51,0.1); border:1px solid rgba(255,51,51,0.3); color:#ff6666; }
+.dc-btn-disconnect:hover { background:rgba(255,51,51,0.2); }
+
+/* ─── TRANSITIONS ─── */
+.screen { transition:none; }
+.screen.slide-out { animation:slideOut 0.35s ease-in forwards; }
+.screen.slide-in { animation:slideIn 0.35s ease-out forwards; }
+@keyframes slideOut { to{ transform:translateX(-40px); opacity:0; } }
+@keyframes slideIn { from{ transform:translateX(40px); opacity:0; } to{ transform:translateX(0); opacity:1; } }
+
+/* ─── BACK BUTTON ─── */
+.back-btn {
+  padding:6px 14px; border-radius:8px; border:1px solid var(--border2);
+  background:transparent; color:var(--text2); font-size:12px; font-weight:600;
+  cursor:pointer; transition:all 0.2s; font-family:var(--sans);
+  display:flex; align-items:center; gap:6px;
+}
+.back-btn:hover { border-color:var(--accent); color:var(--accent); }
+
+/* ─── SOS TOAST ─── */
+.sos-toast {
+  position:fixed; top:60px; right:20px; z-index:9000;
+  background:rgba(255,20,20,0.95); border:1px solid rgba(255,100,100,0.5);
+  border-radius:12px; padding:12px 16px; min-width:260px;
+  box-shadow:0 8px 32px rgba(255,0,0,0.3);
+  display:none; animation:toastIn 0.3s ease-out;
+  cursor:pointer;
+}
+.sos-toast.visible { display:block; }
+@keyframes toastIn { from{transform:translateX(20px);opacity:0;} to{transform:translateX(0);opacity:1;} }
+.toast-title { font-size:13px; font-weight:900; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+.toast-body { font-size:11px; color:rgba(255,255,255,0.8); }
+
+/* ─── EMPTY STATE ─── */
+.rs-empty { text-align:center; color:var(--text2); font-size:12px; padding:30px 16px; }
+</style>
 </head>
 <body>
 
-    <div class="top-header sender-header" id="topHeader">
-        <div class="header-icon-btn" id="settingIconBtn" onclick="showSettings()">⚙️</div>
-        <div class="header-center">
-            <span class="header-title" id="headerTitle" style="color:white;">SOS 요청 모드</span>
-            <div class="header-dot" id="headerDot" style="background:#00FF7F;box-shadow:0 0 6px #00FF7F;display:none;"></div>
+<!-- ═════════════════════════
+     SCREEN 1 — L0 NAVIGATION
+════════════════════════════ -->
+<div id="navScreen" class="screen active">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-badge">ADMIN L0</div>
+      <span class="topbar-title">스마트 안심 네트워크 — 전국 관제</span>
+    </div>
+    <div class="topbar-right">
+      <div class="sos-toast" id="sosToast" onclick="goToSOS()">
+        <div class="toast-title">🚨 SOS 수신 <span style="font-family:var(--mono);font-size:10px;font-weight:400;">광주 북구 중흥동</span></div>
+        <div class="toast-body">김○숙 (AJS-GJ-NK-001) · 클릭하여 즉시 이동</div>
+      </div>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </div>
+
+  <div class="breadcrumb">
+    <span class="bc-item active" id="bc0" onclick="drillTo(0)">🇰🇷 전국</span>
+    <span class="bc-sep" id="bcSep1" style="display:none">›</span>
+    <span class="bc-item" id="bc1" style="display:none" onclick="drillTo(1)"></span>
+    <span class="bc-sep" id="bcSep2" style="display:none">›</span>
+    <span class="bc-item" id="bc2" style="display:none" onclick="drillTo(2)"></span>
+    <span class="bc-sep" id="bcSep3" style="display:none">›</span>
+    <span class="bc-item" id="bc3" style="display:none"></span>
+  </div>
+
+  <div class="nav-body">
+    <!-- Level tabs -->
+    <div class="nav-sidebar">
+      <div class="level-tab active" id="tabL0" onclick="drillTo(0)">
+        <span class="level-badge">L0</span> 전국
+      </div>
+      <div class="level-tab" id="tabL1" onclick="drillTo(1)" style="opacity:0.3;pointer-events:none;">
+        <span class="level-badge">L1</span> 시·도
+      </div>
+      <div class="level-tab" id="tabL2" onclick="drillTo(2)" style="opacity:0.3;pointer-events:none;">
+        <span class="level-badge">L2</span> 시·군·구
+      </div>
+      <div class="level-tab" id="tabL3" style="opacity:0.3;pointer-events:none;">
+        <span class="level-badge">L3</span> 읍·면·동
+      </div>
+      <div style="margin-top:auto; padding:16px; border-top:1px solid var(--border);">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text2);line-height:1.8;">
+          총 등록 어르신<br>
+          <span style="font-size:18px;font-weight:700;color:var(--green);" id="totalCount">2,847</span><br><br>
+          SOS 진행 중<br>
+          <span style="font-size:18px;font-weight:700;color:var(--red);" id="totalSOS">1</span>
         </div>
-        <div class="switch-btn" id="switchBtn" onclick="toggleMode()">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <path id="swPath1" d="M7 16H20M20 16L17 13M20 16L17 19" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path id="swPath2" d="M17 8H4M4 8L7 5M4 8L7 11" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </div>
+      </div>
     </div>
 
-    <div id="senderScreen" class="app-screen active">
-        <div class="radar-container-sender">
-            <div class="radar-ring"></div>
-            <button id="emergencyBtn" class="btn-emergency">
-                <div class="sos-text">SOS</div>
-                <div class="request-text">구조요청</div>
-            </button>
-        </div>
-        <p id="statusMsg">버튼을 눌러주세요</p>
-        <div id="trackingBadge" class="tracking-badge" style="display:none;">📍 실시간 위치 추적 중...</div>
+    <!-- Cards -->
+    <div class="nav-main">
+      <div class="nav-panel-header">
+        <div class="nav-panel-title" id="panelTitle">시·도 선택</div>
+        <div class="nav-panel-count" id="panelCount"></div>
+      </div>
+      <div class="nav-search">
+        <input class="search-input" id="navSearch" placeholder="지역명 검색..." oninput="filterCards()">
+      </div>
+      <div class="nav-grid" id="navGrid"></div>
     </div>
 
-    <div id="receiverScreen" class="app-screen">
-        <div class="radar-wrap">
-            <div class="radar-base">
-                <div class="radar-ring-sup sr1"></div>
-                <div class="radar-ring-sup sr2"></div>
-                <div class="radar-ring-sup sr3"></div>
-                <div class="radar-ring-sup sr4"></div>
-                <div class="radar-cross-h"></div>
-                <div class="radar-cross-v"></div>
-                <div class="radar-sweep-wrap"><div class="radar-sweep-fan"></div></div>
-                <div class="radar-center-dot"></div>
-                <div class="blip sb1"></div>
-                <div class="blip sb2"></div>
-                <div class="blip sb3"></div>
-            </div>
+    <!-- Stats panel -->
+    <div class="nav-stats">
+      <div>
+        <div class="stats-section-title">전국 현황</div>
+        <div class="stat-row"><span class="stat-label">등록 어르신</span><span class="stat-value green">2,847</span></div>
+        <div class="stat-row"><span class="stat-label">정상 상태</span><span class="stat-value green">2,846</span></div>
+        <div class="stat-row"><span class="stat-label">SOS 진행</span><span class="stat-value red">1</span></div>
+        <div class="stat-row"><span class="stat-label">공무원 계정</span><span class="stat-value">89</span></div>
+        <div class="stat-row"><span class="stat-label">관할 구역</span><span class="stat-value">124</span></div>
+      </div>
+      <div>
+        <div class="stats-section-title">실시간 알림</div>
+        <div class="sos-alert-mini" onclick="goToSOS()">
+          <div class="sos-mini-title">🚨 SOS 발생</div>
+          <div class="sos-mini-body">광주 북구 중흥동<br>김○숙 · 1분 전</div>
         </div>
-
-        <div class="mode-toggle">
-            <button class="mode-btn active" id="supSoundBtn" onclick="setSupMode('sound')">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <path d="M5 9H9L15 4V20L9 15H5V9Z" fill="currentColor"/>
-                    <path d="M18 9C19.5 10.5 20 12 20 12C20 12 19.5 13.5 18 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                소리 켜기
-            </button>
-            <button class="mode-btn" id="supVibrateBtn" onclick="setSupMode('vibrate')">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                    <rect x="2" y="6" width="1.5" height="4" rx="0.75" fill="currentColor"/>
-                    <rect x="2" y="12" width="1.5" height="4" rx="0.75" fill="currentColor"/>
-                    <rect x="20.5" y="6" width="1.5" height="4" rx="0.75" fill="currentColor"/>
-                    <rect x="20.5" y="12" width="1.5" height="4" rx="0.75" fill="currentColor"/>
-                    <rect x="5" y="3" width="14" height="18" rx="2.5" fill="currentColor"/>
-                </svg>
-                진동
-            </button>
+      </div>
+      <div>
+        <div class="stats-section-title">마스터 스위치</div>
+        <div style="background:rgba(255,204,0,0.1);border:1px solid rgba(255,204,0,0.3);border-radius:8px;padding:10px 12px;">
+          <div style="font-size:11px;color:var(--yellow);font-weight:700;margin-bottom:4px;">⚠ 위치 기능 OFF</div>
+          <div style="font-size:10px;color:var(--text2);line-height:1.5;">법적 승인 대기 중<br>서버 설정으로 즉시 전환 가능</div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        <button onclick="triggerSupAlert()" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.4);color:white;font-size:14px;font-weight:700;padding:10px 28px;border-radius:30px;cursor:pointer;white-space:nowrap;">🚨 경보 테스트</button>
+<!-- ═════════════════════════
+     SCREEN 2 — L3 RADAR
+════════════════════════════ -->
+<div id="radarScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="back-btn" onclick="goBack()">← 목록으로</button>
+      <div class="logo-badge">RADAR L3</div>
+      <span class="topbar-title" id="radarTitle">중흥동 스마트 안심 네트워크</span>
+    </div>
+    <div class="topbar-right">
+      <div id="scaleLabel" style="font-family:var(--mono);font-size:11px;color:var(--text2);"></div>
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <div class="clock" id="clock2">--:--:--</div>
+    </div>
+  </div>
 
-        <div class="support-alert-overlay" id="supAlertOverlay">
-            <div class="sal-top-bar">
-                <div class="sal-siren">🚨</div>
-                <div class="sal-title">SOS 경보 발생!</div>
-                <button class="sal-confirm" onclick="stopSupAlert()">확인</button>
-            </div>
-            <div class="sal-body">
-                <div class="sal-flash">도움 요청 신호 수신 중...</div>
-                <div class="loc-card">
-                    <div class="loc-lbl">📍 현재 위치</div>
-                    <div class="loc-addr" id="supAlertAddr">위치 정보 불러오는 중...</div>
-                    <div class="loc-coords" id="supAlertCoords"></div>
-                    <div class="loc-time" id="supAlertTime"></div>
-                </div>
-                <div class="map-box">
-                    <iframe id="supMapIframe" src="" allowfullscreen></iframe>
-                </div>
-            </div>
+  <div class="breadcrumb">
+    <span class="bc-item" onclick="goBack()">🇰🇷 전국</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-item" onclick="goBack()" id="radarBC1">광주광역시</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-item" onclick="goBack()" id="radarBC2">북구</span>
+    <span class="bc-sep">›</span>
+    <span class="bc-item active" id="radarBC3">중흥동</span>
+  </div>
+
+  <div class="radar-layout">
+    <!-- Radar area -->
+    <div class="radar-main">
+      <div class="radar-toolbar">
+        <input class="toolbar-search" id="radarSearch" placeholder="이름 또는 전화번호 뒷자리..." oninput="filterDots()">
+        <button class="tb-btn active" id="btnAll" onclick="setFilter('all')">전체</button>
+        <button class="tb-btn" id="btnSOS" onclick="setFilter('sos')">🔴 SOS</button>
+        <button class="tb-btn" id="btnNormal" onclick="setFilter('normal')">🟢 정상</button>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button class="tb-btn" onclick="alert('QR 스캔 기능 — 개발 예정')">📷 QR 등록</button>
         </div>
+      </div>
+      <div class="radar-canvas-wrap">
+        <div class="radar-grid-bg"></div>
+        <div class="radar-circle-wrap" id="radarWrap">
+          <div class="radar-ring-outer"></div>
+          <div class="radar-inner-ring rir1"></div>
+          <div class="radar-inner-ring rir2"></div>
+          <div class="radar-inner-ring rir3"></div>
+          <div class="radar-inner-ring rir4"></div>
+          <div class="radar-cross-h"></div>
+          <div class="radar-cross-v"></div>
+          <div class="radar-sweep"></div>
+          <div class="radar-center"></div>
+          <!-- dots injected by JS -->
+        </div>
+        <div class="radar-legend">
+          <div class="legend-row"><div class="legend-dot" style="background:var(--green);box-shadow:0 0 4px var(--green);"></div><span>정상</span></div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--red);box-shadow:0 0 4px var(--red);animation:dotSOS 0.7s infinite;"></div><span>SOS 발생</span></div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--yellow);box-shadow:0 0 4px var(--yellow);"></div><span>주의</span></div>
+        </div>
+      </div>
     </div>
 
-    <div id="senderSettings" class="settings-screen sender-settings">
-        <h1 style="font-size:28px;margin-bottom:20px;text-align:center;color:white;font-weight:900;">설정</h1>
-        <div class="card">
-            <p class="section-title" style="color:white;">내 고유 ID</p>
-            <div class="id-display"><div class="id-text" id="senderId">로딩중...</div></div>
-            <div style="display:flex;gap:10px;margin-top:12px;">
-                <button onclick="copySenderId()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#1A5C34;color:white;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    📋 복사하기
-                </button>
-                <button onclick="shareSenderKakao()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#FEE500;color:#3C1E1E;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    💬 카카오 공유
-                </button>
-            </div>
-            <div id="senderCopyToast" style="display:none;text-align:center;margin-top:10px;font-size:15px;font-weight:700;color:#60a5fa;">✅ ID가 복사되었습니다!</div>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">👥 보호자 등록하기</p>
-            <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addSenderFriend()">등록하기</button>
-            <button onclick="startSenderQrScan()" style="width:100%;padding:14px;border-radius:12px;border:2px dashed rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);color:white;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">
-                📷 QR 코드로 등록하기
-            </button>
-            <div id="senderQrScanArea" style="display:none;margin-top:12px;">
-                <video id="senderQrVideo" style="width:100%;border-radius:12px;background:#000;" autoplay playsinline></video>
-                <button onclick="stopSenderQrScan()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:none;background:rgba(220,38,38,0.8);color:white;font-size:16px;font-weight:700;cursor:pointer;">❌ 스캔 취소</button>
-                <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:14px;margin-top:6px;">상대방의 QR 코드를 카메라에 비춰주세요</p>
-            </div>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">등록된 보호자 목록</p>
-            <p style="background:rgba(59,130,246,0.3);padding:6px 16px;border-radius:15px;font-size:18px;display:inline-block;margin:10px 0;color:white;border:2px solid rgba(59,130,246,0.3);">
-                <span id="senderCount">0</span>/5명
-            </p>
-            <div id="senderFriendList"></div>
-        </div>
-        <div class="card" style="text-align:center;">
-            <p class="section-title" style="color:white;">📱 내 QR 코드</p>
-            <p style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:12px;">상대방이 이 QR을 스캔하면 자동으로 등록됩니다</p>
-            <div id="senderQrCode" style="display:inline-block;background:white;padding:12px;border-radius:12px;"></div>
-        </div>
-        <button class="btn-back" onclick="hideSettings()" style="display:none;"></button>
+    <!-- Right sidebar -->
+    <div class="radar-sidebar">
+      <div class="rs-header">
+        <span class="rs-title" id="sidebarTitle">관리 목록</span>
+        <span class="rs-count" id="sidebarCount"></span>
+      </div>
+      <div class="rs-tabs">
+        <div class="rs-tab active" onclick="setSideTab('all')">전체</div>
+        <div class="rs-tab" onclick="setSideTab('sos')">🚨 SOS</div>
+        <div class="rs-tab" onclick="setSideTab('normal')">정상</div>
+      </div>
+      <div class="rs-content" id="rsList"></div>
     </div>
+  </div>
+</div>
 
-    <div id="receiverSettings" class="settings-screen receiver-settings">
-        <h1 style="font-size:28px;margin-bottom:20px;text-align:center;color:white;font-weight:900;">설정</h1>
-        <div class="card">
-            <p class="section-title" style="color:white;">내 고유 ID</p>
-            <div class="id-display"><div class="id-text" id="receiverId">로딩중...</div></div>
-            <div style="display:flex;gap:10px;margin-top:12px;">
-                <button onclick="copyReceiverId()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#1A6B3C;color:white;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    📋 복사하기
-                </button>
-                <button onclick="shareKakao()" style="flex:1;padding:14px;border-radius:12px;border:none;background:#FEE500;color:#3C1E1E;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
-                    💬 카카오 공유
-                </button>
-            </div>
-            <div id="copyToast" style="display:none;text-align:center;margin-top:10px;font-size:15px;font-weight:700;color:#00FF7F;">✅ ID가 복사되었습니다!</div>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">🛡️ 보호대상자 등록하기</p>
-            <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
-            <button class="btn-add" onclick="addReceiverFriend()">등록하기</button>
-            <button onclick="startQrScan()" style="width:100%;padding:14px;border-radius:12px;border:2px dashed rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);color:white;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">
-                📷 QR 코드로 등록하기
-            </button>
-            <div id="qrScanArea" style="display:none;margin-top:12px;">
-                <video id="qrVideo" style="width:100%;border-radius:12px;background:#000;" autoplay playsinline></video>
-                <button onclick="stopQrScan()" style="width:100%;margin-top:8px;padding:12px;border-radius:12px;border:none;background:rgba(220,38,38,0.8);color:white;font-size:16px;font-weight:700;cursor:pointer;">❌ 스캔 취소</button>
-                <p style="text-align:center;color:rgba(255,255,255,0.7);font-size:14px;margin-top:6px;">상대방의 QR 코드를 카메라에 비춰주세요</p>
-            </div>
-        </div>
-        <div class="card">
-            <p class="section-title" style="color:white;">보호대상자 목록</p>
-            <p style="background:rgba(59,130,246,0.3);padding:6px 16px;border-radius:15px;font-size:18px;display:inline-block;margin:10px 0;color:white;border:2px solid rgba(59,130,246,0.3);">
-                <span id="receiverCount">0</span>/5명
-            </p>
-            <div id="receiverFriendList"></div>
-        </div>
-        <div class="card" style="text-align:center;">
-            <p class="section-title" style="color:white;">📱 내 QR 코드</p>
-            <p style="color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:12px;">상대방이 이 QR을 스캔하면 자동으로 등록됩니다</p>
-            <div id="myQrCode" style="display:inline-block;background:white;padding:12px;border-radius:12px;"></div>
-        </div>
-        <button class="btn-back" onclick="hideSettings()" style="display:none;"></button>
+<!-- Detail Popup -->
+<div class="detail-popup" id="detailPopup">
+  <div class="detail-card">
+    <div class="dc-top">
+      <div class="dc-title" id="dcName">--</div>
+      <div class="dc-close" onclick="closeDetail()">✕</div>
     </div>
+    <div class="dc-id" id="dcId">--</div>
+    <div class="dc-rows">
+      <div class="dc-row"><div class="dc-label">상태</div><div class="dc-val" id="dcStatus">--</div></div>
+      <div class="dc-row"><div class="dc-label">연락처</div><div class="dc-val" id="dcPhone">--</div></div>
+      <div class="dc-row"><div class="dc-label">상세주소</div><div class="dc-val" id="dcAddr">--</div></div>
+      <div class="dc-row"><div class="dc-label">등록일</div><div class="dc-val" id="dcReg">--</div></div>
+      <div class="dc-row"><div class="dc-label">최근 SOS</div><div class="dc-val" id="dcLastSOS">--</div></div>
+    </div>
+    <div class="dc-actions">
+      <button class="dc-btn dc-btn-track" onclick="alert('지도 추적 기능 — 개발 예정')">📍 위치 추적</button>
+      <button class="dc-btn dc-btn-disconnect" onclick="confirmDisconnect()">연결 해제</button>
+    </div>
+  </div>
+</div>
 
-    <script>
-        let senderId = localStorage.getItem('safeZoneID_SND');
-        if (!senderId) { senderId = 'SZ-' + Math.random().toString(36).substr(2,4).toUpperCase(); localStorage.setItem('safeZoneID_SND', senderId); }
-        document.getElementById('senderId').innerText = senderId;
+<script>
+// ─── CLOCK ───
+function updateClock() {
+  const now = new Date();
+  const t = now.toTimeString().slice(0,8);
+  document.getElementById('clock').textContent = t;
+  const c2 = document.getElementById('clock2');
+  if (c2) c2.textContent = t;
+}
+setInterval(updateClock, 1000); updateClock();
 
-        let receiverId = localStorage.getItem('safeZoneID_RCV');
-        if (!receiverId) { receiverId = 'SZ-' + Math.random().toString(36).substr(2,4).toUpperCase(); localStorage.setItem('safeZoneID_RCV', receiverId); }
-        document.getElementById('receiverId').innerText = receiverId;
+// ─── DATA ───
+const hierarchy = {
+  L1: [
+    { code:'KR-29', name:'광주광역시', L2count:5, residents:423, sos:1 },
+    { code:'KR-46', name:'전라남도', L2count:22, residents:1204, sos:0 },
+    { code:'KR-11', name:'서울특별시', L2count:25, residents:687, sos:0 },
+    { code:'KR-26', name:'부산광역시', L2count:16, residents:312, sos:0 },
+    { code:'KR-27', name:'대구광역시', L2count:8, residents:221, sos:0 },
+  ],
+  'KR-29': [
+    { code:'KR-29-110', name:'광주 북구', L3count:17, residents:142, sos:1 },
+    { code:'KR-29-120', name:'광주 동구', L3count:9, residents:87, sos:0 },
+    { code:'KR-29-130', name:'광주 서구', L3count:14, residents:98, sos:0 },
+    { code:'KR-29-140', name:'광주 남구', L3count:11, residents:62, sos:0 },
+    { code:'KR-29-150', name:'광주 광산구', L3count:19, residents:34, sos:0 },
+  ],
+  'KR-46': [
+    { code:'KR-46-380', name:'담양군', L3count:12, residents:87, sos:0 },
+    { code:'KR-46-390', name:'곡성군', L3count:9, residents:64, sos:0 },
+    { code:'KR-46-400', name:'구례군', L3count:7, residents:48, sos:0 },
+  ],
+  'KR-11': [
+    { code:'KR-11-110', name:'종로구', L3count:17, residents:42, sos:0 },
+    { code:'KR-11-140', name:'중구', L3count:15, residents:38, sos:0 },
+    { code:'KR-11-170', name:'용산구', L3count:16, residents:51, sos:0 },
+  ],
+  'KR-26': [
+    { code:'KR-26-110', name:'중구', L3count:11, residents:31, sos:0 },
+    { code:'KR-26-140', name:'서구', L3count:19, residents:55, sos:0 },
+  ],
+  'KR-27': [
+    { code:'KR-27-110', name:'중구', L3count:7, residents:28, sos:0 },
+  ],
+  'KR-29-110': [
+    { code:'KR-29-110-010', name:'중흥동', residents:18, sos:1, officer:'김민수 주임' },
+    { code:'KR-29-110-020', name:'운암동', residents:14, sos:0, officer:'이지영 주임' },
+    { code:'KR-29-110-030', name:'용봉동', residents:11, sos:0, officer:'박준혁 주임' },
+    { code:'KR-29-110-040', name:'문흥동', residents:16, sos:0, officer:'최수민 주임' },
+    { code:'KR-29-110-050', name:'일곡동', residents:22, sos:0, officer:'정다은 주임' },
+    { code:'KR-29-110-060', name:'두암동', residents:9, sos:0, officer:'한상우 주임' },
+  ],
+  'KR-46-380': [
+    { code:'KR-46-380-340', name:'대전면', residents:12, sos:0, officer:'오성빈 주임' },
+    { code:'KR-46-380-350', name:'봉산면', residents:8, sos:0, officer:'윤미래 주임' },
+    { code:'KR-46-380-360', name:'금성면', residents:7, sos:0, officer:'조현서 주임' },
+  ],
+};
 
-        let currentMode = localStorage.getItem('currentMode') || 'sender';
+// Dummy residents per dong
+const residents = {
+  'KR-29-110-010': [
+    { id:'AJS-GJ-NK-001', name:'김○숙', phone:'010-****-1234', addr:'광주 북구 중흥로 42, 101호', reg:'2024.03.15', lastSOS:'2025.07.21 09:12', status:'sos', x:52, y:38 },
+    { id:'AJS-GJ-NK-002', name:'박○남', phone:'010-****-5678', addr:'광주 북구 중흥로 88, 203호', reg:'2024.04.02', lastSOS:'없음', status:'normal', x:30, y:55 },
+    { id:'AJS-GJ-NK-003', name:'이○자', phone:'010-****-9012', addr:'광주 북구 북문대로 12', reg:'2024.04.20', lastSOS:'2025.05.10', status:'normal', x:68, y:62 },
+    { id:'AJS-GJ-NK-004', name:'최○호', phone:'010-****-3456', addr:'광주 북구 용봉로 15', reg:'2024.05.01', lastSOS:'없음', status:'normal', x:45, y:72 },
+    { id:'AJS-GJ-NK-005', name:'정○희', phone:'010-****-7890', addr:'광주 북구 중흥로 200', reg:'2024.05.15', lastSOS:'없음', status:'warning', x:22, y:35 },
+    { id:'AJS-GJ-NK-006', name:'윤○철', phone:'010-****-2345', addr:'광주 북구 동문대로 55', reg:'2024.06.01', lastSOS:'없음', status:'normal', x:75, y:40 },
+    { id:'AJS-GJ-NK-007', name:'강○순', phone:'010-****-6789', addr:'광주 북구 서문로 8', reg:'2024.06.20', lastSOS:'없음', status:'normal', x:58, y:20 },
+    { id:'AJS-GJ-NK-008', name:'조○민', phone:'010-****-0123', addr:'광주 북구 중흥로 310', reg:'2024.07.05', lastSOS:'없음', status:'normal', x:35, y:25 },
+    { id:'AJS-GJ-NK-009', name:'임○경', phone:'010-****-4567', addr:'광주 북구 임동 22', reg:'2024.07.22', lastSOS:'없음', status:'normal', x:80, y:65 },
+    { id:'AJS-GJ-NK-010', name:'오○진', phone:'010-****-8901', addr:'광주 북구 우치로 100', reg:'2024.08.01', lastSOS:'없음', status:'normal', x:15, y:60 },
+    { id:'AJS-GJ-NK-011', name:'한○미', phone:'010-****-2222', addr:'광주 북구 중흥로 44', reg:'2024.08.10', lastSOS:'없음', status:'normal', x:55, y:80 },
+    { id:'AJS-GJ-NK-012', name:'서○복', phone:'010-****-3333', addr:'광주 북구 운암로 7', reg:'2024.09.01', lastSOS:'없음', status:'normal', x:42, y:45 },
+    { id:'AJS-GJ-NK-013', name:'장○기', phone:'010-****-4444', addr:'광주 북구 문흥로 33', reg:'2024.09.15', lastSOS:'없음', status:'normal', x:70, y:28 },
+    { id:'AJS-GJ-NK-014', name:'황○님', phone:'010-****-5555', addr:'광주 북구 일곡로 9', reg:'2024.10.01', lastSOS:'없음', status:'normal', x:25, y:75 },
+    { id:'AJS-GJ-NK-015', name:'노○수', phone:'010-****-6666', addr:'광주 북구 북문대로 65', reg:'2024.10.20', lastSOS:'없음', status:'normal', x:62, y:50 },
+    { id:'AJS-GJ-NK-016', name:'심○란', phone:'010-****-7777', addr:'광주 북구 용봉로 88', reg:'2024.11.01', lastSOS:'없음', status:'normal', x:38, y:65 },
+    { id:'AJS-GJ-NK-017', name:'문○환', phone:'010-****-8888', addr:'광주 북구 중흥로 155', reg:'2024.11.15', lastSOS:'없음', status:'normal', x:82, y:50 },
+    { id:'AJS-GJ-NK-018', name:'권○현', phone:'010-****-9999', addr:'광주 북구 우치로 44', reg:'2024.12.01', lastSOS:'없음', status:'normal', x:18, y:45 },
+  ]
+};
 
-        window.toggleMode = function() {
-            const sender = document.getElementById('senderScreen');
-            const receiver = document.getElementById('receiverScreen');
-            const header = document.getElementById('topHeader');
-            const title = document.getElementById('headerTitle');
-            const dot = document.getElementById('headerDot');
+// ─── NAV STATE ───
+let currentLevel = 0;
+let selectedPath = [];
+let allCards = [];
+let currentFilter = 'all';
+let sideTabFilter = 'all';
+let currentResidents = [];
+let selectedResident = null;
 
-            if (currentMode === 'sender') {
-                currentMode = 'receiver';
-                header.className = 'top-header support-header';
-                title.textContent = 'SOS 지원 모드';
-                title.style.color = 'white';
-                dot.style.display = '';
-                sender.classList.remove('active');
-                receiver.classList.add('active');
-                setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
-            } else {
-                currentMode = 'sender';
-                header.className = 'top-header sender-header';
-                title.textContent = 'SOS 요청 모드';
-                title.style.color = 'white';
-                dot.style.display = 'none';
-                receiver.classList.remove('active');
-                sender.classList.add('active');
-                stopSupAlert();
-            }
-            localStorage.setItem('currentMode', currentMode);
-        };
+function buildCards(data) {
+  allCards = data;
+  renderCards(data);
+}
 
-        window.showSettings = function() {
-            if (currentMode === 'sender') { document.getElementById('senderSettings').classList.add('active'); loadSenderFriends(); generateSenderQR(); }
-            else { document.getElementById('receiverSettings').classList.add('active'); loadReceiverFriends(); generateMyQR(); }
-            document.getElementById('switchBtn').innerHTML = '<span style="font-size:18px;font-weight:900;color:white;white-space:nowrap;">돌아가기</span>';
-            document.getElementById('switchBtn').onclick = hideSettings;
-            document.getElementById('settingIconBtn').innerHTML = '⚙️';
-            document.getElementById('settingIconBtn').onclick = null;
-        };
-        window.hideSettings = function() {
-            document.getElementById('senderSettings').classList.remove('active');
-            document.getElementById('receiverSettings').classList.remove('active');
-            document.getElementById('switchBtn').innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M7 16H20M20 16L17 13M20 16L17 19" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 8H4M4 8L7 5M4 8L7 11" stroke="rgba(255,255,255,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-            document.getElementById('switchBtn').onclick = toggleMode;
-            document.getElementById('settingIconBtn').onclick = showSettings;
-        };
+function renderCards(data) {
+  const grid = document.getElementById('navGrid');
+  const count = document.getElementById('panelCount');
+  count.textContent = `${data.length}개 구역`;
+  grid.innerHTML = '';
+  data.forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'nav-card' + (item.sos > 0 ? ' has-sos' : '');
+    const levelInfo = item.L2count ? `하위 ${item.L2count}개 구역` : item.L3count ? `하위 ${item.L3count}개 읍·면·동` : `담당: ${item.officer || '미배정'}`;
+    card.innerHTML = `
+      <div class="card-label">${item.name}</div>
+      <div class="card-sub">${item.code}</div>
+      <div class="card-stats">
+        <span class="stat-pill stat-blue">${item.residents}명</span>
+        ${item.sos > 0 ? `<span class="stat-pill stat-red">SOS ${item.sos}</span>` : '<span class="stat-pill stat-green">정상</span>'}
+      </div>
+      <div style="font-size:10px;color:var(--text2);margin-top:6px;">${levelInfo}</div>
+      <div class="card-arrow">›</div>
+    `;
+    card.onclick = () => drillDown(item);
+    grid.appendChild(card);
+  });
+}
 
-        window.addSenderFriend = function() {
-            const input = document.getElementById('senderFriendInput');
-            let id = input.value.trim().toUpperCase();
-            if (!id) { alert('❌ ID를 입력해주세요!'); return; }
-            if (!id.startsWith('SZ-')) id = 'SZ-' + id;
-            let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            if (list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
-            if (list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
-            list.push(id); localStorage.setItem('friendList_SND', JSON.stringify(list));
-            input.value = ''; alert('✅ 등록: ' + id); loadSenderFriends();
-        };
-        window.deleteSenderFriend = function(id) {
-            if (!confirm('⚠️ 삭제하시겠습니까?')) return;
-            let list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            list = list.filter(f => f !== id); localStorage.setItem('friendList_SND', JSON.stringify(list)); loadSenderFriends();
-        };
-        function loadSenderFriends() {
-            const list = JSON.parse(localStorage.getItem('friendList_SND') || '[]');
-            document.getElementById('senderCount').innerText = list.length;
-            const cont = document.getElementById('senderFriendList');
-            cont.innerHTML = list.length === 0
-                ? '<p style="text-align:center;opacity:0.7;margin-top:14px;font-size:18px;color:white;">등록된 보호자가 없습니다</p>'
-                : list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');
-        }
+function filterCards() {
+  const q = document.getElementById('navSearch').value.toLowerCase();
+  renderCards(allCards.filter(c => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q)));
+}
 
-        window.addReceiverFriend = function() {
-            const input = document.getElementById('receiverFriendInput');
-            let id = input.value.trim().toUpperCase();
-            if (!id) { alert('❌ ID를 입력해주세요!'); return; }
-            if (!id.startsWith('SZ-')) id = 'SZ-' + id;
-            let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            if (list.length >= 5) { alert('❌ 최대 5명까지!'); return; }
-            if (list.includes(id)) { alert('❌ 이미 등록됨!'); return; }
-            list.push(id); localStorage.setItem('friendList_RCV', JSON.stringify(list));
-            input.value = ''; alert('✅ 등록: ' + id); loadReceiverFriends();
-            setTimeout(() => { if (window.startListening) window.startListening(); }, 500);
-        };
-        window.deleteReceiverFriend = function(id) {
-            if (!confirm('⚠️ 삭제하시겠습니까?')) return;
-            let list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            list = list.filter(f => f !== id); localStorage.setItem('friendList_RCV', JSON.stringify(list)); loadReceiverFriends();
-        };
-        function loadReceiverFriends() {
-            const list = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            document.getElementById('receiverCount').innerText = list.length;
-            const cont = document.getElementById('receiverFriendList');
-            cont.innerHTML = list.length === 0
-                ? '<p style="text-align:center;opacity:0.7;margin-top:14px;font-size:18px;color:white;">등록된 보호대상자가 없습니다</p>'
-                : list.map(f => `<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');
-        }
+// Initial
+buildCards(hierarchy.L1);
+document.getElementById('panelTitle').textContent = '시·도 선택';
+document.getElementById('navSearch').placeholder = '시·도명 검색...';
 
-        window.copySenderId = function() {
-            const id = localStorage.getItem('safeZoneID_SND') || '';
-            if (navigator.clipboard) { navigator.clipboard.writeText(id).then(() => showSenderCopyToast()); }
-            else { const el = document.createElement('textarea'); el.value = id; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showSenderCopyToast(); }
-        };
-        function showSenderCopyToast() {
-            const t = document.getElementById('senderCopyToast'); t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 2500);
-        }
-        window.shareSenderKakao = function() {
-            const id = localStorage.getItem('safeZoneID_SND') || '';
-            const msg = `ArtOfStreet 안전지대 - 내 ID: ${id}\n이 ID를 앱에 등록하면 나를 보호할 수 있어요!`;
-            if (navigator.share) { navigator.share({ title: 'SOS 안전지대 ID 공유', text: msg }).catch(() => {}); }
-            else { window.open(`https://sharer.kakao.com/talk/friends/picker/link?text=${encodeURIComponent(msg)}`, '_blank'); }
-        };
-        function generateSenderQR() {
-            const id = localStorage.getItem('safeZoneID_SND') || '';
-            const qrDiv = document.getElementById('senderQrCode'); qrDiv.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(id)}&bgcolor=ffffff&color=000000&margin=2`;
-            img.style.cssText = 'width:160px;height:160px;border-radius:8px;'; qrDiv.appendChild(img);
-        }
-        let senderQrStream = null, senderQrInterval = null;
-        window.startSenderQrScan = async function() {
-            document.getElementById('senderQrScanArea').style.display = 'block';
-            try {
-                senderQrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                const video = document.getElementById('senderQrVideo'); video.srcObject = senderQrStream;
-                if ('BarcodeDetector' in window) {
-                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                    senderQrInterval = setInterval(async () => {
-                        try { const codes = await detector.detect(video);
-                            if (codes.length > 0) { const raw = codes[0].rawValue.trim().toUpperCase(); const id = raw.startsWith('SZ-') ? raw : 'SZ-' + raw; stopSenderQrScan(); document.getElementById('senderFriendInput').value = id; alert(`✅ QR 스캔 완료: ${id}\n"등록하기" 버튼을 눌러 추가하세요!`); }
-                        } catch(e) {}
-                    }, 500);
-                } else { alert('이 브라우저는 QR 스캔을 지원하지 않습니다.'); stopSenderQrScan(); }
-            } catch(e) { alert('카메라 권한이 필요합니다.'); document.getElementById('senderQrScanArea').style.display = 'none'; }
-        };
-        window.stopSenderQrScan = function() {
-            if (senderQrStream) { senderQrStream.getTracks().forEach(t => t.stop()); senderQrStream = null; }
-            if (senderQrInterval) { clearInterval(senderQrInterval); senderQrInterval = null; }
-            document.getElementById('senderQrScanArea').style.display = 'none';
-        };
+// Show SOS toast after 1s
+setTimeout(() => { document.getElementById('sosToast').classList.add('visible'); }, 1000);
 
-        window.copyReceiverId = function() {
-            const id = localStorage.getItem('safeZoneID_RCV') || '';
-            if (navigator.clipboard) { navigator.clipboard.writeText(id).then(() => showCopyToast()); }
-            else { const el = document.createElement('textarea'); el.value = id; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); showCopyToast(); }
-        };
-        function showCopyToast() {
-            const t = document.getElementById('copyToast'); t.style.display = 'block';
-            setTimeout(() => { t.style.display = 'none'; }, 2500);
-        }
-        window.shareKakao = function() {
-            const id = localStorage.getItem('safeZoneID_RCV') || '';
-            const msg = `ArtOfStreet 안전지대 - 내 ID: ${id}\n이 ID를 앱에 등록하면 나를 보호할 수 있어요!`;
-            if (navigator.share) { navigator.share({ title: 'SOS 안전지대 ID 공유', text: msg }).catch(() => {}); }
-            else { window.open(`https://sharer.kakao.com/talk/friends/picker/link?text=${encodeURIComponent(msg)}`, '_blank'); }
-        };
-        function generateMyQR() {
-            const id = localStorage.getItem('safeZoneID_RCV') || '';
-            const qrDiv = document.getElementById('myQrCode'); qrDiv.innerHTML = '';
-            const img = document.createElement('img');
-            img.src = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(id)}&bgcolor=ffffff&color=000000&margin=2`;
-            img.style.cssText = 'width:160px;height:160px;border-radius:8px;'; qrDiv.appendChild(img);
-        }
-        let qrStream = null, qrScanInterval = null;
-        window.startQrScan = async function() {
-            document.getElementById('qrScanArea').style.display = 'block';
-            try {
-                qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-                const video = document.getElementById('qrVideo'); video.srcObject = qrStream;
-                if ('BarcodeDetector' in window) {
-                    const detector = new BarcodeDetector({ formats: ['qr_code'] });
-                    qrScanInterval = setInterval(async () => {
-                        try { const codes = await detector.detect(video);
-                            if (codes.length > 0) { const raw = codes[0].rawValue.trim().toUpperCase(); const id = raw.startsWith('SZ-') ? raw : 'SZ-' + raw; stopQrScan(); document.getElementById('receiverFriendInput').value = id; alert(`✅ QR 스캔 완료: ${id}\n"등록하기" 버튼을 눌러 추가하세요!`); }
-                        } catch(e) {}
-                    }, 500);
-                } else { alert('이 브라우저는 QR 스캔을 지원하지 않습니다.'); stopQrScan(); }
-            } catch(e) { alert('카메라 권한이 필요합니다.'); document.getElementById('qrScanArea').style.display = 'none'; }
-        };
-        window.stopQrScan = function() {
-            if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
-            if (qrScanInterval) { clearInterval(qrScanInterval); qrScanInterval = null; }
-            document.getElementById('qrScanArea').style.display = 'none';
-        };
+function drillDown(item) {
+  const code = item.code;
+  
+  // L3 — go to radar
+  if (currentLevel === 2) {
+    openRadar(item);
+    return;
+  }
 
-        let supAlertMode = 'sound';
-        window.setSupMode = function(mode) {
-            supAlertMode = mode;
-            document.getElementById('supSoundBtn').classList.toggle('active', mode === 'sound');
-            document.getElementById('supVibrateBtn').classList.toggle('active', mode === 'vibrate');
-        };
+  selectedPath.push(item);
+  currentLevel++;
+  
+  // Update breadcrumb
+  updateBreadcrumb();
 
-        let supAlerting = false, supSirenTimer = null, supVibrateInterval = null, supAudioCtx = null;
+  // Update tabs
+  ['tabL0','tabL1','tabL2','tabL3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.classList.toggle('active', i === currentLevel);
+    if (i <= currentLevel) { el.style.opacity='1'; el.style.pointerEvents='auto'; }
+  });
 
-        function playSupSiren() {
-            if (!supAlerting) return;
-            try {
-                if (supAudioCtx) supAudioCtx.close();
-                supAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                for (let i = 0; i < 4; i++) {
-                    const osc = supAudioCtx.createOscillator(); const gain = supAudioCtx.createGain();
-                    osc.connect(gain); gain.connect(supAudioCtx.destination);
-                    const t = supAudioCtx.currentTime + i * 0.52;
-                    osc.frequency.setValueAtTime(700, t); osc.frequency.linearRampToValueAtTime(1050, t + 0.26); osc.frequency.linearRampToValueAtTime(700, t + 0.48);
-                    gain.gain.setValueAtTime(0.3, t); gain.gain.linearRampToValueAtTime(0, t + 0.48);
-                    osc.start(t); osc.stop(t + 0.5);
-                }
-                supSirenTimer = setTimeout(playSupSiren, 2200);
-            } catch(e) {}
-        }
+  if (currentLevel === 3) {
+    // Go to L3 radar directly
+    openRadar(item);
+    return;
+  }
 
-        window.triggerSupAlert = function() {
-            if (supAlerting) return;
-            supAlerting = true;
-            document.getElementById('receiverScreen').classList.add('alerting');
-            document.getElementById('supAlertOverlay').classList.add('visible');
-            if (supAlertMode === 'sound') { playSupSiren(); }
-            else { supVibrateInterval = setInterval(() => { if (navigator.vibrate) navigator.vibrate([300,100,300]); }, 800); }
-            const now = new Date();
-            document.getElementById('supAlertTime').textContent = `${now.getFullYear()}.${pad(now.getMonth()+1)}.${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const lat = pos.coords.latitude.toFixed(6); const lng = pos.coords.longitude.toFixed(6);
-                    document.getElementById('supAlertCoords').textContent = `위도 ${lat}  경도 ${lng}`;
-                    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=ko`)
-                        .then(r=>r.json()).then(d=>{ document.getElementById('supAlertAddr').textContent = d.display_name || `${lat}, ${lng}`; })
-                        .catch(()=>{ document.getElementById('supAlertAddr').textContent = `${lat}, ${lng}`; });
-                    document.getElementById('supMapIframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${+lng-0.005},${+lat-0.005},${+lng+0.005},${+lat+0.005}&layer=mapnik&marker=${lat},${lng}`;
-                }, useSupDefault);
-            } else { useSupDefault(); }
-        };
+  const nextData = hierarchy[code] || [];
+  const titles = ['', '시·도 선택', '시·군·구 선택', '읍·면·동 선택'];
+  const placeholders = ['', '시·도명 검색...', '시·군·구명 검색...', '읍·면·동명 검색...'];
+  document.getElementById('panelTitle').textContent = `${item.name} — ${titles[currentLevel]}`;
+  document.getElementById('navSearch').value = '';
+  document.getElementById('navSearch').placeholder = placeholders[currentLevel];
+  buildCards(nextData);
+}
 
-        function useSupDefault() {
-            document.getElementById('supAlertAddr').textContent = '서울특별시 중구 세종대로 110';
-            document.getElementById('supAlertCoords').textContent = '위도 37.566535  경도 126.977969';
-            document.getElementById('supMapIframe').src = 'https://www.openstreetmap.org/export/embed.html?bbox=126.972969,37.561535,126.982969,37.571535&layer=mapnik&marker=37.566535,126.977969';
-        }
+function drillTo(level) {
+  if (level >= currentLevel) return;
+  if (level === 0) {
+    currentLevel = 0;
+    selectedPath = [];
+    buildCards(hierarchy.L1);
+    document.getElementById('panelTitle').textContent = '시·도 선택';
+    document.getElementById('navSearch').placeholder = '시·도명 검색...';
+    document.getElementById('navSearch').value = '';
+    ['tabL1','tabL2','tabL3'].forEach(id => { const el = document.getElementById(id); el.style.opacity='0.3'; el.style.pointerEvents='none'; });
+    document.getElementById('tabL0').classList.add('active');
+  } else if (level === 1) {
+    currentLevel = 1;
+    selectedPath = [selectedPath[0]];
+    const code = selectedPath[0].code;
+    buildCards(hierarchy[code] || []);
+    document.getElementById('panelTitle').textContent = `${selectedPath[0].name} — 시·군·구 선택`;
+    document.getElementById('navSearch').value = '';
+    ['tabL2','tabL3'].forEach(id => { const el = document.getElementById(id); el.style.opacity='0.3'; el.style.pointerEvents='none'; });
+  } else if (level === 2) {
+    currentLevel = 2;
+    selectedPath = selectedPath.slice(0,2);
+    const code = selectedPath[1].code;
+    buildCards(hierarchy[code] || []);
+    document.getElementById('panelTitle').textContent = `${selectedPath[1].name} — 읍·면·동 선택`;
+    document.getElementById('navSearch').value = '';
+    document.getElementById('tabL3').style.opacity='0.3'; document.getElementById('tabL3').style.pointerEvents='none';
+  }
+  updateBreadcrumb();
+}
 
-        window.stopSupAlert = function() {
-            supAlerting = false;
-            document.getElementById('receiverScreen').classList.remove('alerting');
-            document.getElementById('supAlertOverlay').classList.remove('visible');
-            if (supSirenTimer) { clearTimeout(supSirenTimer); supSirenTimer = null; }
-            if (supVibrateInterval) { clearInterval(supVibrateInterval); supVibrateInterval = null; }
-            if (navigator.vibrate) navigator.vibrate(0);
-            if (supAudioCtx) { try { supAudioCtx.close(); } catch(e){} supAudioCtx = null; }
-            document.getElementById('supMapIframe').src = '';
-        };
+function updateBreadcrumb() {
+  const items = ['bc1','bc2','bc3']; const seps = ['bcSep1','bcSep2','bcSep3'];
+  items.forEach((id, i) => {
+    const el = document.getElementById(id); const sep = document.getElementById(seps[i]);
+    if (selectedPath[i]) { el.textContent = selectedPath[i].name; el.style.display=''; sep.style.display=''; }
+    else { el.style.display='none'; sep.style.display='none'; }
+  });
+  ['bc0','bc1','bc2','bc3'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', i === currentLevel);
+  });
+}
 
-        function pad(n) { return String(n).padStart(2,'0'); }
+// ─── RADAR ───
+function openRadar(item) {
+  const code = item.code;
+  const dongName = item.name;
+  
+  // Set radar titles
+  document.getElementById('radarTitle').textContent = `${dongName} 스마트 안심 네트워크`;
+  document.getElementById('radarBC3').textContent = dongName;
+  if (selectedPath[0]) document.getElementById('radarBC1').textContent = selectedPath[0].name;
+  if (selectedPath[1]) document.getElementById('radarBC2').textContent = selectedPath[1].name;
 
-        window.addEventListener('load', () => {
-            if (currentMode === 'receiver') {
-                document.getElementById('senderScreen').classList.remove('active');
-                document.getElementById('receiverScreen').classList.add('active');
-                document.getElementById('topHeader').className = 'top-header support-header';
-                document.getElementById('headerTitle').textContent = 'SOS 지원 모드';
-                document.getElementById('headerDot').style.display = '';
-                setTimeout(() => { if (window.startListening) window.startListening(); }, 2000);
-            }
-        });
-    </script>
+  // Load residents
+  currentResidents = residents[code] || generateDummyResidents(code, item.residents || 8);
+  
+  // Transition
+  const nav = document.getElementById('navScreen');
+  const radar = document.getElementById('radarScreen');
+  nav.classList.add('slide-out');
+  setTimeout(() => {
+    nav.classList.remove('active','slide-out');
+    radar.classList.add('active','slide-in');
+    setTimeout(() => radar.classList.remove('slide-in'), 400);
+    renderRadar();
+    renderSidebar();
+    updateScaleLabel();
+  }, 300);
+}
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-app.js";
-        import { getDatabase, ref, set, remove, serverTimestamp, onValue } from "https://www.gstatic.com/firebasejs/12.9.0/firebase-database.js";
+function generateDummyResidents(code, count) {
+  const statuses = ['normal','normal','normal','normal','normal','warning'];
+  const surnames = ['김','이','박','최','정','강','조','윤','임','한','오','서'];
+  const res = [];
+  for (let i = 0; i < count; i++) {
+    const sur = surnames[i % surnames.length];
+    const angle = (Math.PI * 2 * i) / count;
+    const r = 20 + Math.random() * 55;
+    res.push({
+      id: `AJS-${code.slice(-6).replace(/-/g,'')}-${String(i+1).padStart(3,'0')}`,
+      name: `${sur}○${['수','미','자','호','순','철','희','민'][i%8]}`,
+      phone: `010-****-${String(1000+i*137).slice(-4)}`,
+      addr: `해당 구역 ${100+i*7}번지`,
+      reg: `2024.${String((i%12)+1).padStart(2,'0')}.${String((i%28)+1).padStart(2,'0')}`,
+      lastSOS: '없음',
+      status: statuses[i % statuses.length],
+      x: 50 + r * Math.cos(angle) * 0.7,
+      y: 50 + r * Math.sin(angle) * 0.7,
+    });
+  }
+  return res;
+}
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJnlwuftFUmmazQg-riYRewSeKRjBB8g",
-            databaseURL: "https://safezone-2c1b2-default-rtdb.firebaseio.com",
-            projectId: "safezone-2c1b2",
-            appId: "1:181205095456:web:da0a519ff43cc19e7b1845"
-        };
+function renderRadar() {
+  const wrap = document.getElementById('radarWrap');
+  // Remove old dots
+  wrap.querySelectorAll('.radar-dot').forEach(d => d.remove());
+  
+  const filtered = getFilteredResidents();
+  
+  filtered.forEach(r => {
+    const dot = document.createElement('div');
+    dot.className = `radar-dot dot-${r.status}`;
+    dot.style.left = r.x + '%';
+    dot.style.top = r.y + '%';
+    
+    const tip = document.createElement('div');
+    tip.className = 'dot-tooltip';
+    tip.innerHTML = `<b>${r.name}</b><br><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">${r.id}</span><br><span style="font-size:10px;">${r.addr.slice(0,20)}...</span>`;
+    dot.appendChild(tip);
+    
+    dot.onclick = () => openDetail(r);
+    wrap.appendChild(dot);
+  });
+}
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const geocoder = new kakao.maps.services.Geocoder();
+function renderSidebar() {
+  const list = document.getElementById('rsList');
+  const count = document.getElementById('sidebarCount');
+  const filtered = getSideFiltered();
+  count.textContent = `${filtered.length}명`;
+  
+  if (filtered.length === 0) {
+    list.innerHTML = '<div class="rs-empty">해당 조건의 어르신이 없습니다</div>';
+    return;
+  }
+  
+  // SOS first
+  const sorted = [...filtered].sort((a,b) => (a.status==='sos'?-1:b.status==='sos'?1:0));
+  list.innerHTML = sorted.map(r => `
+    <div class="res-card ${r.status==='sos'?'sos-card':''}" onclick="openDetail(currentResidents.find(x=>x.id==='${r.id}'))">
+      <div class="res-header-row">
+        <span class="res-name">${r.name}</span>
+        <span class="res-status ${r.status==='sos'?'stat-red':r.status==='warning'?'stat-pill':'stat-green'}" 
+          style="${r.status==='sos'?'background:rgba(255,51,51,0.2);color:#ff6666;border:1px solid rgba(255,51,51,0.4);border-radius:10px;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;':r.status==='warning'?'background:rgba(255,204,0,0.15);color:var(--yellow);border:1px solid rgba(255,204,0,0.3);border-radius:10px;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;':'background:rgba(0,255,136,0.1);color:var(--green);border:1px solid rgba(0,255,136,0.2);border-radius:10px;font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 7px;'}">
+          ${r.status==='sos'?'SOS':r.status==='warning'?'주의':'정상'}
+        </span>
+      </div>
+      <div class="res-id">${r.id}</div>
+      <div class="res-addr">${r.addr.slice(0,24)}${r.addr.length>24?'...':''}</div>
+    </div>
+  `).join('');
+}
 
-        window.isTracking = false;
-        let watchId = null;
-        const statusMsg = document.getElementById('statusMsg');
-        const trackingBadge = document.getElementById('trackingBadge');
-        const emergencyBtn = document.getElementById('emergencyBtn');
+function getFilteredResidents() {
+  let list = currentResidents;
+  const q = document.getElementById('radarSearch').value.toLowerCase();
+  if (q) list = list.filter(r => r.name.replace('○','').includes(q) || r.phone.includes(q) || r.id.toLowerCase().includes(q));
+  if (currentFilter === 'sos') list = list.filter(r => r.status === 'sos');
+  if (currentFilter === 'normal') list = list.filter(r => r.status === 'normal');
+  return list;
+}
 
-        emergencyBtn.addEventListener('touchstart', function() {
-            if (navigator.vibrate) navigator.vibrate([500, 100, 500, 100, 800]);
-        }, { passive: false });
+function getSideFiltered() {
+  let list = currentResidents;
+  const q = document.getElementById('radarSearch').value.toLowerCase();
+  if (q) list = list.filter(r => r.name.replace('○','').includes(q) || r.phone.includes(q) || r.id.toLowerCase().includes(q));
+  if (sideTabFilter === 'sos') list = list.filter(r => r.status === 'sos');
+  if (sideTabFilter === 'normal') list = list.filter(r => r.status === 'normal');
+  return list;
+}
 
-        emergencyBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            if (!window.isTracking) { startTracking(); } else { stopTracking(); }
-        });
+function setFilter(f) {
+  currentFilter = f;
+  ['btnAll','btnSOS','btnNormal'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById(f==='all'?'btnAll':f==='sos'?'btnSOS':'btnNormal').classList.add('active');
+  renderRadar();
+}
 
-        function startTracking() {
-            const myID = localStorage.getItem('safeZoneID_SND')?.trim().toUpperCase();
-            if (!myID) { alert('❌ ID 없음'); return; }
-            const emergencyRef = ref(db, 'emergency_global');
-            const sendTime = new Date().toLocaleTimeString();
-            set(emergencyRef, {
-                sender: myID, address: '위치 확인 중...', lat: 37.5665, lon: 126.9780,
-                mapUrl: 'https://map.kakao.com/', time: sendTime,
-                timestamp: serverTimestamp(), status: 'emergency'
-            }).then(() => {
-                statusMsg.innerText = "✅ 긴급 신호 전송됨!";
-                if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            }).catch(err => { alert('❌ 전송 실패!\n\n' + err.message); });
-            statusMsg.innerText = "📍 위치 확인 중...";
-            watchId = navigator.geolocation.watchPosition(pos => {
-                const lat = pos.coords.latitude; const lon = pos.coords.longitude;
-                geocoder.coord2Address(lon, lat, (result, status) => {
-                    let addr = '주소 확인 불가';
-                    if (status === kakao.maps.services.Status.OK && result[0]) {
-                        addr = result[0].road_address ? result[0].road_address.address_name : result[0].address.address_name;
-                    }
-                    set(emergencyRef, {
-                        sender: myID, address: addr, lat, lon,
-                        mapUrl: `https://map.kakao.com/link/map/긴급구조,${lat},${lon}`,
-                        time: new Date().toLocaleTimeString(), timestamp: serverTimestamp(), status: 'emergency'
-                    });
-                    statusMsg.innerText = "✅ " + addr.substring(0, 22) + "...";
-                });
-            }, () => { statusMsg.innerText = "⚠️ 위치 불가 (신호 전송됨)"; },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-            window.isTracking = true;
-            emergencyBtn.classList.add('tracking');
-            trackingBadge.style.display = 'inline-block';
-        }
+function setSideTab(f) {
+  sideTabFilter = f;
+  document.querySelectorAll('.rs-tab').forEach((el, i) => el.classList.toggle('active', ['all','sos','normal'][i]===f));
+  renderSidebar();
+}
 
-        function stopTracking() {
-            if (watchId) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-            remove(ref(db, 'emergency_global'));
-            window.isTracking = false;
-            emergencyBtn.classList.remove('tracking');
-            trackingBadge.style.display = 'none';
-            statusMsg.innerText = "✅ 추적 종료";
-        }
+function filterDots() { renderRadar(); renderSidebar(); }
 
-        window.startTracking = startTracking;
-        window.stopTracking = stopTracking;
+function updateScaleLabel() {
+  const n = currentResidents.length;
+  const label = n <= 20 ? '대형 (28dp) · 자동 스케일' : n <= 50 ? '중형 (20dp) · 자동 스케일' : '소형 (14dp) · 기준 밀도';
+  document.getElementById('scaleLabel').textContent = `👥 ${n}명 · ${label}`;
+}
 
-        let currentEmergency = null;
+function openDetail(r) {
+  if (!r) return;
+  selectedResident = r;
+  document.getElementById('dcName').textContent = r.name;
+  document.getElementById('dcId').textContent = r.id;
+  const statusMap = { sos:'🚨 SOS 진행 중', normal:'✅ 정상', warning:'⚠ 주의 관찰' };
+  document.getElementById('dcStatus').innerHTML = `<span style="font-weight:700;color:${r.status==='sos'?'#ff6666':r.status==='warning'?'var(--yellow)':'var(--green)'}">${statusMap[r.status]||r.status}</span>`;
+  document.getElementById('dcPhone').textContent = r.phone;
+  document.getElementById('dcAddr').textContent = r.addr;
+  document.getElementById('dcReg').textContent = r.reg;
+  document.getElementById('dcLastSOS').textContent = r.lastSOS;
+  document.getElementById('detailPopup').classList.add('visible');
+}
 
-        window.startListening = function() {
-            const friendList = JSON.parse(localStorage.getItem('friendList_RCV') || '[]');
-            const globalRef = ref(db, 'emergency_global');
-            onValue(globalRef, (snap) => {
-                const data = snap.val();
-                if (!data) { currentEmergency = null; window.stopSupAlert && window.stopSupAlert(); return; }
-                const senderID = data.sender;
-                if (friendList.length === 0 || friendList.includes(senderID)) {
-                    if (currentEmergency !== senderID) {
-                        currentEmergency = senderID;
-                        if (!supAlerting) {
-                            window.triggerSupAlert();
-                            setTimeout(() => {
-                                if (data.address) document.getElementById('supAlertAddr').textContent = data.address;
-                                if (data.lat && data.lon) {
-                                    document.getElementById('supAlertCoords').textContent = `위도 ${data.lat}  경도 ${data.lon}`;
-                                    document.getElementById('supMapIframe').src = `https://www.openstreetmap.org/export/embed.html?bbox=${data.lon-0.005},${data.lat-0.005},${data.lon+0.005},${data.lat+0.005}&layer=mapnik&marker=${data.lat},${data.lon}`;
-                                }
-                            }, 500);
-                        }
-                    }
-                }
-            });
-        };
+function closeDetail() { document.getElementById('detailPopup').classList.remove('visible'); }
 
-        const dummyMap = document.createElement('div');
-        dummyMap.style.cssText = 'width:1px;height:1px;position:absolute;left:-9999px;';
-        document.body.appendChild(dummyMap);
-        const kakaoMap = new kakao.maps.Map(dummyMap, { center: new kakao.maps.LatLng(37.5665, 126.9780), level: 3 });
-        window.kakaoMap = kakaoMap;
-    </script>
+function confirmDisconnect() {
+  if (!selectedResident) return;
+  if (confirm(`⚠️ ${selectedResident.name}님의 관리 연결을 해제하시겠습니까?\n\n해제 즉시 레이더에서 제거되며 위치 공유 동의가 철회됩니다.`)) {
+    currentResidents = currentResidents.filter(r => r.id !== selectedResident.id);
+    closeDetail();
+    renderRadar();
+    renderSidebar();
+    updateScaleLabel();
+    alert(`✅ ${selectedResident.name}님의 연결이 해제되었습니다.`);
+  }
+}
+
+function goToSOS() {
+  // Navigate directly to 중흥동
+  selectedPath = [hierarchy.L1[0], hierarchy['KR-29'][0]];
+  currentLevel = 2;
+  updateBreadcrumb();
+  openRadar({ code:'KR-29-110-010', name:'중흥동', residents:18, sos:1 });
+  document.getElementById('sosToast').classList.remove('visible');
+}
+
+function goBack() {
+  const nav = document.getElementById('navScreen');
+  const radar = document.getElementById('radarScreen');
+  radar.classList.add('slide-out');
+  setTimeout(() => {
+    radar.classList.remove('active','slide-out');
+    nav.classList.add('active','slide-in');
+    setTimeout(() => nav.classList.remove('slide-in'), 400);
+  }, 280);
+}
+
+// Close popup on backdrop click
+document.getElementById('detailPopup').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+</script>
 </body>
 </html>
