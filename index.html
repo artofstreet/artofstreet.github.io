@@ -117,7 +117,8 @@
         .help-text {
             font-family: 'Noto Sans KR', sans-serif;
             font-size: 36px;
-            font-weight: 700;
+            font-weight: 900;
+            -webkit-text-stroke: 1px white;
             color: rgba(255,255,255,0.95);
             letter-spacing: 5px;
             text-shadow: 0 0 16px rgba(255,255,255,0.45), 0 1px 4px rgba(0,0,0,0.6);
@@ -316,7 +317,7 @@
             <div id="senderCopyToast" style="display:none;text-align:center;margin-top:10px;font-size:15px;font-weight:700;color:#60a5fa;">✅ ID가 복사되었습니다!</div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">👥 보호자 등록하기</p>
+            <p class="section-title" style="color:white;">👥 도와주는자 등록하기</p>
             <input type="text" id="senderFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
             <button class="btn-add" onclick="addSenderFriend()">등록하기</button>
             <button onclick="startSenderQrScan()" style="width:100%;padding:14px;border-radius:12px;border:2px dashed rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);color:white;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">📷 QR 코드로 등록하기</button>
@@ -327,7 +328,7 @@
             </div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">등록된 보호자 목록</p>
+            <p class="section-title" style="color:white;">등록된 도와주는자 목록</p>
             <p style="background:rgba(59,130,246,0.3);padding:6px 16px;border-radius:15px;font-size:18px;display:inline-block;margin:10px 0;color:white;border:2px solid rgba(59,130,246,0.3);"><span id="senderCount">0</span>/5명</p>
             <div id="senderFriendList"></div>
         </div>
@@ -351,7 +352,7 @@
             <div id="copyToast" style="display:none;text-align:center;margin-top:10px;font-size:15px;font-weight:700;color:#00FF7F;">✅ ID가 복사되었습니다!</div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">🛡️ 보호대상자 등록하기</p>
+            <p class="section-title" style="color:white;">🛡️ 도움받는자 등록하기</p>
             <input type="text" id="receiverFriendInput" class="input-box" placeholder="예: SZ-A1B2" maxlength="15">
             <button class="btn-add" onclick="addReceiverFriend()">등록하기</button>
             <button onclick="startQrScan()" style="width:100%;padding:14px;border-radius:12px;border:2px dashed rgba(255,255,255,0.5);background:rgba(255,255,255,0.1);color:white;font-size:18px;font-weight:700;cursor:pointer;margin-top:10px;">📷 QR 코드로 등록하기</button>
@@ -362,7 +363,7 @@
             </div>
         </div>
         <div class="card">
-            <p class="section-title" style="color:white;">보호대상자 목록</p>
+            <p class="section-title" style="color:white;">도움받는자 목록</p>
             <p style="background:rgba(59,130,246,0.3);padding:6px 16px;border-radius:15px;font-size:18px;display:inline-block;margin:10px 0;color:white;border:2px solid rgba(59,130,246,0.3);"><span id="receiverCount">0</span>/5명</p>
             <div id="receiverFriendList"></div>
         </div>
@@ -431,10 +432,10 @@
 
         window.addSenderFriend=function(){const i=document.getElementById('senderFriendInput');let id=i.value.trim().toUpperCase();if(!id){alert('❌ ID를 입력해주세요!');return;}if(!id.startsWith('SZ-'))id='SZ-'+id;let l=JSON.parse(localStorage.getItem('friendList_SND')||'[]');if(l.length>=5){alert('❌ 최대 5명까지!');return;}if(l.includes(id)){alert('❌ 이미 등록됨!');return;}l.push(id);localStorage.setItem('friendList_SND',JSON.stringify(l));i.value='';alert('✅ 등록: '+id);loadSenderFriends();};
         window.deleteSenderFriend=function(id){if(!confirm('⚠️ 삭제하시겠습니까?'))return;let l=JSON.parse(localStorage.getItem('friendList_SND')||'[]');l=l.filter(f=>f!==id);localStorage.setItem('friendList_SND',JSON.stringify(l));loadSenderFriends();};
-        function loadSenderFriends(){const l=JSON.parse(localStorage.getItem('friendList_SND')||'[]');document.getElementById('senderCount').innerText=l.length;const c=document.getElementById('senderFriendList');c.innerHTML=l.length===0?'<p style="text-align:center;opacity:0.7;margin-top:14px;font-size:18px;color:white;">등록된 보호자가 없습니다</p>':l.map(f=>`<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');}
+        function loadSenderFriends(){const l=JSON.parse(localStorage.getItem('friendList_SND')||'[]');document.getElementById('senderCount').innerText=l.length;const c=document.getElementById('senderFriendList');c.innerHTML=l.length===0?'<p style="text-align:center;opacity:0.7;margin-top:14px;font-size:18px;color:white;">등록된 도와주는자가 없습니다</p>':l.map(f=>`<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteSenderFriend('${f}')">✕</button></div>`).join('');}
         window.addReceiverFriend=function(){const i=document.getElementById('receiverFriendInput');let id=i.value.trim().toUpperCase();if(!id){alert('❌ ID를 입력해주세요!');return;}if(!id.startsWith('SZ-'))id='SZ-'+id;let l=JSON.parse(localStorage.getItem('friendList_RCV')||'[]');if(l.length>=5){alert('❌ 최대 5명까지!');return;}if(l.includes(id)){alert('❌ 이미 등록됨!');return;}l.push(id);localStorage.setItem('friendList_RCV',JSON.stringify(l));i.value='';alert('✅ 등록: '+id);loadReceiverFriends();setTimeout(()=>{if(window.startListening)window.startListening();},500);};
         window.deleteReceiverFriend=function(id){if(!confirm('⚠️ 삭제하시겠습니까?'))return;let l=JSON.parse(localStorage.getItem('friendList_RCV')||'[]');l=l.filter(f=>f!==id);localStorage.setItem('friendList_RCV',JSON.stringify(l));loadReceiverFriends();};
-        function loadReceiverFriends(){const l=JSON.parse(localStorage.getItem('friendList_RCV')||'[]');document.getElementById('receiverCount').innerText=l.length;const c=document.getElementById('receiverFriendList');c.innerHTML=l.length===0?'<p style="text-align:center;opacity:0.7;margin-top:14px;font-size:18px;color:white;">등록된 보호대상자가 없습니다</p>':l.map(f=>`<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');}
+        function loadReceiverFriends(){const l=JSON.parse(localStorage.getItem('friendList_RCV')||'[]');document.getElementById('receiverCount').innerText=l.length;const c=document.getElementById('receiverFriendList');c.innerHTML=l.length===0?'<p style="text-align:center;opacity:0.7;margin-top:14px;font-size:18px;color:white;">등록된 도움받는자가 없습니다</p>':l.map(f=>`<div class="friend-item" style="color:white;"><span>✅ ${f}</span><button class="btn-delete" onclick="deleteReceiverFriend('${f}')">✕</button></div>`).join('');}
         window.copySenderId=function(){const id=localStorage.getItem('safeZoneID_SND')||'';if(navigator.clipboard)navigator.clipboard.writeText(id).then(()=>{const t=document.getElementById('senderCopyToast');t.style.display='block';setTimeout(()=>t.style.display='none',2500);});};
         window.shareSenderKakao=function(){const id=localStorage.getItem('safeZoneID_SND')||'';const msg=`ArtOfStreet 안전지대 - 내 ID: ${id}`;if(navigator.share)navigator.share({title:'안전지대 ID 공유',text:msg}).catch(()=>{});else window.open(`https://sharer.kakao.com/talk/friends/picker/link?text=${encodeURIComponent(msg)}`,'_blank');};
         function generateSenderQR(){const id=localStorage.getItem('safeZoneID_SND')||'';const q=document.getElementById('senderQrCode');q.innerHTML='';const img=document.createElement('img');img.src=`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(id)}&bgcolor=ffffff&color=000000&margin=2`;img.style.cssText='width:160px;height:160px;border-radius:8px;';q.appendChild(img);}
