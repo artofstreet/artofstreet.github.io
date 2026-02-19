@@ -119,18 +119,18 @@ body {
   will-change: transform;
 }
 .unit-emoji {
-  font-size: 54px; line-height: 1;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.18));
+  font-size: 80px; line-height: 1;
+  filter: drop-shadow(0 5px 8px rgba(0,0,0,0.22));
   transition: transform 0.1s;
 }
 .unit-label {
   background: white;
-  padding: 3px 12px;
-  border-radius: 20px;
-  font-size: 15px;
-  margin-top: -6px;
-  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-  border: 2px solid var(--green);
+  padding: 5px 18px;
+  border-radius: 25px;
+  font-size: 20px;
+  margin-top: -8px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+  border: 3px solid var(--green);
   color: #2e7d32;
   font-weight: bold;
 }
@@ -365,6 +365,24 @@ function playTone(freq, type='sine', dur=0.18, vol=0.3) {
   } catch(e){}
 }
 
+function speakWord(word) {
+  try {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.lang = 'en-US';
+    utter.rate = 0.85;
+    utter.pitch = 1.2;
+    utter.volume = 1.0;
+    // 어린이용: 여성 목소리 우선 선택
+    const voices = window.speechSynthesis.getVoices();
+    const preferred = voices.find(v => v.lang.startsWith('en') && v.name.toLowerCase().includes('female'))
+                   || voices.find(v => v.lang.startsWith('en-US'))
+                   || voices.find(v => v.lang.startsWith('en'));
+    if (preferred) utter.voice = preferred;
+    window.speechSynthesis.speak(utter);
+  } catch(e) {}
+}
+
 function playGoodSound() {
   playTone(523, 'sine', 0.12, 0.35);
   setTimeout(() => playTone(659, 'sine', 0.12, 0.35), 80);
@@ -523,6 +541,7 @@ function spawnUnit() {
       // Good tap
       vibrate(30);
       playGoodSound();
+      speakWord(data.word);
       combo++;
       const bonusScore = 10 * (combo >= 3 ? 2 : 1);
       addScore(bonusScore, cx, cy);
@@ -533,6 +552,7 @@ function spawnUnit() {
       // Bad tap
       vibrate([60,30,60]);
       playBadSound();
+      speakWord(data.word);
       combo = 0;
       addScore(-15, cx, cy);
       document.getElementById('combo-display').textContent = '';
@@ -619,6 +639,12 @@ function isTouchDevice() {
 document.getElementById('start-btn').addEventListener('click', startGame);
 document.getElementById('restart-btn').addEventListener('click', startGame);
 document.getElementById('over-restart-btn').addEventListener('click', startGame);
+
+// 음성 목록 미리 로드
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+}
 
 buildBlocks();
 </script>
