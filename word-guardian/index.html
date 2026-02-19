@@ -3,85 +3,121 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>소리 진동 테스트 - 스르사마</title>
+<title>건강 미인 프로젝트 - 스르사마</title>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
-    body { margin: 0; padding: 0; overflow: hidden; background: #e8f5e9; font-family: 'Jua', sans-serif; touch-action: none; }
-    #game-view { position: relative; width: 100vw; height: 100vh; }
-    
-    /* 블록 영역 */
-    #mission-area {
+    :root { --primary: #4caf50; --bad: #f44336; }
+    body { margin: 0; padding: 0; overflow: hidden; background: #f1f8e9; font-family: 'Jua', sans-serif; touch-action: none; }
+    #game-view { position: relative; width: 100vw; height: 100vh; z-index: 1; }
+
+    /* 중앙 숨겨진 이미지 (건강해진 모습) */
+    #reward-container {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 300px; height: 300px; background: #fff; border-radius: 20px;
-        display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr);
-        border: 5px solid #81c784; z-index: 10;
+        width: 300px; height: 300px; border-radius: 20px; overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5;
+        background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=400&auto=format&fit=crop'); 
+        background-size: cover; border: 5px solid white;
     }
-    .block { background: #aed581; border: 1px solid #fff; transition: 0.3s; }
-    .block.broken { transform: scale(0); opacity: 0; }
+    #block-overlay {
+        position: absolute; inset: 0; display: grid;
+        grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
+    }
+    .block { background: #c5e1a5; border: 1px solid #fff; transition: 0.4s; }
+    .block.broken { transform: scale(0) rotate(90deg); opacity: 0; }
 
-    /* 유닛 */
+    /* 상단 UI */
+    #ui-header { 
+        position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+        width: 90%; background: white; border-radius: 20px; padding: 10px 15px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100;
+        border: 4px solid #81c784; text-align: center;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+
+    /* 유닛 스타일 */
     .unit { position: absolute; cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 50; }
-    .unit-img { width: 90px; height: 90px; object-fit: contain; }
-    .unit-text { background: white; padding: 2px 10px; border-radius: 10px; border: 2px solid #81c784; margin-top: -5px; }
+    .unit-img { width: 95px; height: 95px; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.15)); }
+    .unit-text { background: white; padding: 2px 10px; border-radius: 15px; font-size: 18px; border: 2px solid #81c784; margin-top: -5px; }
 
-    /* 시작 화면 */
+    /* 펑 터지는 파티클 */
+    .pop-particle {
+        position: absolute; width: 10px; height: 10px; border-radius: 50%;
+        pointer-events: none; animation: pop-anim 0.6s ease-out forwards;
+    }
+    @keyframes pop-anim {
+        0% { transform: translate(0,0) scale(1); opacity: 1; }
+        100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+    }
+
     #start-screen {
-        position: absolute; inset: 0; background: white;
+        position: absolute; inset: 0; background: rgba(255,255,255,0.98);
         display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
     }
-    #start-btn { padding: 20px 60px; font-size: 30px; background: #4caf50; color: white; border: none; border-radius: 50px; cursor: pointer; }
+    #start-btn { padding: 20px 60px; font-size: 32px; background: #4caf50; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #2e7d32; }
 </style>
 </head>
 <body>
 <div id="game-view">
-    <div id="mission-area" id="block-container"></div>
+    <div id="reward-container"><div id="block-overlay"></div></div>
     <div id="start-screen">
-        <h1 style="color:#2e7d32;">소리 & 진동 테스트</h1>
-        <p>버튼을 누르면 발음과 진동이 활성화됩니다!</p>
-        <button id="start-btn">발음&진동 시작!</button>
+        <h1 style="color:#2e7d32; font-size: 40px;">쫀득 건강 팡팡!</h1>
+        <p style="text-align:center;">블록을 깨서 건강한 모습을 확인하세요!<br>(소리 & 진동 집중 모드)</p>
+        <button id="start-btn">도전 시작!</button>
+    </div>
+    <div id="ui-header">
+        <div style="font-size: 20px;">남은 블록: <span id="block-count">36</span></div>
+        <div id="score-display" style="color: #2e7d32;">점수: <span id="score-num">0</span></div>
     </div>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
+    const blockOverlay = document.getElementById('block-overlay');
+    const blockCountNum = document.getElementById('block-count');
+    const scoreNum = document.getElementById('score-num');
     const startBtn = document.getElementById('start-btn');
     const startScreen = document.getElementById('start-screen');
-    const missionArea = document.getElementById('mission-area');
 
-    let active = false, blocks = [];
+    let active = false, score = 0, blocks = [];
 
-    // 1. 영어 소리 잠금 해제 함수
-    function initAudio() {
-        if ('speechSynthesis' in window) {
-            const msg = new SpeechSynthesisUtterance("");
-            window.speechSynthesis.speak(msg);
-        }
+    // 사운드 초기화
+    function initSound() {
+        const msg = new SpeechSynthesisUtterance("");
+        window.speechSynthesis.speak(msg);
     }
 
-    // 2. 영어 발음 함수
     function speak(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'en-US';
-            msg.rate = 0.8; // 천천히 명확하게
+            msg.lang = 'en-US'; msg.rate = 0.8;
             window.speechSynthesis.speak(msg);
         }
     }
 
-    const foodData = [
-        { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png', ok: true },
-        { en: 'Apple', img: 'https://cdn-icons-png.flaticon.com/512/415/415733.png', ok: true },
-        { en: 'Candy', img: 'https://cdn-icons-png.flaticon.com/512/2530/2530087.png', ok: false }
-    ];
-
-    // 블록 생성
-    for (let i = 0; i < 16; i++) {
-        const b = document.createElement('div');
-        b.className = 'block';
-        missionArea.appendChild(b);
-        blocks.push(b);
+    // 펑 터지는 효과
+    function createPop(x, y, color) {
+        for (let i = 0; i < 12; i++) {
+            const p = document.createElement('div');
+            p.className = 'pop-particle';
+            p.style.backgroundColor = color;
+            p.style.left = x + 'px'; p.style.top = y + 'px';
+            const tx = (Math.random() - 0.5) * 200;
+            const ty = (Math.random() - 0.5) * 200;
+            p.style.setProperty('--tx', tx + 'px');
+            p.style.setProperty('--ty', ty + 'px');
+            view.appendChild(p);
+            setTimeout(() => p.remove(), 600);
+        }
     }
+
+    const foodData = [
+        { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png', ok: true, color: '#ff9800' },
+        { en: 'Spinach', img: 'https://cdn-icons-png.flaticon.com/512/7398/7398055.png', ok: true, color: '#4caf50' },
+        { en: 'Black Bean', img: 'https://cdn-icons-png.flaticon.com/512/7996/7996741.png', ok: true, color: '#333' },
+        { en: 'Apple', img: 'https://cdn-icons-png.flaticon.com/512/415/415733.png', ok: true, color: '#f44336' },
+        { en: 'Candy', img: 'https://cdn-icons-png.flaticon.com/512/2530/2530087.png', ok: false, color: '#e91e63' }
+    ];
 
     function spawn() {
         if (!active) return;
@@ -89,7 +125,7 @@
         const unit = document.createElement('div');
         unit.className = 'unit';
         unit.innerHTML = `<img src="${data.img}" class="unit-img"><div class="unit-text">${data.en}</div>`;
-        unit.style.left = (Math.random() * (window.innerWidth - 100)) + 'px';
+        unit.style.left = (Math.random() * (window.innerWidth - 110)) + 'px';
         unit.style.top = '-150px';
         view.appendChild(unit);
 
@@ -97,27 +133,33 @@
         function fall() {
             if (!active || unit.dataset.hit) return;
             y += 4; unit.style.top = y + 'px';
-            if (y > window.innerHeight) { unit.remove(); } 
+            if (y > window.innerHeight) { unit.remove(); }
             else { requestAnimationFrame(fall); }
         }
 
         unit.onpointerdown = (e) => {
             e.stopPropagation();
+            if (unit.dataset.hit) return;
             unit.dataset.hit = "true";
-
-            // 발음 실행
+            
             speak(data.en);
-
-            // 진동 실행 (안드로이드 전용)
-            if (navigator.vibrate) {
-                navigator.vibrate(60); 
-            }
+            createPop(e.clientX, e.clientY, data.color);
+            if (navigator.vibrate) navigator.vibrate(60);
 
             if (data.ok) {
                 const alive = blocks.filter(b => !b.classList.contains('broken'));
-                if (alive.length > 0) alive[0].classList.add('broken');
-            }
+                if (alive.length > 0) {
+                    alive[Math.floor(Math.random() * alive.length)].classList.add('broken');
+                    blockCountNum.innerText = alive.length - 1;
+                    score += 100;
+                    if (alive.length - 1 === 0) {
+                         active = false;
+                         setTimeout(() => alert("축하합니다! 건강 미소 획득!"), 500);
+                    }
+                }
+            } else { score = Math.max(0, score - 50); }
             
+            scoreNum.innerText = score;
             unit.style.display = "none";
             unit.remove();
         };
@@ -126,11 +168,18 @@
     }
 
     startBtn.onclick = () => {
-        initAudio(); // 소리 엔진 깨우기
-        if (navigator.vibrate) navigator.vibrate(100); // 진동 기능 확인용
+        initSound();
+        if (navigator.vibrate) navigator.vibrate(100);
+        blockOverlay.innerHTML = '';
+        blocks = [];
+        for (let i = 0; i < 36; i++) {
+            const b = document.createElement('div');
+            b.className = 'block';
+            blockOverlay.appendChild(b);
+            blocks.push(b);
+        }
         startScreen.style.display = 'none';
-        active = true;
-        spawn();
+        active = true; spawn();
     };
 </script>
 </body>
