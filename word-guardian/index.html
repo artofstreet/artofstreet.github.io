@@ -3,97 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Health Food Dash PRO</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Jua&display=swap" rel="stylesheet">
+    <title>말랑 건강 푸드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #4CAF50;
-            --danger: #FF5252;
-            --glass: rgba(255, 255, 255, 0.25);
+            --primary: #81c784;
+            --bad: #e57373;
         }
 
         body { 
             margin: 0; padding: 0; overflow: hidden; 
-            background: linear-gradient(180deg, #e8f5e9 0%, #81c784 100%);
+            /* 배경을 더 부드러운 파스텔톤으로 변경 */
+            background: linear-gradient(180deg, #f1f8e9 0%, #dcedc8 100%);
             font-family: 'Jua', sans-serif; touch-action: none;
         }
 
-        /* 배경 장식 */
-        .bg-circle {
-            position: absolute; border-radius: 50%; background: var(--glass); z-index: 0;
+        /* 배경에 귀여운 패턴 추가 */
+        body::after {
+            content: ''; position: absolute; inset: 0; opacity: 0.1; z-index: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         }
 
         #game-view { position: relative; width: 100vw; height: 100vh; z-index: 1; }
 
-        /* 상단 프로페셔널 UI */
+        /* UI 디자인을 더 동글동글하게 */
         #ui-header { 
-            position: absolute; top: 15px; width: 90%; left: 5%;
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px; padding: 15px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
+            width: 85%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px; padding: 15px 25px;
+            box-shadow: 0 8px 25px rgba(100,181,246,0.2);
             display: flex; flex-direction: column; align-items: center; z-index: 100;
-            border: 1px solid rgba(255,255,255,0.3);
+            border: 4px solid #aed581;
         }
 
-        #score-box { font-size: 24px; color: #2e7d32; margin-bottom: 8px; }
+        #score-box { font-size: 28px; color: #558b2f; margin-bottom: 8px; }
         #hp-container { 
-            width: 100%; height: 14px; background: #ddd; border-radius: 10px; 
-            overflow: hidden; border: 2px solid #fff;
+            width: 100%; height: 18px; background: #fff; border-radius: 20px; 
+            overflow: hidden; border: 3px solid #aed581;
         }
-        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.3s ease; }
+        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #aed581, #7cb342); border-radius: 20px; transition: width 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-        /* 게임 유닛 스타일 */
+        /* 귀여운 유닛 스타일 및 애니메이션 */
         .unit { 
             position: absolute; display: flex; flex-direction: column; align-items: center; 
-            z-index: 50; cursor: pointer; transition: transform 0.1s;
+            z-index: 50; cursor: pointer;
         }
-        .unit:active { transform: scale(0.9); }
-        
+
+        /* 둥실둥실 떠다니는 애니메이션 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(-10px) rotate(3deg); }
+        }
         .unit-img { 
-            width: 80px; height: 80px; object-fit: cover; border-radius: 20px;
-            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
-            border: 3px solid #fff;
+            width: 90px; height: 90px; object-fit: contain; 
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.1));
+            animation: float 2s ease-in-out infinite;
         }
         
         .unit-text { 
-            background: var(--primary); color: white; padding: 2px 15px; 
-            border-radius: 15px; font-size: 18px; margin-top: -10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Poppins', sans-serif;
+            background: #fff; color: #558b2f; padding: 4px 15px; 
+            border-radius: 15px; font-size: 20px; margin-top: -5px;
+            border: 3px solid var(--primary); box-shadow: 0 4px 0 #81c784;
         }
-        .bad .unit-text { background: var(--danger); }
+        .bad .unit-text { color: #c62828; border-color: var(--bad); box-shadow: 0 4px 0 #ef9a9a; }
 
-        /* 효과 메시지 */
-        .combo-text {
-            position: absolute; color: #ffeb3b; font-size: 40px; font-weight: bold;
-            text-shadow: 2px 2px 10px rgba(0,0,0,0.5); pointer-events: none; z-index: 200;
+        /* 클릭했을 때 팡 터지는 효과 */
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.7; }
+            100% { transform: scale(0); opacity: 0; }
         }
+        .unit.popped { animation: pop 0.3s forwards !important; pointer-events: none; }
 
+        /* 시작 화면 */
         #start-screen {
-            position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+            position: absolute; inset: 0; background: rgba(255,255,255,0.8);
             display: flex; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; color: white;
+            z-index: 1000; color: #33691e;
         }
-
         #start-btn { 
-            padding: 20px 60px; font-size: 30px; background: #4CAF50;
-            color: white; border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3); font-family: 'Jua';
+            padding: 15px 40px; font-size: 32px; background: #81c784;
+            color: white; border: 4px solid #fff; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 8px 0 #558b2f; font-family: 'Jua';
         }
+        #start-btn:active { box-shadow: 0 2px 0 #558b2f; transform: translateY(6px); }
     </style>
 </head>
 <body>
 <div id="game-view">
     <div id="start-screen">
-        <h1 style="font-size: 40px; margin-bottom: 10px;">Health Dash PRO</h1>
-        <p style="margin-bottom: 30px;">당근과 채소를 눌러 건강을 지키세요!</p>
-        <button id="start-btn">게임 시작</button>
+        <h1 style="font-size: 45px; margin-bottom: 10px; text-shadow: 2px 2px 0 #aed581;">말랑 건강 푸드</h1>
+        <p style="font-size: 20px; margin-bottom: 30px;">귀여운 채소를 터치해주세요! 🥕</p>
+        <button id="start-btn">시작하기!</button>
     </div>
 
     <div id="ui-header">
-        <div id="score-box">SCORE: <span id="score-num">0</span> <small id="combo-tag" style="display:none; color:#e91e63;">(COMBO X2)</small></div>
+        <div id="score-box">점수 : <span id="score-num">0</span></div>
         <div id="hp-container"><div id="hp-bar"></div></div>
-        <div id="tip-box" style="font-size:14px; color:#388e3c; margin-top:8px;">🥕 당근은 두피 건강과 시력 보호에 최고예요!</div>
     </div>
 </div>
 
@@ -104,24 +111,25 @@
     const startBtn = document.getElementById('start-btn');
     const startScreen = document.getElementById('start-screen');
 
-    let score = 0, active = false, hp = 100, combo = 0;
-    let speed = 3.5;
+    let score = 0, active = false, hp = 100;
+    let speed = 3.0;
 
-    // 무료 고화질 이미지 소스 (Unsplash)
+    // 귀여운 일러스트 이미지 URL로 교체 (무료 아이콘 사용)
     const foodData = [
-        { en: 'CARROT', img: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=120&h=120&fit=crop', ok: true },
-        { en: 'TOMATO', img: 'https://images.unsplash.com/photo-1518977676601-b53f02ac6d31?w=120&h=120&fit=crop', ok: true },
-        { en: 'WALNUT', img: 'https://images.unsplash.com/photo-153662094842d-54ca0d97652c?w=120&h=120&fit=crop', ok: true },
-        { en: 'CANDY', img: 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=120&h=120&fit=crop', ok: false },
-        { en: 'BURGER', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=120&h=120&fit=crop', ok: false },
-        { en: 'SODA', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=120&h=120&fit=crop', ok: false }
+        // 좋은 음식 (건강)
+        { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png', ok: true },
+        { en: 'Tomato', img: 'https://cdn-icons-png.flaticon.com/512/1202/1202125.png', ok: true },
+        { en: 'Nut', img: 'https://cdn-icons-png.flaticon.com/512/1813/1813871.png', ok: true },
+        // 나쁜 음식 (설탕/정크)
+        { en: 'Candy', img: 'https://cdn-icons-png.flaticon.com/512/2530/2530087.png', ok: false },
+        { en: 'Burger', img: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png', ok: false },
+        { en: 'Soda', img: 'https://cdn-icons-png.flaticon.com/512/2717/2717349.png', ok: false }
     ];
 
     function speak(text) {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'en-US';
+            msg.lang = 'en-US'; msg.rate = 1.2; // 목소리 약간 빠르게
             window.speechSynthesis.speak(msg);
         }
     }
@@ -131,67 +139,59 @@
         const data = foodData[Math.floor(Math.random() * foodData.length)];
         const unit = document.createElement('div');
         unit.className = `unit ${data.ok ? 'good' : 'bad'}`;
+        // 이미지를 둥실거리는 애니메이션 적용
         unit.innerHTML = `<img src="${data.img}" class="unit-img"><div class="unit-text">${data.en}</div>`;
-        unit.style.left = (Math.random() * (window.innerWidth - 100)) + 'px';
+        unit.style.left = (Math.random() * (window.innerWidth - 110)) + 'px';
         unit.style.top = '-150px';
         view.appendChild(unit);
 
         let y = -150;
         function fall() {
-            if (!active) { unit.remove(); return; }
+            if (!active || unit.classList.contains('popped')) return;
             y += speed; unit.style.top = y + 'px';
             if (y > window.innerHeight) {
-                if (data.ok) { hp -= 15; combo = 0; }
-                updateUI(); unit.remove();
+                if (data.ok) { hp -= 20; updateUI(); }
+                unit.remove();
             } else { requestAnimationFrame(fall); }
         }
 
-        unit.onclick = (e) => {
+        unit.onpointerdown = (e) => { // 반응 속도를 위해 click 대신 pointerdown 사용
             e.stopPropagation();
+            if(unit.classList.contains('popped')) return;
+
             speak(data.en);
+            unit.classList.add('popped'); // 팡 터지는 효과 클래스 추가
+
             if (data.ok) {
-                combo++;
-                score += (100 * (combo > 5 ? 2 : 1));
-                hp = Math.min(100, hp + 2);
-                speed += 0.03;
-                showEffect(e.clientX, e.clientY, combo > 5 ? `COMBO ${combo}!` : '+100');
+                score += 100; hp = Math.min(100, hp + 5); speed += 0.02;
             } else {
-                hp -= 20; combo = 0;
-                if (navigator.vibrate) navigator.vibrate(100);
+                hp -= 25; 
+                if (navigator.vibrate) navigator.vibrate([50, 50, 50]); // 진동 패턴 변경
             }
             updateUI();
-            unit.remove();
+            setTimeout(() => unit.remove(), 300); // 애니메이션 후 제거
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, Math.max(400, 1200 - (score / 100)));
-    }
-
-    function showEffect(x, y, text) {
-        const el = document.createElement('div');
-        el.className = 'combo-text';
-        el.style.left = x + 'px'; el.style.top = y + 'px';
-        el.innerText = text;
-        view.appendChild(el);
-        setTimeout(() => el.remove(), 800);
+        setTimeout(spawn, Math.max(500, 1300 - (score / 80)));
     }
 
     function updateUI() {
         scoreNum.innerText = score;
         hpBar.style.width = hp + "%";
-        document.getElementById('combo-tag').style.display = combo > 5 ? 'inline' : 'none';
         if (hp <= 0) end();
     }
 
     function end() {
         active = false;
-        alert(`게임 종료!\n최종 점수: ${score}\n리아가 스르사마의 건강한 생활을 응원합니다!`);
-        location.reload();
+        setTimeout(() => {
+            alert(`게임 오버!\n귀여운 점수: ${score}점`);
+            location.reload();
+        }, 500);
     }
 
     startBtn.onclick = () => {
         startScreen.style.display = 'none';
         active = true; spawn();
-        speak("Let's Start!");
     };
 </script>
 </body>
