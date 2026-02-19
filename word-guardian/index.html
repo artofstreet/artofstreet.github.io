@@ -3,184 +3,126 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>건강 미인 프로젝트 - 스르사마</title>
+<title>말랑말랑 건강 대시 - 스르사마</title>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <style>
-    :root { --primary: #4caf50; --bad: #f44336; }
-    body { margin: 0; padding: 0; overflow: hidden; background: #f1f8e9; font-family: 'Jua', sans-serif; touch-action: none; }
-    #game-view { position: relative; width: 100vw; height: 100vh; z-index: 1; }
+    /* 전체 배경을 조금 더 밝고 명랑한 노란-연두 톤으로 조정 */
+    body { margin: 0; padding: 0; overflow: hidden; background: #fffde7; font-family: 'Jua', sans-serif; touch-action: none; }
+    #game-view { position: relative; width: 100vw; height: 100vh; }
 
-    /* 중앙 숨겨진 이미지 (건강해진 모습) */
+    /* 중앙의 미션 이미지를 더 귀엽게 감싸는 틀 */
     #reward-container {
         position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 300px; height: 300px; border-radius: 20px; overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 5;
-        background-image: url('https://images.unsplash.com/photo-1506126613408-eca07ce68773?q=80&w=400&auto=format&fit=crop'); 
-        background-size: cover; border: 5px solid white;
+        width: 280px; height: 280px; border-radius: 40px; overflow: hidden;
+        box-shadow: 0 15px 0 #cddc39; z-index: 5;
+        background-image: url('https://images.unsplash.com/photo-1511688858151-24056a1ea405?q=80&w=400&auto=format&fit=crop'); 
+        background-size: cover; border: 8px solid white;
     }
-    #block-overlay {
-        position: absolute; inset: 0; display: grid;
-        grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(6, 1fr);
-    }
-    .block { background: #c5e1a5; border: 1px solid #fff; transition: 0.4s; }
-    .block.broken { transform: scale(0) rotate(90deg); opacity: 0; }
+    .block { background: #dce775; border: 2px solid #fff; transition: 0.5s; }
+    .block.broken { transform: scale(0) rotate(180deg); opacity: 0; }
 
-    /* 상단 UI */
-    #ui-header { 
-        position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-        width: 90%; background: white; border-radius: 20px; padding: 10px 15px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100;
-        border: 4px solid #81c784; text-align: center;
-        display: flex; justify-content: space-between; align-items: center;
+    /* 비눗방울처럼 터지는 효과 */
+    .bubble {
+        position: absolute; border-radius: 50%; background: rgba(255,255,255,0.6);
+        pointer-events: none; animation: float-up 0.8s ease-out forwards;
+        border: 2px solid white;
+    }
+    @keyframes float-up {
+        to { transform: translateY(-100px) scale(1.5); opacity: 0; }
     }
 
-    /* 유닛 스타일 */
-    .unit { position: absolute; cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 50; }
-    .unit-img { width: 95px; height: 95px; object-fit: contain; filter: drop-shadow(0 8px 10px rgba(0,0,0,0.15)); }
-    .unit-text { background: white; padding: 2px 10px; border-radius: 15px; font-size: 18px; border: 2px solid #81c784; margin-top: -5px; }
-
-    /* 펑 터지는 파티클 */
-    .pop-particle {
-        position: absolute; width: 10px; height: 10px; border-radius: 50%;
-        pointer-events: none; animation: pop-anim 0.6s ease-out forwards;
+    #start-btn { 
+        padding: 25px 50px; font-size: 35px; background: #ffeb3b; color: #5d4037; 
+        border: none; border-radius: 60px; cursor: pointer; box-shadow: 0 10px 0 #fbc02d; 
     }
-    @keyframes pop-anim {
-        0% { transform: translate(0,0) scale(1); opacity: 1; }
-        100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
-    }
-
-    #start-screen {
-        position: absolute; inset: 0; background: rgba(255,255,255,0.98);
-        display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
-    }
-    #start-btn { padding: 20px 60px; font-size: 32px; background: #4caf50; color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 8px 0 #2e7d32; }
 </style>
 </head>
 <body>
 <div id="game-view">
-    <div id="reward-container"><div id="block-overlay"></div></div>
-    <div id="start-screen">
-        <h1 style="color:#2e7d32; font-size: 40px;">쫀득 건강 팡팡!</h1>
-        <p style="text-align:center;">블록을 깨서 건강한 모습을 확인하세요!<br>(소리 & 진동 집중 모드)</p>
-        <button id="start-btn">도전 시작!</button>
-    </div>
-    <div id="ui-header">
-        <div style="font-size: 20px;">남은 블록: <span id="block-count">36</span></div>
-        <div id="score-display" style="color: #2e7d32;">점수: <span id="score-num">0</span></div>
+    <div id="reward-container"><div id="block-overlay" style="display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(5,1fr); height:100%;"></div></div>
+    <div id="start-screen" style="position:absolute; inset:0; background:rgba(255,255,255,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:1000;">
+        <h1 style="color:#fbc02d; font-size: 45px; margin-bottom: 20px;">🌈 말랑 건강 팡팡</h1>
+        <button id="start-btn">신나게 시작!</button>
     </div>
 </div>
 
 <script>
     const view = document.getElementById('game-view');
-    const blockOverlay = document.getElementById('block-overlay');
-    const blockCountNum = document.getElementById('block-count');
-    const scoreNum = document.getElementById('score-num');
+    const overlay = document.getElementById('block-overlay');
     const startBtn = document.getElementById('start-btn');
-    const startScreen = document.getElementById('start-screen');
+    
+    let active = false, blocks = [];
 
-    let active = false, score = 0, blocks = [];
-
-    // 사운드 초기화
-    function initSound() {
-        const msg = new SpeechSynthesisUtterance("");
-        window.speechSynthesis.speak(msg);
+    // 비눗방울 효과 추가
+    function createBubbles(x, y) {
+        for (let i = 0; i < 5; i++) {
+            const b = document.createElement('div');
+            b.className = 'bubble';
+            const size = Math.random() * 20 + 10;
+            b.style.width = b.style.height = size + 'px';
+            b.style.left = x + (Math.random() - 0.5) * 50 + 'px';
+            b.style.top = y + (Math.random() - 0.5) * 50 + 'px';
+            view.appendChild(b);
+            setTimeout(() => b.remove(), 800);
+        }
     }
 
+    // 소리(발음) 재생
     function speak(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'en-US'; msg.rate = 0.8;
+            msg.lang = 'en-US'; msg.rate = 1.0; 
             window.speechSynthesis.speak(msg);
         }
     }
 
-    // 펑 터지는 효과
-    function createPop(x, y, color) {
-        for (let i = 0; i < 12; i++) {
-            const p = document.createElement('div');
-            p.className = 'pop-particle';
-            p.style.backgroundColor = color;
-            p.style.left = x + 'px'; p.style.top = y + 'px';
-            const tx = (Math.random() - 0.5) * 200;
-            const ty = (Math.random() - 0.5) * 200;
-            p.style.setProperty('--tx', tx + 'px');
-            p.style.setProperty('--ty', ty + 'px');
-            view.appendChild(p);
-            setTimeout(() => p.remove(), 600);
+    startBtn.onclick = () => {
+        document.getElementById('start-screen').style.display = 'none';
+        overlay.innerHTML = '';
+        for (let i = 0; i < 25; i++) {
+            const blk = document.createElement('div');
+            blk.className = 'block';
+            overlay.appendChild(blk);
+            blocks.push(blk);
         }
-    }
-
-    const foodData = [
-        { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png', ok: true, color: '#ff9800' },
-        { en: 'Spinach', img: 'https://cdn-icons-png.flaticon.com/512/7398/7398055.png', ok: true, color: '#4caf50' },
-        { en: 'Black Bean', img: 'https://cdn-icons-png.flaticon.com/512/7996/7996741.png', ok: true, color: '#333' },
-        { en: 'Apple', img: 'https://cdn-icons-png.flaticon.com/512/415/415733.png', ok: true, color: '#f44336' },
-        { en: 'Candy', img: 'https://cdn-icons-png.flaticon.com/512/2530/2530087.png', ok: false, color: '#e91e63' }
-    ];
+        active = true;
+        spawn();
+    };
 
     function spawn() {
         if (!active) return;
-        const data = foodData[Math.floor(Math.random() * foodData.length)];
+        const data = { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png' };
         const unit = document.createElement('div');
-        unit.className = 'unit';
-        unit.innerHTML = `<img src="${data.img}" class="unit-img"><div class="unit-text">${data.en}</div>`;
-        unit.style.left = (Math.random() * (window.innerWidth - 110)) + 'px';
+        unit.style.position = 'absolute';
+        unit.innerHTML = `<img src="${data.img}" style="width:100px;"><div style="text-align:center; font-size:20px;">${data.en}</div>`;
+        unit.style.left = Math.random() * (window.innerWidth - 100) + 'px';
         unit.style.top = '-150px';
         view.appendChild(unit);
 
         let y = -150;
         function fall() {
             if (!active || unit.dataset.hit) return;
-            y += 4; unit.style.top = y + 'px';
-            if (y > window.innerHeight) { unit.remove(); }
-            else { requestAnimationFrame(fall); }
+            y += 3; unit.style.top = y + 'px';
+            if (y > window.innerHeight) unit.remove();
+            else requestAnimationFrame(fall);
         }
 
         unit.onpointerdown = (e) => {
-            e.stopPropagation();
-            if (unit.dataset.hit) return;
             unit.dataset.hit = "true";
-            
             speak(data.en);
-            createPop(e.clientX, e.clientY, data.color);
-            if (navigator.vibrate) navigator.vibrate(60);
-
-            if (data.ok) {
-                const alive = blocks.filter(b => !b.classList.contains('broken'));
-                if (alive.length > 0) {
-                    alive[Math.floor(Math.random() * alive.length)].classList.add('broken');
-                    blockCountNum.innerText = alive.length - 1;
-                    score += 100;
-                    if (alive.length - 1 === 0) {
-                         active = false;
-                         setTimeout(() => alert("축하합니다! 건강 미소 획득!"), 500);
-                    }
-                }
-            } else { score = Math.max(0, score - 50); }
+            createBubbles(e.clientX, e.clientY);
+            if (navigator.vibrate) navigator.vibrate(40);
             
-            scoreNum.innerText = score;
-            unit.style.display = "none";
+            const alive = blocks.filter(b => !b.classList.contains('broken'));
+            if (alive.length > 0) alive[0].classList.add('broken');
+            
+            unit.style.display = 'none';
             unit.remove();
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, 1000);
+        setTimeout(spawn, 1500);
     }
-
-    startBtn.onclick = () => {
-        initSound();
-        if (navigator.vibrate) navigator.vibrate(100);
-        blockOverlay.innerHTML = '';
-        blocks = [];
-        for (let i = 0; i < 36; i++) {
-            const b = document.createElement('div');
-            b.className = 'block';
-            blockOverlay.appendChild(b);
-            blocks.push(b);
-        }
-        startScreen.style.display = 'none';
-        active = true; spawn();
-    };
 </script>
 </body>
 </html>
