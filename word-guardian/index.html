@@ -3,61 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ArtOfStreet - 건강 음식 2단계</title>
-    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <title>Health Food Dash PRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Jua&display=swap" rel="stylesheet">
     <style>
-        /* 프리미엄 2단계 디자인: 조금 더 신선한 그린 & 라임 톤 */
+        :root {
+            --primary: #4CAF50;
+            --danger: #FF5252;
+            --glass: rgba(255, 255, 255, 0.25);
+        }
+
         body { 
             margin: 0; padding: 0; overflow: hidden; 
-            background: linear-gradient(135deg, #f1f8e9 0%, #c5e1a5 100%);
+            background: linear-gradient(180deg, #e8f5e9 0%, #81c784 100%);
             font-family: 'Jua', sans-serif; touch-action: none;
         }
-        body::before {
-            content: ''; position: absolute; inset: 0;
-            background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.6) 0%, transparent 50%);
-            z-index: 0;
+
+        /* 배경 장식 */
+        .bg-circle {
+            position: absolute; border-radius: 50%; background: var(--glass); z-index: 0;
         }
-        #game-view { position: relative; width: 100vw; height: 100vh; overflow: hidden; z-index: 1; }
 
-        /* 상단 UI: 2단계 표시 */
-        #ui-header { position: absolute; top: 0; width: 100%; display: flex; flex-direction: column; align-items: center; z-index: 100; }
-        #info-panel { 
-            background: rgba(255, 255, 255, 0.95); padding: 12px 35px; border-radius: 0 0 35px 35px; 
-            box-shadow: 0 8px 20px rgba(56, 142, 60, 0.15); border: 3px solid #aed581; 
-            display: flex; flex-direction: column; gap: 5px; align-items: center; min-width: 270px;
+        #game-view { position: relative; width: 100vw; height: 100vh; z-index: 1; }
+
+        /* 상단 프로페셔널 UI */
+        #ui-header { 
+            position: absolute; top: 15px; width: 90%; left: 5%;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px; padding: 15px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; z-index: 100;
+            border: 1px solid rgba(255,255,255,0.3);
         }
-        #level-tag { background: #689f38; color: white; padding: 2px 10px; border-radius: 10px; font-size: 14px; margin-bottom: 5px; }
-        #score-box { font-size: 28px; color: #33691e; font-weight: bold; }
-        #hp-container { width: 220px; height: 12px; background: #eee; border-radius: 10px; border: 2px solid #aed581; overflow: hidden; }
-        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #689f38, #9ccc65); transition: width 0.3s; }
 
-        /* 게임 유닛 */
-        .unit { position: absolute; display: flex; flex-direction: column; align-items: center; z-index: 50; cursor: pointer; }
-        .unit-icon { font-size: 70px; filter: drop-shadow(0 8px 15px rgba(0,0,0,0.12)); }
-        .unit-text { background: white; padding: 5px 22px; border-radius: 20px; font-size: 24px; color: #333; font-weight: bold; border: 3px solid #8bc34a; margin-top: 4px; box-shadow: 0 4px 0 #dcedc8; }
+        #score-box { font-size: 24px; color: #2e7d32; margin-bottom: 8px; }
+        #hp-container { 
+            width: 100%; height: 14px; background: #ddd; border-radius: 10px; 
+            overflow: hidden; border: 2px solid #fff;
+        }
+        #hp-bar { width: 100%; height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.3s ease; }
 
-        /* 시작 버튼 */
+        /* 게임 유닛 스타일 */
+        .unit { 
+            position: absolute; display: flex; flex-direction: column; align-items: center; 
+            z-index: 50; cursor: pointer; transition: transform 0.1s;
+        }
+        .unit:active { transform: scale(0.9); }
+        
+        .unit-img { 
+            width: 80px; height: 80px; object-fit: cover; border-radius: 20px;
+            filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+            border: 3px solid #fff;
+        }
+        
+        .unit-text { 
+            background: var(--primary); color: white; padding: 2px 15px; 
+            border-radius: 15px; font-size: 18px; margin-top: -10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family: 'Poppins', sans-serif;
+        }
+        .bad .unit-text { background: var(--danger); }
+
+        /* 효과 메시지 */
+        .combo-text {
+            position: absolute; color: #ffeb3b; font-size: 40px; font-weight: bold;
+            text-shadow: 2px 2px 10px rgba(0,0,0,0.5); pointer-events: none; z-index: 200;
+        }
+
+        #start-screen {
+            position: absolute; inset: 0; background: rgba(0,0,0,0.7);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000; color: white;
+        }
+
         #start-btn { 
-            position: absolute; top: 60%; left: 50%; transform: translate(-50%, -50%); 
-            padding: 18px 50px; font-size: 28px; 
-            background: linear-gradient(to bottom, #9ccc65, #689f38); 
-            color: white; border: 4px solid white; border-radius: 50px; 
-            cursor: pointer; box-shadow: 0 8px 0 #33691e;
-            z-index: 9999 !important; font-family: 'Jua';
+            padding: 20px 60px; font-size: 30px; background: #4CAF50;
+            color: white; border: none; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3); font-family: 'Jua';
         }
     </style>
 </head>
 <body>
 <div id="game-view">
-    <div id="ui-header">
-        <div id="info-panel">
-            <div id="level-tag">심화 2단계</div>
-            <div id="score-box">건강 점수 :&nbsp;<span id="score-num">0</span></div>
-            <div id="hp-container"><div id="hp-bar"></div></div>
-            <div style="font-size:14px; color:#558b2f; margin-top:5px;">🥕 당근은 두피 건강에 좋아요!</div>
-        </div>
+    <div id="start-screen">
+        <h1 style="font-size: 40px; margin-bottom: 10px;">Health Dash PRO</h1>
+        <p style="margin-bottom: 30px;">당근과 채소를 눌러 건강을 지키세요!</p>
+        <button id="start-btn">게임 시작</button>
     </div>
-    <button id="start-btn">2단계 시작</button>
+
+    <div id="ui-header">
+        <div id="score-box">SCORE: <span id="score-num">0</span> <small id="combo-tag" style="display:none; color:#e91e63;">(COMBO X2)</small></div>
+        <div id="hp-container"><div id="hp-bar"></div></div>
+        <div id="tip-box" style="font-size:14px; color:#388e3c; margin-top:8px;">🥕 당근은 두피 건강과 시력 보호에 최고예요!</div>
+    </div>
 </div>
 
 <script>
@@ -65,9 +102,20 @@
     const scoreNum = document.getElementById('score-num');
     const hpBar = document.getElementById('hp-bar');
     const startBtn = document.getElementById('start-btn');
+    const startScreen = document.getElementById('start-screen');
 
-    let score = 0, active = false, hp = 100;
-    let speed = 4.0; // 1단계보다 더 빠른 시작 속도
+    let score = 0, active = false, hp = 100, combo = 0;
+    let speed = 3.5;
+
+    // 무료 고화질 이미지 소스 (Unsplash)
+    const foodData = [
+        { en: 'CARROT', img: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=120&h=120&fit=crop', ok: true },
+        { en: 'TOMATO', img: 'https://images.unsplash.com/photo-1518977676601-b53f02ac6d31?w=120&h=120&fit=crop', ok: true },
+        { en: 'WALNUT', img: 'https://images.unsplash.com/photo-153662094842d-54ca0d97652c?w=120&h=120&fit=crop', ok: true },
+        { en: 'CANDY', img: 'https://images.unsplash.com/photo-1582058091505-f87a2e55a40f?w=120&h=120&fit=crop', ok: false },
+        { en: 'BURGER', img: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=120&h=120&fit=crop', ok: false },
+        { en: 'SODA', img: 'https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=120&h=120&fit=crop', ok: false }
+    ];
 
     function speak(text) {
         if ('speechSynthesis' in window) {
@@ -78,72 +126,72 @@
         }
     }
 
-    // 2단계 데이터: 리아님의 건강 관심사 반영 (당근, 견과류 등)
-    const foodWords = [
-        { en: 'CARROT', em: '🥕', ok: true },     // 당근 (두피/탈모 예방)
-        { en: 'NUT', em: '🥜', ok: true },        // 견과류
-        { en: 'TOMATO', em: '🍅', ok: true },    // 토마토
-        { en: 'CANDY', em: '🍬', ok: false },     // 당분 (피해야 할 것)
-        { en: 'BURGER', em: '🍔', ok: false },   // 패스트푸드
-        { en: 'SODA', em: '🥤', ok: false }      // 탄산음료
-    ];
-
-    function updateHP(amt) {
-        hp = Math.min(100, Math.max(0, hp + amt));
-        hpBar.style.width = hp + "%";
-        if (hp <= 0 && active) end();
-    }
-
     function spawn() {
         if (!active) return;
-        // 동시에 더 많이 쏟아지도록 설정
-        const count = Math.random() > 0.5 ? 2 : 1;
-        for(let i=0; i<count; i++) {
-            const data = foodWords[Math.floor(Math.random() * foodWords.length)];
-            const unit = document.createElement('div');
-            unit.className = 'unit';
-            unit.innerHTML = `<div class="unit-icon">${data.em}</div><div class="unit-text">${data.en}</div>`;
-            unit.style.left = (Math.random() * (window.innerWidth - 130)) + 'px';
-            unit.style.top = '-200px';
-            view.appendChild(unit);
+        const data = foodData[Math.floor(Math.random() * foodData.length)];
+        const unit = document.createElement('div');
+        unit.className = `unit ${data.ok ? 'good' : 'bad'}`;
+        unit.innerHTML = `<img src="${data.img}" class="unit-img"><div class="unit-text">${data.en}</div>`;
+        unit.style.left = (Math.random() * (window.innerWidth - 100)) + 'px';
+        unit.style.top = '-150px';
+        view.appendChild(unit);
 
-            let y = -200;
-            function fall() {
-                if (!active) { unit.remove(); return; }
-                y += speed; unit.style.top = y + 'px';
-                if (y > window.innerHeight - 80) {
-                    if (data.ok) updateHP(-18); // 2단계는 놓치면 타격이 더 큼
-                    unit.remove();
-                } else { requestAnimationFrame(fall); }
-            }
-
-            unit.onclick = (e) => {
-                e.stopPropagation();
-                speak(data.en);
-                if (data.ok) {
-                    score += 150; updateHP(6); speed += 0.05;
-                } else {
-                    updateHP(-15);
-                    if (navigator.vibrate) navigator.vibrate(80);
-                }
-                scoreNum.innerText = score;
-                unit.remove();
-            };
-            requestAnimationFrame(fall);
+        let y = -150;
+        function fall() {
+            if (!active) { unit.remove(); return; }
+            y += speed; unit.style.top = y + 'px';
+            if (y > window.innerHeight) {
+                if (data.ok) { hp -= 15; combo = 0; }
+                updateUI(); unit.remove();
+            } else { requestAnimationFrame(fall); }
         }
-        setTimeout(spawn, Math.max(300, 1000 - (score / 50)));
+
+        unit.onclick = (e) => {
+            e.stopPropagation();
+            speak(data.en);
+            if (data.ok) {
+                combo++;
+                score += (100 * (combo > 5 ? 2 : 1));
+                hp = Math.min(100, hp + 2);
+                speed += 0.03;
+                showEffect(e.clientX, e.clientY, combo > 5 ? `COMBO ${combo}!` : '+100');
+            } else {
+                hp -= 20; combo = 0;
+                if (navigator.vibrate) navigator.vibrate(100);
+            }
+            updateUI();
+            unit.remove();
+        };
+        requestAnimationFrame(fall);
+        setTimeout(spawn, Math.max(400, 1200 - (score / 100)));
+    }
+
+    function showEffect(x, y, text) {
+        const el = document.createElement('div');
+        el.className = 'combo-text';
+        el.style.left = x + 'px'; el.style.top = y + 'px';
+        el.innerText = text;
+        view.appendChild(el);
+        setTimeout(() => el.remove(), 800);
+    }
+
+    function updateUI() {
+        scoreNum.innerText = score;
+        hpBar.style.width = hp + "%";
+        document.getElementById('combo-tag').style.display = combo > 5 ? 'inline' : 'none';
+        if (hp <= 0) end();
     }
 
     function end() {
         active = false;
-        alert(`2단계 종료!\n건강 점수: ${score}\n더 건강해진 리아님을 응원합니다!`);
+        alert(`게임 종료!\n최종 점수: ${score}\n리아가 스르사마의 건강한 생활을 응원합니다!`);
         location.reload();
     }
 
     startBtn.onclick = () => {
-        startBtn.style.display = 'none';
-        active = true; score = 0; hp = 100; updateHP(0); spawn();
-        speak("Level 2 Open!");
+        startScreen.style.display = 'none';
+        active = true; spawn();
+        speak("Let's Start!");
     };
 </script>
 </body>
