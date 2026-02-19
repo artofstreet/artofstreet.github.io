@@ -1,72 +1,69 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>스르사마의 건강 팡팡</title>
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<style>
-    :root { --primary: #4caf50; --bad: #f44336; }
-    body { 
-        margin: 0; padding: 0; overflow: hidden; 
-        background: #f1f8e9; font-family: 'Jua', sans-serif; touch-action: none;
-    }
-    #game-view { position: relative; width: 100vw; height: 100vh; z-index: 1; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>스르사마의 쫀득 건강 푸드</title>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #4caf50; --bad: #f44336; }
+        body { 
+            margin: 0; padding: 0; overflow: hidden; 
+            background: #e8f5e9; font-family: 'Jua', sans-serif; touch-action: none;
+        }
+        #game-view { position: relative; width: 100vw; height: 100vh; z-index: 1; }
 
-    /* 상단 UI */
-    #ui-header { 
-        position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
-        width: 85%; background: white; border-radius: 20px; padding: 12px;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.1); z-index: 100;
-        border: 4px solid #81c784; text-align: center;
-    }
-    #score-box { font-size: 24px; color: #2e7d32; }
-    #hp-container { width: 100%; height: 12px; background: #eee; border-radius: 10px; margin-top: 5px; overflow: hidden; }
-    #hp-bar { width: 100%; height: 100%; background: #66bb6a; transition: width 0.3s; }
+        /* 상단 UI */
+        #ui-header { 
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            width: 85%; background: white; border-radius: 25px; padding: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1); z-index: 100;
+            border: 4px solid #4caf50;
+        }
+        #score-box { font-size: 26px; color: #2e7d32; font-weight: bold; }
+        #hp-container { width: 100%; height: 15px; background: #ddd; border-radius: 20px; overflow: hidden; margin-top: 5px; }
+        #hp-bar { width: 100%; height: 100%; background: #4caf50; transition: width 0.3s; }
 
-    /* 과일/채소 유닛 */
-    .unit { position: absolute; cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 50; }
-    .unit-img { 
-        width: 100px; height: 100px; object-fit: contain; 
-        filter: drop-shadow(0 8px 10px rgba(0,0,0,0.15));
-    }
-    .unit-text { background: white; padding: 2px 12px; border-radius: 15px; font-size: 18px; border: 2px solid #81c784; margin-top: -10px; }
+        /* 캐릭터 유닛 */
+        .unit { position: absolute; cursor: pointer; display: flex; flex-direction: column; align-items: center; z-index: 50; }
+        .unit-img { 
+            width: 110px; height: 110px; object-fit: contain;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.2));
+            animation: float 2s ease-in-out infinite;
+        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 
-    /* 폭발 파티클 */
-    .pop-particle {
-        position: absolute; width: 15px; height: 15px; border-radius: 50%;
-        pointer-events: none; animation: explode 0.7s ease-out forwards;
-    }
-    @keyframes explode {
-        0% { transform: scale(1); opacity: 1; }
-        100% { transform: translate(var(--ex), var(--ey)) scale(0); opacity: 0; }
-    }
+        /* 펑 터지는 파티클 */
+        .pop-piece {
+            position: absolute; width: 12px; height: 12px; border-radius: 50%;
+            pointer-events: none; animation: pop-out 0.8s ease-out forwards;
+        }
+        @keyframes pop-out {
+            0% { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
 
-    /* 터질 때 커지는 애니메이션 */
-    .unit.bomb { animation: unit-bomb 0.2s ease-out forwards; }
-    @keyframes unit-bomb {
-        to { transform: scale(1.8); opacity: 0; }
-    }
-
-    #start-screen {
-        position: absolute; inset: 0; background: rgba(255,255,255,0.95);
-        display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
-    }
-    #start-btn { 
-        padding: 15px 50px; font-size: 30px; background: #4caf50; color: white;
-        border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 6px 0 #2e7d32;
-    }
-</style>
+        /* 시작 화면 */
+        #start-screen {
+            position: absolute; inset: 0; background: rgba(255,255,255,0.95);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 1000;
+        }
+        #start-btn { 
+            padding: 20px 60px; font-size: 32px; background: #4caf50; color: white;
+            border: none; border-radius: 60px; cursor: pointer; box-shadow: 0 10px 0 #2e7d32;
+        }
+        #start-btn:active { transform: translateY(6px); box-shadow: 0 4px 0 #2e7d32; }
+    </style>
 </head>
 <body>
 <div id="game-view">
     <div id="start-screen">
-        <h1 style="color:#2e7d32; font-size: 36px;">건강 팡팡! (PRO)</h1>
-        <p style="text-align:center;">진동과 함께 펑터지는<br>손맛을 느껴보세요!</p>
-        <button id="start-btn">시작하기</button>
+        <h1 style="font-size: 42px; color:#2e7d32; margin-bottom: 10px;">쫀득 건강 푸드 PRO</h1>
+        <p style="font-size: 20px; color:#666; margin-bottom: 30px;">진정한 손맛을 느껴보세요!</p>
+        <button id="start-btn">발음&진동 활성화</button>
     </div>
     <div id="ui-header">
-        <div id="score-box">건강 점수 : <span id="score-num">0</span></div>
+        <div id="score-box">리아 점수 : <span id="score-num">0</span></div>
         <div id="hp-container"><div id="hp-bar"></div></div>
     </div>
 </div>
@@ -79,43 +76,41 @@
     const startScreen = document.getElementById('start-screen');
 
     let score = 0, active = false, hp = 100;
-    let speed = 3.8;
+    let speed = 4.0;
 
     function speak(text) {
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
             const msg = new SpeechSynthesisUtterance(text);
             msg.lang = 'en-US';
-            msg.rate = 0.9; // 발음을 조금 더 천천히 해서 명확하게
-            msg.pitch = 1.0;
+            msg.rate = 0.8; // 천천히 해서 명확하게 들리도록 조절
             window.speechSynthesis.speak(msg);
         }
     }
 
-    // 정확도가 높은 고품질 이미지 데이터
+    // 이미지가 명확하고 고화질인 데이터 (Flaticon 정식 일러스트)
     const foodData = [
         { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png', ok: true, color: '#ff9800' },
-        { en: 'Apple', img: 'https://cdn-icons-png.flaticon.com/512/415/415733.png', ok: true, color: '#f44336' },
         { en: 'Spinach', img: 'https://cdn-icons-png.flaticon.com/512/7398/7398055.png', ok: true, color: '#4caf50' },
-        { en: 'Black Bean', img: 'https://cdn-icons-png.flaticon.com/512/7996/7996741.png', ok: true, color: '#333' },
-        { en: 'Broccoli', img: 'https://cdn-icons-png.flaticon.com/512/2347/2347034.png', ok: true, color: '#2e7d32' },
-        { en: 'Banana', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909761.png', ok: true, color: '#ffeb3b' },
-        { en: 'Donut', img: 'https://cdn-icons-png.flaticon.com/512/1041/1041347.png', ok: false, color: '#e91e63' },
+        { en: 'Black Bean', img: 'https://cdn-icons-png.flaticon.com/512/7996/7996741.png', ok: true, color: '#212121' },
+        { en: 'Broccoli', img: 'https://cdn-icons-png.flaticon.com/512/2347/2347034.png', ok: true, color: '#388e3c' },
+        { en: 'Apple', img: 'https://cdn-icons-png.flaticon.com/512/415/415733.png', ok: true, color: '#f44336' },
+        { en: 'Candy', img: 'https://cdn-icons-png.flaticon.com/512/2530/2530087.png', ok: false, color: '#e91e63' },
         { en: 'Soda', img: 'https://cdn-icons-png.flaticon.com/512/2717/2717349.png', ok: false, color: '#2196f3' }
     ];
 
-    function burst(x, y, color) {
-        for (let i = 0; i < 20; i++) { // 파티클 개수 대폭 증가
+    function createExplosion(x, y, color) {
+        for (let i = 0; i < 15; i++) {
             const p = document.createElement('div');
-            p.className = 'pop-particle';
+            p.className = 'pop-piece';
             p.style.backgroundColor = color;
             p.style.left = x + 'px'; p.style.top = y + 'px';
-            const angle = Math.random() * Math.PI * 2;
-            const dist = Math.random() * 120 + 50;
-            p.style.setProperty('--ex', Math.cos(angle) * dist + 'px');
-            p.style.setProperty('--ey', Math.sin(angle) * dist + 'px');
+            const tx = (Math.random() - 0.5) * 250;
+            const ty = (Math.random() - 0.5) * 250;
+            p.style.setProperty('--tx', tx + 'px');
+            p.style.setProperty('--ty', ty + 'px');
             view.appendChild(p);
-            setTimeout(() => p.remove(), 700);
+            setTimeout(() => p.remove(), 800);
         }
     }
 
@@ -124,14 +119,14 @@
         const data = foodData[Math.floor(Math.random() * foodData.length)];
         const unit = document.createElement('div');
         unit.className = 'unit';
-        unit.innerHTML = `<img src="${data.img}" class="unit-img"><div class="unit-text">${data.en}</div>`;
-        unit.style.left = (Math.random() * (window.innerWidth - 110)) + 'px';
+        unit.innerHTML = `<img src="${data.img}" class="unit-img"><div style="font-size:20px; font-weight:bold;">${data.en}</div>`;
+        unit.style.left = (Math.random() * (window.innerWidth - 120)) + 'px';
         unit.style.top = '-150px';
         view.appendChild(unit);
 
         let y = -150;
         function fall() {
-            if (!active || unit.classList.contains('bomb')) return;
+            if (!active || unit.dataset.hit) return;
             y += speed; unit.style.top = y + 'px';
             if (y > window.innerHeight) {
                 if (data.ok) { hp -= 15; updateUI(); }
@@ -139,26 +134,28 @@
             } else { requestAnimationFrame(fall); }
         }
 
+        // 터치 지점 즉각 반응
         unit.onpointerdown = (e) => {
             e.stopPropagation();
-            if (unit.classList.contains('bomb')) return;
-            
-            unit.classList.add('bomb'); // 펑! 커지는 효과
+            if (unit.dataset.hit) return;
+            unit.dataset.hit = "true";
+
             speak(data.en);
-            burst(e.clientX, e.clientY, data.color);
+            createExplosion(e.clientX, e.clientY, data.color);
 
             if (data.ok) {
-                score += 100; hp = Math.min(100, hp + 5); speed += 0.03;
-                if (navigator.vibrate) navigator.vibrate(60); // 쫀득한 진동
+                score += 100; hp = Math.min(100, hp + 5); speed += 0.04;
+                if (navigator.vibrate) navigator.vibrate(80); // 쫀득한 진동
             } else {
-                hp -= 25;
-                if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // 경고 진동
+                hp -= 20;
+                if (navigator.vibrate) navigator.vibrate([150, 50, 150]); // 강력한 경고 진동
             }
             updateUI();
+            unit.style.transform = "scale(2)"; unit.style.opacity = "0"; unit.style.transition = "0.2s";
             setTimeout(() => unit.remove(), 200);
         };
         requestAnimationFrame(fall);
-        setTimeout(spawn, Math.max(400, 1300 - (score/150)));
+        setTimeout(spawn, Math.max(400, 1200 - (score/150)));
     }
 
     function updateUI() {
@@ -169,15 +166,15 @@
 
     function end() {
         active = false;
-        alert(`게임 종료! 스르사마의 점수: ${score}점\n오늘도 건강한 하루 보내세요!`);
+        alert(`게임 오버!\n스르사마의 건강 점수: ${score}점`);
         location.reload();
     }
 
     startBtn.onclick = () => {
-        speak(""); // 오디오 초기화
+        if (navigator.vibrate) navigator.vibrate(100); // 진동 기능 깨우기
         startScreen.style.display = 'none';
-        active = true;
-        spawn();
+        active = true; spawn();
+        speak("Ready? Go!");
     };
 </script>
 </body>
