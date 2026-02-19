@@ -3,129 +3,624 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>말랑 건강 팡팡 - 스르사마</title>
+<title>건강 단어 팡팡! 🌟</title>
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.0/kakao.min.js" integrity="sha384-l68Y96fS9q+Tpd67K6S7h7+tX+2U5/Y5vI8l+T+8K5+6k" crossorigin="anonymous"></script>
 <style>
-    body { margin: 0; padding: 0; overflow: hidden; background: #fffde7; font-family: 'Jua', sans-serif; touch-action: none; }
-    #game-view { position: relative; width: 100vw; height: 100vh; }
+:root {
+  --green: #56c271;
+  --dark-green: #2e8b50;
+  --red: #ff5a5a;
+  --yellow: #ffd93d;
+  --blue: #6ec6ff;
+  --purple: #c084fc;
+  --bg: #e8f5e9;
+  --block-color: #81c784;
+  --block-border: #4caf50;
+}
 
-    /* 카카오 공유 버튼 스타일 */
-    #kakao-share-btn {
-        position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
-        background: #fee500; color: #3c1e1e; padding: 10px 20px;
-        border-radius: 20px; font-size: 16px; border: none; cursor: pointer;
-        box-shadow: 0 4px 0 #e6cf00; z-index: 200; display: flex; align-items: center; gap: 5px;
-    }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    #reward-container {
-        position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-        width: 280px; height: 280px; border-radius: 40px; overflow: hidden;
-        box-shadow: 0 15px 0 #cddc39; z-index: 5;
-        background-image: url('https://images.unsplash.com/photo-1511688858151-24056a1ea405?q=80&w=400&auto=format&fit=crop'); 
-        background-size: cover; border: 8px solid white;
-    }
-    .block { background: #dce775; border: 2px solid #fff; transition: 0.5s; }
-    .block.broken { transform: scale(0) rotate(180deg); opacity: 0; }
+body {
+  margin: 0; padding: 0; overflow: hidden;
+  background: linear-gradient(160deg, #d4f5d4 0%, #e8f5e9 50%, #c8e6c9 100%);
+  font-family: 'Jua', sans-serif;
+  touch-action: none;
+  user-select: none;
+}
 
-    #start-btn { 
-        padding: 25px 50px; font-size: 35px; background: #ffeb3b; color: #5d4037; 
-        border: none; border-radius: 60px; cursor: pointer; box-shadow: 0 10px 0 #fbc02d; 
-    }
+/* ─── FLOATING CLOUDS ─── */
+.cloud {
+  position: fixed; background: rgba(255,255,255,0.6);
+  border-radius: 50px; z-index: 0; animation: drift linear infinite;
+}
+.cloud::before, .cloud::after {
+  content:''; position:absolute; background: rgba(255,255,255,0.6); border-radius:50%;
+}
+@keyframes drift { from{transform:translateX(-200px)} to{transform:translateX(110vw)} }
+
+/* ─── GAME VIEW ─── */
+#game-view {
+  position: relative; width: 100vw; height: 100vh;
+  overflow: hidden; z-index: 1;
+}
+
+/* ─── TOP HUD ─── */
+#hud {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 94%; display: flex; justify-content: space-between; align-items: center;
+  background: rgba(255,255,255,0.92);
+  border-radius: 25px; padding: 8px 18px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 200;
+  border: 3px solid var(--green);
+}
+.hud-item { display: flex; align-items: center; gap: 5px; font-size: 18px; }
+.hud-hearts { font-size: 22px; letter-spacing: 2px; }
+#score-num { color: var(--dark-green); font-size: 22px; }
+
+/* ─── PROGRESS BAR ─── */
+#progress-wrap {
+  position: absolute; top: 72px; left: 50%; transform: translateX(-50%);
+  width: 90%; z-index: 200;
+}
+#progress-bar-bg {
+  background: rgba(255,255,255,0.7); border-radius: 20px;
+  height: 12px; overflow: hidden; border: 2px solid var(--green);
+}
+#progress-bar-fill {
+  height: 100%; background: linear-gradient(90deg, #56c271, #ffd93d);
+  border-radius: 20px; transition: width 0.4s ease;
+  width: 100%;
+}
+
+/* ─── HIDDEN IMAGE (center) ─── */
+#reward-wrap {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(280px, 70vw);
+  height: min(280px, 70vw);
+  z-index: 5;
+}
+#reward-img {
+  width: 100%; height: 100%;
+  font-size: min(160px, 40vw);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fffde7, #f1f8e9);
+  border: 4px solid white;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+#block-overlay {
+  position: absolute; inset: 0;
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  border-radius: 16px; overflow: hidden;
+}
+.block {
+  background: var(--block-color);
+  border: 1.5px solid rgba(255,255,255,0.5);
+  transition: transform 0.35s cubic-bezier(.36,.07,.19,.97), opacity 0.35s ease;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.block.broken {
+  transform: scale(0) rotate(120deg) !important;
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+/* ─── FALLING UNITS ─── */
+.unit {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer; z-index: 50;
+  animation: fall linear forwards;
+  will-change: transform;
+}
+.unit-emoji {
+  font-size: 54px; line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.18));
+  transition: transform 0.1s;
+}
+.unit-label {
+  background: white;
+  padding: 3px 12px;
+  border-radius: 20px;
+  font-size: 15px;
+  margin-top: -6px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+  border: 2px solid var(--green);
+  color: #2e7d32;
+  font-weight: bold;
+}
+.unit.bad .unit-label {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+@keyframes fall {
+  0%   { transform: translateY(-110px); }
+  100% { transform: translateY(110vh); }
+}
+
+/* ─── TAP EFFECTS ─── */
+.pop-particle {
+  position: absolute; width: 12px; height: 12px; border-radius: 50%;
+  pointer-events: none; z-index: 300;
+  animation: pop-fly 0.65s ease-out forwards;
+}
+@keyframes pop-fly {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+}
+
+.tap-ring {
+  position: absolute; border-radius: 50%; pointer-events: none; z-index: 300;
+  width: 60px; height: 60px; margin: -30px;
+  border: 3px solid var(--yellow);
+  animation: ring-expand 0.5s ease-out forwards;
+}
+@keyframes ring-expand {
+  0%   { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(2);   opacity: 0; }
+}
+
+.score-popup {
+  position: absolute; z-index: 400; font-size: 26px;
+  font-weight: bold; pointer-events: none;
+  animation: float-up 0.9s ease-out forwards;
+}
+@keyframes float-up {
+  0%   { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-80px); opacity: 0; }
+}
+
+/* ─── WRONG FLASH ─── */
+#wrong-flash {
+  position: fixed; inset: 0; background: rgba(255,80,80,0.3);
+  z-index: 500; pointer-events: none; opacity: 0;
+  transition: opacity 0.1s;
+}
+
+/* ─── SCREENS ─── */
+.screen {
+  position: absolute; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: rgba(255,255,255,0.97);
+}
+.screen h1 { font-size: 42px; margin: 10px 0; }
+.screen p  { font-size: 18px; text-align: center; color: #555; line-height: 1.7; max-width: 320px; }
+
+.big-btn {
+  padding: 18px 55px; font-size: 28px; font-family: 'Jua', sans-serif;
+  background: var(--green); color: white; border: none;
+  border-radius: 50px; cursor: pointer;
+  box-shadow: 0 7px 0 var(--dark-green);
+  transition: transform 0.1s, box-shadow 0.1s;
+  margin-top: 20px;
+}
+.big-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 var(--dark-green); }
+.big-btn.red-btn { background: #ff5a5a; box-shadow: 0 7px 0 #c62828; }
+
+.reward-big { font-size: 90px; animation: bounce-in 0.5s; }
+@keyframes bounce-in {
+  0%   { transform: scale(0) rotate(-20deg); }
+  60%  { transform: scale(1.2) rotate(5deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+
+/* ─── WORD HINT BAR ─── */
+#hint-bar {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  width: 94%; background: rgba(255,255,255,0.9); border-radius: 20px;
+  padding: 8px 14px; text-align: center; font-size: 14px; color: #555;
+  border: 2px solid var(--block-color); z-index: 200;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+}
+#hint-bar strong { color: var(--dark-green); }
+#hint-bar span   { color: var(--red); }
+
+/* ─── COMBO ─── */
+#combo-display {
+  position: absolute; top: 110px; right: 10px;
+  font-size: 28px; z-index: 200;
+  animation: none; pointer-events: none;
+}
+.combo-pop { animation: combo-bounce 0.4s ease; }
+@keyframes combo-bounce {
+  0%  { transform: scale(1); }
+  50% { transform: scale(1.6); }
+  100%{ transform: scale(1); }
+}
 </style>
 </head>
 <body>
-<div id="game-view">
-    <button id="kakao-share-btn" onclick="shareToKakao()">
-        <img src="https://developers.kakao.com/assets/img/about/logos/kakaotalksharing/kakaotalk_sharing_btn_small.png" width="20"> 
-        테스트 주소 보내기
-    </button>
 
-    <div id="reward-container"><div id="block-overlay" style="display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(5,1fr); height:100%;"></div></div>
-    <div id="start-screen" style="position:absolute; inset:0; background:rgba(255,255,255,0.9); display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:1000;">
-        <h1 style="color:#fbc02d; font-size: 45px; margin-bottom: 20px;">🌈 말랑 건강 팡팡</h1>
-        <button id="start-btn">신나게 시작!</button>
-    </div>
+<!-- Clouds -->
+<div class="cloud" style="width:120px;height:40px;top:8%;animation-duration:22s;animation-delay:-5s;">
+  <div style="width:60px;height:60px;top:-30px;left:20px;position:absolute;background:rgba(255,255,255,0.6);border-radius:50%;"></div>
+  <div style="width:40px;height:40px;top:-20px;left:55px;position:absolute;background:rgba(255,255,255,0.6);border-radius:50%;"></div>
+</div>
+<div class="cloud" style="width:160px;height:50px;top:20%;animation-duration:30s;animation-delay:-12s;">
+  <div style="width:80px;height:80px;top:-40px;left:25px;position:absolute;background:rgba(255,255,255,0.6);border-radius:50%;"></div>
+  <div style="width:55px;height:55px;top:-28px;left:75px;position:absolute;background:rgba(255,255,255,0.6);border-radius:50%;"></div>
+</div>
+
+<div id="game-view">
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-item">💚 <span class="hud-hearts" id="hearts">❤️❤️❤️</span></div>
+    <div class="hud-item">⭐ <span id="score-num">0</span></div>
+    <div class="hud-item">🧩 <span id="block-count">36</span></div>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-wrap">
+    <div id="progress-bar-bg"><div id="progress-bar-fill"></div></div>
+  </div>
+
+  <!-- Combo -->
+  <div id="combo-display"></div>
+
+  <!-- Reward Image -->
+  <div id="reward-wrap">
+    <div id="reward-img">🌟</div>
+    <div id="block-overlay"></div>
+  </div>
+
+  <!-- Hint -->
+  <div id="hint-bar">
+    <strong>✅ 건강 단어</strong>를 터치! &nbsp;
+    <span>❌ 나쁜 단어</span>는 피해요!
+  </div>
+
+  <!-- Wrong Flash -->
+  <div id="wrong-flash"></div>
+
+  <!-- START SCREEN -->
+  <div class="screen" id="start-screen">
+    <div style="font-size:80px;animation:bounce-in 0.6s">🥦</div>
+    <h1 style="color:#2e7d32;">건강 단어 팡팡!</h1>
+    <p>내려오는 <strong style="color:var(--dark-green)">건강 단어</strong>를 터치해서<br>
+       블록을 부수고 숨겨진 그림을 찾아요!<br><br>
+       <span style="color:var(--red)">나쁜 단어</span>를 터치하면 하트를 잃어요 💔</p>
+    <button class="big-btn" id="start-btn">🌟 시작!</button>
+  </div>
+
+  <!-- CLEAR SCREEN -->
+  <div class="screen" id="clear-screen" style="display:none;">
+    <div class="reward-big">🎉</div>
+    <h1 style="color:#2e7d32;">완성!</h1>
+    <p>모든 블록을 다 부쉈어요!<br>최종 점수: <strong id="final-score" style="color:var(--dark-green);font-size:28px;"></strong></p>
+    <button class="big-btn" id="restart-btn">🔄 다시 하기</button>
+  </div>
+
+  <!-- GAME OVER SCREEN -->
+  <div class="screen" id="over-screen" style="display:none;">
+    <div style="font-size:80px;">💔</div>
+    <h1 style="color:var(--red);">게임 오버!</h1>
+    <p>하트가 모두 없어졌어요<br>점수: <strong id="over-score" style="color:var(--red);font-size:28px;"></strong></p>
+    <button class="big-btn red-btn" id="over-restart-btn">🔄 다시 하기</button>
+  </div>
 </div>
 
 <script>
-    // 2. 카카오 초기화 (스르사마의 키를 여기에 넣으세요)
-    try {
-        Kakao.init('YOUR_JS_KEY_HERE'); 
-    } catch(e) { console.log(e); }
+// ─── DATA ──────────────────────────────────────────────────
+const GOOD_WORDS = [
+  { word:'apple',    emoji:'🍎', ko:'사과' },
+  { word:'water',    emoji:'💧', ko:'물' },
+  { word:'banana',   emoji:'🍌', ko:'바나나' },
+  { word:'carrot',   emoji:'🥕', ko:'당근' },
+  { word:'milk',     emoji:'🥛', ko:'우유' },
+  { word:'broccoli', emoji:'🥦', ko:'브로콜리' },
+  { word:'orange',   emoji:'🍊', ko:'오렌지' },
+  { word:'grape',    emoji:'🍇', ko:'포도' },
+  { word:'tomato',   emoji:'🍅', ko:'토마토' },
+  { word:'exercise', emoji:'🏃', ko:'운동' },
+  { word:'sleep',    emoji:'😴', ko:'수면' },
+  { word:'salad',    emoji:'🥗', ko:'샐러드' },
+  { word:'corn',     emoji:'🌽', ko:'옥수수' },
+  { word:'egg',      emoji:'🥚', ko:'달걀' },
+  { word:'fish',     emoji:'🐟', ko:'생선' },
+];
 
-    function shareToKakao() {
-        Kakao.Share.sendDefault({
-            objectType: 'feed',
-            content: {
-                title: '🌈 스르사마의 건강 팡팡 테스트!',
-                description: '건강 음식을 맞춰서 숨겨진 그림을 찾아보세요. 영어 공부는 덤!',
-                imageUrl: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png',
-                link: {
-                    mobileWebUrl: window.location.href,
-                    webUrl: window.location.href,
-                },
-            },
-            buttons: [
-                {
-                    title: '게임하러 가기',
-                    link: {
-                        mobileWebUrl: window.location.href,
-                        webUrl: window.location.href,
-                    },
-                },
-            ],
-        });
+const BAD_WORDS = [
+  { word:'burger',    emoji:'🍔', ko:'버거' },
+  { word:'candy',     emoji:'🍬', ko:'사탕' },
+  { word:'soda',      emoji:'🥤', ko:'탄산음료' },
+  { word:'fries',     emoji:'🍟', ko:'감자튀김' },
+  { word:'cookie',    emoji:'🍪', ko:'쿠키' },
+  { word:'donut',     emoji:'🍩', ko:'도넛' },
+  { word:'lazy',      emoji:'🛋️', ko:'게으름' },
+  { word:'junk',      emoji:'🗑️', ko:'정크푸드' },
+  { word:'chips',     emoji:'🥨', ko:'과자' },
+  { word:'cake',      emoji:'🎂', ko:'케이크' },
+];
+
+const REWARD_EMOJIS = ['🌈','🦄','🐬','🦋','🌸','🎠','🏆','🌟','🐼','🦁'];
+
+// ─── STATE ─────────────────────────────────────────────────
+let score = 0, lives = 3, combo = 0, blocksLeft = 36;
+let active = false, spawnTimer = null, blocks = [];
+let audioCtx = null;
+
+// ─── AUDIO ─────────────────────────────────────────────────
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playTone(freq, type='sine', dur=0.18, vol=0.3) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+  } catch(e){}
+}
+
+function playGoodSound() {
+  playTone(523, 'sine', 0.12, 0.35);
+  setTimeout(() => playTone(659, 'sine', 0.12, 0.35), 80);
+  setTimeout(() => playTone(784, 'sine', 0.18, 0.3), 160);
+}
+
+function playBadSound() {
+  playTone(200, 'sawtooth', 0.25, 0.4);
+  setTimeout(() => playTone(160, 'sawtooth', 0.2, 0.3), 120);
+}
+
+function playClearSound() {
+  const notes = [523,659,784,1047];
+  notes.forEach((f,i) => setTimeout(() => playTone(f,'sine',0.22,0.4), i*110));
+}
+
+// ─── BACKGROUND MUSIC (Web Audio - cheerful children's melody) ─
+let bgMusicInterval = null;
+const melody = [
+  [523,0],[659,160],[784,320],[659,480],[523,640],
+  [784,800],[880,960],[784,1120],[659,1280],[523,1440],
+  [392,1600],[523,1760],[659,1920],[784,2080],[880,2240],
+  [784,2400],[659,2560],[523,2720],[659,2880],[784,3040],
+];
+function startBgMusic() {
+  if (bgMusicInterval) return;
+  let cycle = 0;
+  function playChunk() {
+    if (!active) return;
+    const ctx = getAudioCtx();
+    const baseTime = ctx.currentTime;
+    melody.forEach(([freq, ms]) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.connect(g); g.connect(ctx.destination);
+      osc.type = 'triangle'; osc.frequency.value = freq;
+      const t = baseTime + ms/1000;
+      g.gain.setValueAtTime(0.06, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+      osc.start(t); osc.stop(t + 0.15);
+    });
+    bgMusicInterval = setTimeout(playChunk, 3400);
+  }
+  playChunk();
+}
+function stopBgMusic() {
+  if (bgMusicInterval) { clearTimeout(bgMusicInterval); bgMusicInterval = null; }
+}
+
+// ─── VIBRATION ─────────────────────────────────────────────
+function vibrate(pattern) {
+  try { if (navigator.vibrate) navigator.vibrate(pattern); } catch(e){}
+}
+
+// ─── BLOCK GRID ────────────────────────────────────────────
+function buildBlocks() {
+  const overlay = document.getElementById('block-overlay');
+  overlay.innerHTML = '';
+  blocks = [];
+  const decorations = ['🌿','🍀','⭐','🌸','💫','🌈','🎈','🦋','🌟','❄️','🍃','✨'];
+  for (let i = 0; i < 36; i++) {
+    const div = document.createElement('div');
+    div.className = 'block';
+    div.textContent = decorations[i % decorations.length];
+    blocks.push(div);
+    overlay.appendChild(div);
+  }
+  blocksLeft = 36;
+  document.getElementById('block-count').textContent = '36';
+  document.getElementById('progress-bar-fill').style.width = '100%';
+}
+
+function breakBlock() {
+  const remaining = blocks.filter(b => !b.classList.contains('broken'));
+  if (remaining.length === 0) return;
+  const idx = Math.floor(Math.random() * remaining.length);
+  remaining[idx].classList.add('broken');
+  blocksLeft--;
+  document.getElementById('block-count').textContent = blocksLeft;
+  const pct = (blocksLeft / 36) * 100;
+  document.getElementById('progress-bar-fill').style.width = pct + '%';
+  if (blocksLeft === 0) setTimeout(showClear, 400);
+}
+
+// ─── SCORE / LIVES ─────────────────────────────────────────
+function updateHearts() {
+  const h = ['❤️','❤️','❤️'];
+  for (let i = lives; i < 3; i++) h[i] = '🖤';
+  document.getElementById('hearts').textContent = h.join('');
+}
+
+function addScore(val, x, y) {
+  score += val;
+  document.getElementById('score-num').textContent = score;
+  const pop = document.createElement('div');
+  pop.className = 'score-popup';
+  pop.textContent = (val > 0 ? '+' : '') + val;
+  pop.style.color = val > 0 ? '#2e7d32' : '#f44336';
+  pop.style.left = x + 'px'; pop.style.top = y + 'px';
+  document.getElementById('game-view').appendChild(pop);
+  pop.addEventListener('animationend', () => pop.remove());
+}
+
+// ─── PARTICLES ─────────────────────────────────────────────
+function spawnParticles(x, y, colors) {
+  const view = document.getElementById('game-view');
+  for (let i = 0; i < 16; i++) {
+    const p = document.createElement('div');
+    p.className = 'pop-particle';
+    p.style.background = colors[i % colors.length];
+    p.style.left = x + 'px'; p.style.top = y + 'px';
+    const angle = (i / 16) * Math.PI * 2;
+    const dist = 60 + Math.random() * 80;
+    p.style.setProperty('--tx', Math.cos(angle)*dist + 'px');
+    p.style.setProperty('--ty', Math.sin(angle)*dist + 'px');
+    view.appendChild(p);
+    p.addEventListener('animationend', () => p.remove());
+  }
+  const ring = document.createElement('div');
+  ring.className = 'tap-ring';
+  ring.style.left = x + 'px'; ring.style.top = y + 'px';
+  view.appendChild(ring);
+  ring.addEventListener('animationend', () => ring.remove());
+}
+
+// ─── SPAWN FALLING UNIT ────────────────────────────────────
+function spawnUnit() {
+  if (!active) return;
+  const isGood = Math.random() < 0.55;
+  const pool = isGood ? GOOD_WORDS : BAD_WORDS;
+  const data = pool[Math.floor(Math.random() * pool.length)];
+  const view = document.getElementById('game-view');
+
+  const unit = document.createElement('div');
+  unit.className = 'unit' + (isGood ? '' : ' bad');
+  unit.innerHTML = `<div class="unit-emoji">${data.emoji}</div>
+                    <div class="unit-label">${data.word}</div>`;
+
+  const x = 20 + Math.random() * (window.innerWidth - 100);
+  unit.style.left = x + 'px';
+  unit.style.top = '0px';
+
+  const speed = 3.5 + Math.random() * 3 + (score / 500);
+  unit.style.animation = `fall ${speed}s linear forwards`;
+
+  unit.addEventListener(isTouchDevice() ? 'touchstart' : 'mousedown', (e) => {
+    e.preventDefault();
+    if (!active) return;
+    const rect = unit.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+
+    unit.remove();
+
+    if (isGood) {
+      // Good tap
+      vibrate(30);
+      playGoodSound();
+      combo++;
+      const bonusScore = 10 * (combo >= 3 ? 2 : 1);
+      addScore(bonusScore, cx, cy);
+      spawnParticles(cx, cy, ['#56c271','#ffd93d','#6ec6ff','#c084fc','#ff8a65']);
+      breakBlock();
+      showCombo();
+    } else {
+      // Bad tap
+      vibrate([60,30,60]);
+      playBadSound();
+      combo = 0;
+      addScore(-15, cx, cy);
+      document.getElementById('combo-display').textContent = '';
+      spawnParticles(cx, cy, ['#ff5a5a','#ff8a65','#ffcc02']);
+      const flash = document.getElementById('wrong-flash');
+      flash.style.opacity = '1';
+      setTimeout(() => flash.style.opacity = '0', 200);
+      lives--;
+      if (lives < 0) lives = 0;
+      updateHearts();
+      if (lives === 0) { setTimeout(showGameOver, 300); return; }
     }
+  }, {passive: false});
 
-    // (기존 게임 로직 생략 - 이전과 동일하게 유지)
-    const view = document.getElementById('game-view');
-    const overlay = document.getElementById('block-overlay');
-    const startBtn = document.getElementById('start-btn');
-    let active = false, blocks = [];
+  view.appendChild(unit);
 
-    startBtn.onclick = () => {
-        document.getElementById('start-screen').style.display = 'none';
-        overlay.innerHTML = '';
-        for (let i = 0; i < 25; i++) {
-            const blk = document.createElement('div');
-            blk.className = 'block';
-            overlay.appendChild(blk);
-            blocks.push(blk);
-        }
-        active = true;
-        spawn();
-    };
+  // Remove if hits bottom
+  unit.addEventListener('animationend', () => {
+    if (unit.parentNode) unit.remove();
+  });
 
-    function spawn() {
-        if (!active) return;
-        const data = { en: 'Carrot', img: 'https://cdn-icons-png.flaticon.com/512/2909/2909770.png' };
-        const unit = document.createElement('div');
-        unit.style.position = 'absolute';
-        unit.style.zIndex = '50';
-        unit.innerHTML = `<img src="${data.img}" style="width:100px;"><div style="text-align:center; font-size:20px;">${data.en}</div>`;
-        unit.style.left = Math.random() * (window.innerWidth - 100) + 'px';
-        unit.style.top = '-150px';
-        view.appendChild(unit);
+  // Schedule next spawn
+  const delay = Math.max(600, 1400 - score * 0.8);
+  spawnTimer = setTimeout(spawnUnit, delay);
+}
 
-        let y = -150;
-        function fall() {
-            if (!active || unit.dataset.hit) return;
-            y += 3; unit.style.top = y + 'px';
-            if (y > window.innerHeight) unit.remove();
-            else requestAnimationFrame(fall);
-        }
+function showCombo() {
+  const el = document.getElementById('combo-display');
+  if (combo >= 3) {
+    el.textContent = `🔥 ${combo} 콤보!`;
+    el.classList.remove('combo-pop');
+    void el.offsetWidth;
+    el.classList.add('combo-pop');
+    if (combo % 3 === 0) playTone(1047, 'sine', 0.2, 0.5);
+  } else {
+    el.textContent = '';
+  }
+}
 
-        unit.onpointerdown = (e) => {
-            unit.dataset.hit = "true";
-            const alive = blocks.filter(b => !b.classList.contains('broken'));
-            if (alive.length > 0) alive[0].classList.add('broken');
-            unit.style.display = 'none';
-            unit.remove();
-        };
-        requestAnimationFrame(fall);
-        setTimeout(spawn, 1500);
-    }
+// ─── SCREENS ───────────────────────────────────────────────
+function showClear() {
+  active = false; stopBgMusic();
+  clearTimeout(spawnTimer);
+  playClearSound(); vibrate([100,50,100,50,200]);
+  document.querySelectorAll('.unit').forEach(u => u.remove());
+  document.getElementById('final-score').textContent = score + '점';
+  document.getElementById('clear-screen').style.display = 'flex';
+}
+
+function showGameOver() {
+  active = false; stopBgMusic();
+  clearTimeout(spawnTimer);
+  playBadSound();
+  document.querySelectorAll('.unit').forEach(u => u.remove());
+  document.getElementById('over-score').textContent = score + '점';
+  document.getElementById('over-screen').style.display = 'flex';
+}
+
+function startGame() {
+  score = 0; lives = 3; combo = 0; blocksLeft = 36;
+  document.getElementById('score-num').textContent = '0';
+  document.getElementById('combo-display').textContent = '';
+  updateHearts();
+  buildBlocks();
+  // Random reward emoji
+  document.getElementById('reward-img').textContent =
+    REWARD_EMOJIS[Math.floor(Math.random() * REWARD_EMOJIS.length)];
+  document.querySelectorAll('.unit').forEach(u => u.remove());
+  ['start-screen','clear-screen','over-screen'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  active = true;
+  clearTimeout(spawnTimer);
+  spawnTimer = setTimeout(spawnUnit, 600);
+  startBgMusic();
+}
+
+// ─── UTILS ─────────────────────────────────────────────────
+function isTouchDevice() {
+  return ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+}
+
+// ─── INIT ──────────────────────────────────────────────────
+document.getElementById('start-btn').addEventListener('click', startGame);
+document.getElementById('restart-btn').addEventListener('click', startGame);
+document.getElementById('over-restart-btn').addEventListener('click', startGame);
+
+buildBlocks();
 </script>
 </body>
 </html>
