@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>오름AI 부동산</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+:root {
+  --orange:#F05A28;--orange-light:#FFF4EE;--orange-gradient:linear-gradient(135deg,#F05A28 0%,#FF8A5C 100%);
+  --green:#34C759;--green-light:#F0FAF3;--blue:#4A90D9;--blue-light:#F0F5FF;
+  --bg:#F5F6F8;--card:#FFFFFF;--text:#1C1C28;--text-secondary:#8891A0;--border:#E8ECF0;--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;min-height:100vh;min-height:100dvh}
+
+.app-shell{width:100%;height:100vh;height:100dvh;background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.notch{display:none}
+.status-bar{display:none}
+
+@media(min-width:500px){
+  body{background:#ECEDF0;display:flex;align-items:center;justify-content:center;padding:20px 0;min-height:100vh}
+  .app-shell{width:375px;height:812px;max-height:calc(100vh - 40px);border-radius:40px;box-shadow:0 24px 60px rgba(0,0,0,.12),0 0 0 2px #2A2A2A,0 0 0 6px #3A3A3A,0 0 0 8px #2A2A2A}
+  .notch{display:block;position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#222;border-radius:20px;z-index:50}
+  .status-bar{display:flex;height:54px;padding:14px 24px 0;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;position:relative;z-index:40;flex-shrink:0}
+  .status-bar .time{font-size:14px;font-weight:700}
+  .status-bar .icons{display:flex;gap:5px;font-size:11px}
+}
+
+.top-bar{display:flex;justify-content:flex-end;gap:10px;padding:env(safe-area-inset-top,12px) 20px 4px;flex-shrink:0}
+@media(min-width:500px){.top-bar{padding:0 20px 4px}}
+.top-bar button{width:36px;height:36px;border-radius:12px;border:none;background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+.noti-badge{position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#EF4444;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+.content-area{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.content-area::-webkit-scrollbar{display:none}
+
+.tab-bar{height:calc(78px + env(safe-area-inset-bottom,0px));padding-top:8px;padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0}
+@media(min-width:500px){.tab-bar{height:78px;padding-bottom:0}}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;border:none;background:none;font-family:'Noto Sans KR',sans-serif}
+.tab-icon{font-size:22px}
+.tab-label{font-size:10px;font-weight:500;color:var(--text-secondary)}
+.tab-item.active .tab-label{color:var(--orange);font-weight:700}
+
+.m-header{padding:4px 20px 6px;display:flex;justify-content:space-between;align-items:center}
+.m-header h1{font-size:20px;font-weight:800}
+.m-sub-header{padding:6px 20px 12px;display:flex;align-items:center;gap:12px}
+.m-back{background:none;border:none;font-size:18px;cursor:pointer;padding:4px}
+.m-sub-header h1{font-size:18px;font-weight:700}
+
+.sticky-top{position:sticky;top:0;z-index:20;background:#fff;padding-bottom:2px}
+.m-stats{display:flex;gap:8px;padding:0 20px 6px}
+.m-stat-card{flex:1;padding:5px 8px;border-radius:10px;text-align:center}
+.m-stat-card.orange{background:var(--orange-light)}.m-stat-card.green{background:var(--green-light)}.m-stat-card.blue{background:var(--blue-light)}
+.m-stat-num{font-size:17px;font-weight:800}
+.m-stat-card.orange .m-stat-num{color:var(--orange)}.m-stat-card.green .m-stat-num{color:var(--green)}.m-stat-card.blue .m-stat-num{color:var(--blue)}
+.m-stat-label{font-size:10px;color:var(--text-secondary);margin-top:1px;font-weight:500}
+.section-title{display:flex;justify-content:space-between;align-items:center;padding:0 20px 12px}
+.section-title h2{font-size:16px;font-weight:700}
+
+.search-input{width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid transparent;font-size:13px;font-weight:600;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.search-input:focus{border-color:var(--orange)}
+
+.property-list{padding:0 20px 100px;display:flex;flex-direction:column;gap:12px}
+.property-item{display:flex;gap:14px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.property-item:active{transform:scale(.98)}
+.prop-thumb{width:72px;height:72px;border-radius:14px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.prop-info{flex:1;min-width:0}
+.prop-name{font-size:15px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prop-addr{font-size:12px;color:var(--text-secondary);margin-bottom:6px}
+.prop-price{font-size:16px;font-weight:800;color:var(--orange);margin-bottom:6px}
+.prop-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.tag-type{background:#F3F4F6;color:#4B5563}.tag-done{background:var(--green-light);color:var(--green)}.tag-draft{background:var(--blue-light);color:var(--blue)}
+
+.fab{position:absolute;bottom:calc(90px + env(safe-area-inset-bottom,0px));right:20px;width:56px;height:56px;border-radius:50%;background:var(--orange-gradient);border:none;font-size:24px;color:#fff;cursor:pointer;z-index:50;box-shadow:0 6px 20px rgba(240,90,40,.35);display:flex;align-items:center;justify-content:center;transition:transform .2s}
+@media(min-width:500px){.fab{bottom:90px}}
+.fab:active{transform:scale(.9)}
+
+.voice-area{display:flex;flex-direction:column;align-items:center;padding:12px 20px;background:linear-gradient(180deg,#FFFFFF,#F8F9FB)}
+.recording-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--orange);color:#fff;font-size:13px;font-weight:600;margin-bottom:12px}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.rec-btn-wrap{position:relative;margin-bottom:10px;width:170px;height:170px;display:flex;align-items:center;justify-content:center}
+.rec-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(240,90,40,.15);animation:pulse 2s infinite}
+.rec-pulse.p1{width:140px;height:140px}.rec-pulse.p2{width:170px;height:170px;animation-delay:.5s}
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(.9);opacity:.6}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0}}
+.rec-btn{width:110px;height:110px;border-radius:50%;background:var(--orange-gradient);border:none;font-size:40px;color:#fff;cursor:pointer;box-shadow:0 10px 40px rgba(240,90,40,.35);position:relative;z-index:2;display:flex;align-items:center;justify-content:center}
+.rec-timer{font-size:28px;font-weight:800;margin:4px 0}
+.rec-hint{text-align:center;font-size:12px;color:var(--text-secondary);line-height:1.6}
+.transcript-area{margin:12px 20px 0;padding:16px;background:var(--bg);border-radius:var(--radius);font-size:14px;line-height:1.7;color:var(--text-secondary);min-height:70px;max-height:150px;overflow-y:auto}
+.transcript-area .hl{color:var(--orange);font-weight:600}
+.voice-actions{display:flex;gap:12px;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);flex-shrink:0}
+@media(min-width:500px){.voice-actions{padding-bottom:12px}}
+.btn-cancel-v{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary)}
+.btn-convert{flex:1.5;padding:14px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+.ai-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;padding:40px 20px;text-align:center}
+.ai-spinner{width:80px;height:80px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;font-size:36px;animation:spinPulse 1.5s ease-in-out infinite;margin-bottom:24px}
+@keyframes spinPulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,90,40,.4)}50%{transform:scale(1.1);box-shadow:0 0 0 20px rgba(240,90,40,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,90,40,0)}}
+.ai-loading-text{font-size:18px;font-weight:700;margin-bottom:8px}
+.ai-loading-sub{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.ai-progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;margin-top:20px;overflow:hidden}
+.ai-progress-fill{height:100%;background:var(--orange-gradient);border-radius:2px;animation:progressAnim 2s ease-in-out forwards}
+@keyframes progressAnim{0%{width:0}30%{width:40%}60%{width:70%}90%{width:90%}100%{width:100%}}
+
+.detail-hero{background:linear-gradient(135deg,var(--orange-light),#FAFBFC);padding:12px 20px 24px;text-align:center}
+.detail-hero .emoji{font-size:56px;margin:8px 0}
+.detail-tags{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.detail-name{font-size:20px;font-weight:800}
+.detail-addr-t{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.detail-body{padding:20px}
+.detail-price{font-size:28px;font-weight:800;color:var(--orange);margin-bottom:20px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.info-cell{padding:14px;background:var(--bg);border-radius:12px}
+.info-cell .label{font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-weight:500}
+.info-cell .value{font-size:15px;font-weight:700}
+.memo-card{padding:16px;background:var(--bg);border-radius:var(--radius);margin-bottom:20px}
+.memo-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.owner-card{padding:16px;background:var(--bg);border-radius:var(--radius);margin-bottom:20px;border-left:3px solid var(--orange)}
+.owner-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+.owner-label{color:var(--text-secondary)}.owner-val{font-weight:700}
+.owner-memo{font-size:12px;color:var(--text-secondary);background:#fff;padding:8px 10px;border-radius:8px;margin-top:6px}
+.detail-actions{display:flex;gap:12px;margin-bottom:12px}
+.btn-edit-d{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text)}
+.btn-share{flex:1;padding:14px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+.match-section{margin-bottom:20px}
+.match-title{font-size:15px;font-weight:800;margin-bottom:10px}
+.match-item{display:flex;gap:12px;padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--orange-light);margin-bottom:8px;cursor:pointer;align-items:center}
+.match-avatar{width:36px;height:36px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0}
+.match-info{flex:1;min-width:0}
+.match-name{font-size:13px;font-weight:700}
+.match-badge{padding:2px 8px;border-radius:12px;background:var(--orange-light);color:var(--orange);font-size:11px;font-weight:800;margin-left:4px}
+.match-meta{font-size:11px;color:var(--text-secondary);margin-top:2px}
+
+.edit-form{padding:0 20px 100px}
+.edit-section{margin-bottom:16px}
+.edit-label{font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.edit-input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-weight:600;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:#fff;outline:none;transition:border .2s}
+.edit-input:focus{border-color:var(--orange)}
+.edit-input.price{color:var(--orange);font-size:18px;font-weight:800}
+.edit-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.edit-textarea{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary);min-height:80px;resize:none;outline:none}
+.edit-textarea:focus{border-color:var(--orange)}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;background:var(--orange-light);color:var(--orange);font-size:11px;font-weight:700;margin-bottom:16px}
+.save-actions{display:flex;gap:12px;margin-top:20px}
+.btn-re{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-save{flex:1;padding:14px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+.customer-filter{display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto}
+.cfilter{padding:5px 14px;border-radius:18px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary);white-space:nowrap;flex-shrink:0}
+.cfilter.active{background:var(--orange);color:#fff;border-color:var(--orange)}
+.customer-list{padding:0 20px 100px;display:flex;flex-direction:column;gap:10px}
+.customer-item{display:flex;gap:14px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);cursor:pointer;align-items:center;transition:all .15s}
+.customer-item:active{transform:scale(.98)}
+.customer-avatar{width:44px;height:44px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0}
+.customer-info{flex:1;min-width:0}
+.customer-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.customer-meta{font-size:12px;color:var(--text-secondary)}
+.customer-need{font-size:12px;color:var(--orange);font-weight:600;margin-top:2px}
+.customer-arrow{color:var(--text-secondary);font-size:18px}
+
+.cd-profile{display:flex;align-items:center;gap:14px;padding:0 20px 16px}
+.cd-avatar{width:52px;height:52px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
+.cd-name{font-size:18px;font-weight:800}
+.cd-role{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.cd-contact{display:flex;gap:8px;padding:0 20px 16px}
+.cd-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center}
+.cd-section{padding:0 20px 16px}
+.cd-section-title{font-size:14px;font-weight:700;margin-bottom:10px}
+.cd-card{background:var(--bg);border-radius:var(--radius);padding:14px}
+.cd-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px}
+.cd-label-t{color:var(--text-secondary)}.cd-val{font-weight:700}
+.cd-memo-box{padding:18px;background:var(--bg);border-radius:16px;border-left:4px solid var(--orange);font-size:14px;line-height:2;white-space:pre-wrap}
+
+.my-profile{display:flex;align-items:center;gap:14px;margin:0 20px 16px;padding:20px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border)}
+.my-avatar{width:52px;height:52px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center}
+.my-name{font-size:18px;font-weight:800}.my-role{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.my-biz{margin:0 20px 16px;padding:18px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);border-left:3px solid var(--orange)}
+.my-biz-title{font-size:15px;font-weight:700;margin-bottom:14px}
+.my-biz-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+.my-biz-label{color:var(--text-secondary)}.my-biz-val{font-weight:700}
+.my-menu{margin:0 20px 100px;display:flex;flex-direction:column;gap:2px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.my-menu-item{display:flex;align-items:center;gap:10px;padding:16px 18px;font-size:14px;font-weight:600;border:none;background:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text);text-align:left;transition:background .15s;width:100%}
+.my-menu-item:active{background:var(--bg)}
+.my-menu-item+.my-menu-item{border-top:1px solid var(--border)}
+.my-menu-item.danger{color:#EF4444}
+
+.noti-list{padding:0 20px 100px;display:flex;flex-direction:column;gap:10px}
+.noti-item{display:flex;gap:12px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);cursor:pointer;align-items:center;transition:all .15s}
+.noti-item.unread{background:#FFF8F0}
+.noti-item:active{transform:scale(.98)}
+.noti-icon-w{width:42px;height:42px;border-radius:12px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.noti-info{flex:1}
+.noti-title-t{font-size:13px;font-weight:700;margin-bottom:2px}
+.noti-desc{font-size:11px;color:var(--text-secondary)}
+.noti-time{font-size:11px;color:var(--text-secondary);flex-shrink:0}
+
+.onboard{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(40px + env(safe-area-inset-top,0px)) 32px 40px;text-align:center;min-height:100%}
+@media(min-width:500px){.onboard{padding:40px 32px}}
+.onboard-logo{width:64px;height:64px;border-radius:18px;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin-bottom:24px;box-shadow:0 8px 24px rgba(240,90,40,.25)}
+.onboard-title{font-size:24px;font-weight:800;margin-bottom:10px}
+.onboard-desc{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:36px}
+.kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border-radius:12px;border:none;background:#FEE500;font-size:16px;font-weight:700;color:#3C1E1E;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;margin-bottom:12px}
+.kakao-btn:active{transform:scale(.97)}
+.phone-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.phone-btn:active{transform:scale(.97)}
+.onboard-terms{margin-top:20px;font-size:11px;color:var(--text-secondary)}
+.onboard-terms a{color:var(--orange);text-decoration:none}
+
+.scan-screen{display:flex;flex-direction:column;align-items:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px 20px}
+@media(min-width:500px){.scan-screen{padding:20px}}
+.scan-header{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:20px}
+.scan-step{padding:5px 14px;border-radius:20px;background:var(--orange-light);color:var(--orange);font-size:13px;font-weight:700}
+.scan-skip{background:none;border:none;font-size:13px;color:var(--text-secondary);font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.scan-title{font-size:20px;font-weight:800;margin-bottom:6px}
+.scan-desc{font-size:13px;color:var(--text-secondary);margin-bottom:24px}
+.scan-frame{position:relative;width:100%;height:180px;background:#1A1A2E;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}
+.scan-corner{position:absolute;width:24px;height:24px;border:3px solid var(--orange)}
+.scan-corner.tl{top:16px;left:16px;border-right:none;border-bottom:none;border-radius:4px 0 0 0}
+.scan-corner.tr{top:16px;right:16px;border-left:none;border-bottom:none;border-radius:0 4px 0 0}
+.scan-corner.bl{bottom:16px;left:16px;border-right:none;border-top:none;border-radius:0 0 0 4px}
+.scan-corner.br{bottom:16px;right:16px;border-left:none;border-top:none;border-radius:0 0 4px 0}
+.scan-detecting{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;background:rgba(240,90,40,.9);color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+
+.share-actions-row{padding:0 20px 100px;display:flex;gap:10px}
+.share-btn-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.share-btn-w:active{transform:scale(.96);background:var(--bg)}
+.share-icon-w{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.share-icon-w.kakao{background:#FEE500}.share-icon-w.sms-s{background:var(--green);color:#fff}.share-icon-w.img{background:var(--orange-light);color:var(--orange)}
+.share-title{font-size:13px;font-weight:700;text-align:center}
+.share-sub{font-size:10px;color:var(--orange);font-weight:600;text-align:center;margin-top:2px}
+
+.biz-card-w{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;margin:0 20px 16px;background:#fff;border-radius:var(--radius);border:1px solid var(--border);border-left:3px solid var(--orange);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.biz-left{display:flex;align-items:center;gap:10px}
+.biz-logo-w{width:36px;height:36px;border-radius:8px;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.biz-name-t{font-size:14px;font-weight:800}.biz-title-t{font-size:11px;color:var(--text-secondary)}
+.biz-right{text-align:right}
+.biz-contact-t{font-size:12px;font-weight:700;line-height:1.6}
+.biz-org{font-size:10px;color:var(--text-secondary);margin-top:2px}
+
+.carousel-wrap{position:relative;margin:0 20px 16px;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);background:#fff}
+.carousel-track{display:flex;transition:transform .3s ease}
+.slide{flex:0 0 100%;position:relative}
+.slide-img{width:100%;height:240px;background:linear-gradient(135deg,#FFE8D6,#FFF4EE 50%,#FFECD2);display:flex;align-items:center;justify-content:center;font-size:72px}
+.slide-label{position:absolute;bottom:12px;left:12px;padding:4px 12px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:600}
+.carousel-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
+.carousel-dots .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;transition:all .2s}
+.carousel-dots .dot.active{background:#fff;width:20px;border-radius:4px}
+
+.history-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.history-item:last-child{border-bottom:none}
+.history-icon-w{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.history-icon-w.kakao{background:#FEE500}.history-icon-w.sms{background:var(--green);color:#fff}
+.history-info{flex:1}
+.history-method{font-size:13px;font-weight:700}
+.history-date{font-size:11px;color:var(--text-secondary);margin-top:1px}
+.history-count{font-size:12px;color:var(--orange);font-weight:600}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var h = React.createElement;
+var useState = React.useState;
+var useRef = React.useRef;
+
+var P=[
+  {name:'래미안 레이크뷰 108동',addr:'서초구 반포동',type:'아파트',deal:'매매',price:'18.5억',area:'84㎡',floor:'25층',status:'done',emoji:'🏢',dir:'남향',rooms:'3개',baths:'2개',moveIn:'즉시입주',memo:'• 한강뷰 직접 조망 가능\n• 인테리어 올수리 완료\n• 주차 2대 가능\n• 반포역 도보 5분\n• 관리비 약 35만원/월',regDate:'2026.02.25',ownerName:'박정수',ownerPhone:'010-1234-5678',ownerRel:'소유자',ownerMemo:'오후 2시 이후 통화'},
+  {name:'반포 자이 아파트 203동',addr:'서초구 반포동',type:'아파트',deal:'전세',price:'9.8억',area:'109㎡',floor:'12층',status:'done',emoji:'🏠',dir:'동향',rooms:'4개',baths:'2개',moveIn:'2026.04.01',memo:'• 올수리 상태 양호\n• 반포초·세화중 학군 우수\n• 반포역 도보 7분',regDate:'2026.02.20',ownerName:'이미영',ownerPhone:'010-2345-6789',ownerRel:'소유자',ownerMemo:'문자 선호'},
+  {name:'강남 오피스텔 B동',addr:'강남구 역삼동',type:'오피스텔',deal:'월세',price:'보증금3천/월120',area:'42㎡',floor:'8층',status:'draft',emoji:'🏬',dir:'남서향',rooms:'1개',baths:'1개',moveIn:'즉시입주',memo:'• 역삼역 도보 3분\n• 풀옵션\n• 관리비 10만',regDate:'2026.02.27',ownerName:'김태호',ownerPhone:'010-3456-7890',ownerRel:'대리인',ownerMemo:'아버지와 직접 협의'},
+  {name:'래미안 퍼스티지 501동',addr:'서초구 서초동',type:'아파트',deal:'매매',price:'22억',area:'118㎡',floor:'18층',status:'done',emoji:'🏢',dir:'남향',rooms:'4개',baths:'2개',moveIn:'협의',memo:'• 서초역 초역세권\n• 대형 평형, 4베이 구조',regDate:'2026.02.22',ownerName:'최수진',ownerPhone:'010-4567-8901',ownerRel:'소유자',ownerMemo:'해외 거주, 카톡 필수'},
+  {name:'마포 용강동 빌라',addr:'마포구 용강동',type:'빌라',deal:'매매',price:'5.2억',area:'66㎡',floor:'3층',status:'draft',emoji:'🏘️',dir:'남향',rooms:'2개',baths:'1개',moveIn:'즉시입주',memo:'• 대흥역 도보 5분\n• 조용한 주택가\n• 주차 1대',regDate:'2026.02.28',ownerName:'정민호',ownerPhone:'010-5678-9012',ownerRel:'소유자',ownerMemo:'직접 거주 중'},
+  {name:'잠실 엘스 307동',addr:'송파구 잠실동',type:'아파트',deal:'매매',price:'24억',area:'119㎡',floor:'22층',status:'done',emoji:'🏢',dir:'남향',rooms:'4개',baths:'2개',moveIn:'협의',memo:'• 잠실역 도보 3분\n• 롯데월드타워뷰',regDate:'2026.02.15',ownerName:'한지수',ownerPhone:'010-6111-2222',ownerRel:'소유자',ownerMemo:'주말 통화 선호'},
+  {name:'헬리오시티 204동',addr:'송파구 가락동',type:'아파트',deal:'전세',price:'11억',area:'84㎡',floor:'15층',status:'done',emoji:'🏠',dir:'남동향',rooms:'3개',baths:'2개',moveIn:'2026.05.01',memo:'• 송파역 도보 7분\n• 주차 2대',regDate:'2026.02.10',ownerName:'오세준',ownerPhone:'010-6222-3333',ownerRel:'소유자',ownerMemo:'카톡 선호'},
+  {name:'역삼 센트럴 오피스텔',addr:'강남구 역삼동',type:'오피스텔',deal:'월세',price:'보증금5천/월150',area:'55㎡',floor:'12층',status:'done',emoji:'🏬',dir:'동향',rooms:'1개',baths:'1개',moveIn:'즉시입주',memo:'• 역삼역 도보 5분\n• 풀옵션 + 빌트인',regDate:'2026.02.12',ownerName:'배지현',ownerPhone:'010-6333-4444',ownerRel:'소유자',ownerMemo:'이메일 선호'},
+  {name:'성수동 트리마제',addr:'성동구 성수동',type:'아파트',deal:'매매',price:'28억',area:'140㎡',floor:'30층',status:'done',emoji:'🏢',dir:'남향',rooms:'4개',baths:'2개',moveIn:'즉시입주',memo:'• 한강뷰 프리미엄\n• 초고층 랜드마크',regDate:'2026.02.08',ownerName:'윤태영',ownerPhone:'010-6444-5555',ownerRel:'소유자',ownerMemo:'해외 출장 잦음'},
+  {name:'논현동 상가 1층',addr:'강남구 논현동',type:'상가',deal:'월세',price:'보증금5천/월300',area:'92㎡',floor:'1층',status:'done',emoji:'🏪',dir:'남향',rooms:'-',baths:'1개',moveIn:'즉시입주',memo:'• 논현역 도보 3분\n• 유동인구 많음',regDate:'2026.01.25',ownerName:'장세영',ownerPhone:'010-6777-8888',ownerRel:'소유자',ownerMemo:'직접 방문 선호'},
+];
+
+var C=[
+  {name:'이서연',phone:'010-1111-2222',need:'매수',area:'서초구 반포동',budget:'15~20억',type:'아파트',size:'84㎡ 이상',floor:'고층',memo:'• 한강뷰 선호\n• 자녀 2명, 학군 중요\n• 대출 5억 가능',status:'searching'},
+  {name:'박준혁',phone:'010-3333-4444',need:'전세',area:'서초구 반포동',budget:'8~10억',type:'아파트',size:'109㎡',floor:'중층 이상',memo:'• 반포초 학군 필수\n• 주차 2대 필요',status:'matched'},
+  {name:'최영은',phone:'010-5555-6666',need:'월세',area:'강남구 역삼동',budget:'보증금3~5천/월100~150',type:'오피스텔',size:'30~50㎡',floor:'무관',memo:'• 역세권 필수\n• 풀옵션 선호',status:'searching'},
+  {name:'정태우',phone:'010-7777-8888',need:'매수',area:'마포구',budget:'4~6억',type:'빌라',size:'60㎡ 이상',floor:'저층 가능',memo:'• 신혼부부\n• 주차 1대 필수',status:'searching'},
+  {name:'김하늘',phone:'010-8111-2233',need:'매수',area:'송파구 잠실동',budget:'20~25억',type:'아파트',size:'109㎡ 이상',floor:'고층',memo:'• 잠실역 인근\n• 학군 중요',status:'searching'},
+  {name:'한소희',phone:'010-8333-4455',need:'월세',area:'용산구 이태원동',budget:'보증금2~3천/월150~200',type:'상가',size:'50㎡ 이상',floor:'1층',memo:'• 카페 창업 목적',status:'matched'},
+  {name:'류승범',phone:'010-8444-5566',need:'매수',area:'성동구 성수동',budget:'25~30억',type:'아파트',size:'120㎡ 이상',floor:'고층',memo:'• 한강뷰 프리미엄',status:'matched'},
+];
+
+var NOTI=[
+  {type:'match',title:'래미안 108동 → 매칭 고객 2명',desc:'이서연, 박준혁 조건 일치',time:'방금',unread:true,propIdx:0},
+  {type:'match',title:'강남 오피스텔 B동 → 매칭 1명',desc:'최영은 조건 일치',time:'1시간 전',unread:true,propIdx:2},
+  {type:'match',title:'마포 용강동 빌라 → 매칭 1명',desc:'정태우 조건 일치',time:'3시간 전',unread:true,propIdx:4},
+  {type:'system',title:'매물 등록 완료',desc:'래미안 퍼스티지 501동 등록됨',time:'어제',unread:false,propIdx:3},
+  {type:'system',title:'명함 정보 업데이트',desc:'김민수 명함 저장',time:'2일 전',unread:false,propIdx:-1},
+];
+
+function getMatches(pi){
+  var p=P[pi],r=[];
+  C.forEach(function(c,ci){var s=0;var dm=(c.need==='매수'&&p.deal==='매매')||(c.need==='전세'&&p.deal==='전세')||(c.need==='월세'&&p.deal==='월세');if(!dm)return;s+=30;if(c.type!==p.type)return;s+=20;if(c.area&&p.addr&&p.addr.includes(c.area.split(' ')[0]))s+=20;else s+=10;s+=Math.floor(Math.random()*10)+5;if(s>=60)r.push({idx:ci,score:Math.min(s,99)});});
+  r.sort(function(a,b){return b.score-a.score});return r;
+}
+
+function App(){
+  var _screen=useState('login'),screen=_screen[0],setScreen=_screen[1];
+  var _prevScr=useState(null),prevScr=_prevScr[0],setPrevScr=_prevScr[1];
+  var _selProp=useState(0),selProp=_selProp[0],setSelProp=_selProp[1];
+  var _selCust=useState(0),selCust=_selCust[0],setSelCust=_selCust[1];
+  var _loggedIn=useState(false),loggedIn=_loggedIn[0],setLoggedIn=_loggedIn[1];
+  var _search=useState(''),search=_search[0],setSearch=_search[1];
+  var _notiCnt=useState(3),notiCnt=_notiCnt[0],setNotiCnt=_notiCnt[1];
+  var _filter=useState('전체'),filter=_filter[0],setFilter=_filter[1];
+  var _pfilter=useState('전체'),pfilter=_pfilter[0],setPfilter=_pfilter[1];
+  var _slide=useState(0),slide=_slide[0],setSlide=_slide[1];
+  var ref=useRef(null);
+  var screenRef=useRef('login');
+  var timerRef=useRef(null);
+
+  var go=function(s){if(timerRef.current){clearTimeout(timerRef.current);timerRef.current=null;}setPrevScr(screenRef.current);screenRef.current=s;setScreen(s);if(ref.current)ref.current.scrollTop=0;};
+  var goDelayed=function(s,ms){timerRef.current=setTimeout(function(){timerRef.current=null;go(s);},ms);};
+  var showTabs=loggedIn&&['login','card-scan','card-loading','card-confirm','voice'].indexOf(screen)===-1;
+  var done=P.filter(function(p){return p.status==='done'}).length;
+
+  function StatusTag(props){return props.s==='done'?h('span',{className:'tag tag-done'},'등록완료'):h('span',{className:'tag tag-draft'},'작성중');}
+  function CTag(props){return props.s==='matched'?h('span',{className:'tag tag-done'},'매칭완료'):h('span',{className:'tag tag-draft'},'찾는 중');}
+
+  var renderScreen=function(){
+    if(screen==='login') return h('div',{className:'onboard'},
+      h('div',{className:'onboard-logo'},h('svg',{width:28,height:28,viewBox:'0 0 36 36',fill:'none'},h('path',{d:'M4 28L13 8l6 10 5-6 8 16H4z',fill:'#fff'}))),
+      h('div',{className:'onboard-title'},'오름AI 부동산'),
+      h('div',{className:'onboard-desc',dangerouslySetInnerHTML:{__html:'녹음 한 번이면 매물정보, 고객정보를 한번에.<br/>AI가 알아서 분류하고 정리합니다.'}}),
+      h('button',{className:'kakao-btn',onClick:function(){go('card-scan')}},'💬 카카오로 시작하기'),
+      h('button',{className:'phone-btn',onClick:function(){go('card-scan')}},'📱 휴대폰 번호로 시작하기'),
+      h('div',{className:'onboard-terms',dangerouslySetInnerHTML:{__html:'시작하면 <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다'}})
+    );
+
+    if(screen==='card-scan') return h('div',{className:'scan-screen'},
+      h('div',{className:'scan-header'},h('div',{className:'scan-step'},'1/2'),h('button',{className:'scan-skip',onClick:function(){setLoggedIn(true);go('list')}},'건너뛰기')),
+      h('div',{className:'scan-title'},'명함을 비춰주세요'),
+      h('div',{className:'scan-desc'},'자동으로 인식됩니다'),
+      h('div',{className:'scan-frame',onClick:function(){go('card-loading');goDelayed('card-confirm',2000)}},
+        h('div',{className:'scan-corner tl'}),h('div',{className:'scan-corner tr'}),h('div',{className:'scan-corner bl'}),h('div',{className:'scan-corner br'}),
+        h('div',{style:{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'14px 20px',textAlign:'left',border:'1px dashed rgba(255,255,255,.2)'}},
+          h('div',{style:{fontSize:14,fontWeight:700,color:'#fff',marginBottom:4}},'오름공인중개사사무소'),
+          h('div',{style:{fontSize:12,color:'rgba(255,255,255,.7)',marginBottom:8}},'김민수 공인중개사'),
+          h('div',{style:{fontSize:12,color:'rgba(255,255,255,.6)'}},'02-1234-5678')
+        ),
+        h('div',{className:'scan-detecting'},h('span',{className:'rec-dot'}),' 명함 인식 중…')
+      )
+    );
+
+    if(screen==='card-loading') return h('div',{className:'ai-loading'},h('div',{className:'ai-spinner'},'🔍'),h('div',{className:'ai-loading-text'},'명함을 인식하고 있어요'),h('div',{className:'ai-loading-sub'},'텍스트를 자동으로 추출합니다'),h('div',{className:'ai-progress-bar'},h('div',{className:'ai-progress-fill'})));
+
+    if(screen==='card-confirm') return h('div',{className:'scan-screen'},
+      h('div',{className:'scan-header'},h('div',{className:'scan-step'},'2/2')),
+      h('div',{className:'scan-title'},'정보가 맞는지 확인해주세요'),
+      h('div',{className:'ai-badge'},'✨ AI 자동 인식 완료'),
+      h('div',{className:'edit-form',style:{paddingBottom:20,width:'100%'}},
+        h('div',{className:'edit-section'},h('div',{className:'edit-label'},'사무소명'),h('input',{className:'edit-input',defaultValue:'오름공인중개사사무소'})),
+        h('div',{className:'edit-row',style:{marginBottom:16}},h('div',{className:'edit-section'},h('div',{className:'edit-label'},'이름'),h('input',{className:'edit-input',defaultValue:'김민수'})),h('div',{className:'edit-section'},h('div',{className:'edit-label'},'직함'),h('input',{className:'edit-input',defaultValue:'공인중개사'}))),
+        h('div',{className:'edit-section'},h('div',{className:'edit-label'},'전화번호'),h('input',{className:'edit-input',defaultValue:'02-1234-5678'})),
+        h('div',{className:'edit-section'},h('div',{className:'edit-label'},'주소'),h('input',{className:'edit-input',defaultValue:'서울시 서초구 반포대로 123'}))
+      ),
+      h('button',{className:'btn-save',style:{width:'100%',maxWidth:300},onClick:function(){setLoggedIn(true);go('list')}},'✅ 완료')
+    );
+
+    if(screen==='list'){
+      var pFilters=['전체','매매','전세','월세','등록완료','작성중'];
+      var filtered=P.filter(function(p){
+        var sm=!search||p.name.includes(search)||p.addr.includes(search);
+        if(!sm)return false;
+        if(pfilter==='전체')return true;
+        if(pfilter==='매매')return p.deal==='매매';
+        if(pfilter==='전세')return p.deal==='전세';
+        if(pfilter==='월세')return p.deal==='월세';
+        if(pfilter==='등록완료')return p.status==='done';
+        if(pfilter==='작성중')return p.status==='draft';
+        return true;
+      });
+      return h(React.Fragment,null,
+        h('div',{className:'sticky-top'},
+          h('div',{className:'m-header'},h('h1',null,'매물')),
+          h('div',{style:{padding:'0 20px 8px'}},h('input',{className:'search-input',placeholder:'🔍 매물명, 주소 검색',value:search,onChange:function(e){setSearch(e.target.value)}})),
+          h('div',{className:'m-stats'},
+            h('div',{className:'m-stat-card orange'},h('div',{className:'m-stat-num'},P.length),h('div',{className:'m-stat-label'},'전체 매물')),
+            h('div',{className:'m-stat-card green'},h('div',{className:'m-stat-num'},done),h('div',{className:'m-stat-label'},'등록완료')),
+            h('div',{className:'m-stat-card blue'},h('div',{className:'m-stat-num'},P.length-done),h('div',{className:'m-stat-label'},'작성 중'))
+          ),
+          h('div',{className:'customer-filter'},pFilters.map(function(f){return h('button',{key:f,className:'cfilter '+(pfilter===f?'active':''),onClick:function(){setPfilter(f)}},f)}))
+        ),
+        h('div',{className:'property-list'},filtered.map(function(p){var ri=P.indexOf(p);return h('div',{className:'property-item',key:ri,onClick:function(){setSelProp(ri);go('detail')}},
+          h('div',{className:'prop-thumb'},p.emoji),
+          h('div',{className:'prop-info'},h('div',{className:'prop-name'},p.name),h('div',{className:'prop-addr'},p.addr),h('div',{className:'prop-price'},p.deal+' '+p.price),h('div',{className:'prop-tags'},h('span',{className:'tag tag-type'},p.type),h(StatusTag,{s:p.status})))
+        )})),
+        h('button',{className:'fab',onClick:function(){go('voice')}},'🎙️')
+      );
+    }
+
+    if(screen==='voice') return h(React.Fragment,null,
+      h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('list')}},'←'),h('h1',null,'음성 매물 등록')),
+      h('div',{className:'voice-area'},
+        h('div',{className:'recording-badge'},h('span',{className:'rec-dot'}),' 녹음 중'),
+        h('div',{className:'rec-btn-wrap'},h('div',{className:'rec-pulse p1'}),h('div',{className:'rec-pulse p2'}),h('button',{className:'rec-btn'},'🎙️')),
+        h('div',{className:'rec-timer'},'01:23'),
+        h('div',{className:'rec-hint',dangerouslySetInnerHTML:{__html:'현장에서 자유롭게 말씀하세요<br/>AI가 자동으로 정리합니다'}})
+      ),
+      h('div',{className:'transcript-area',dangerouslySetInnerHTML:{__html:'"래미안 레이크뷰 108동 전용 84제곱미터 25층이고요, 남향입니다. 매매가는 18억 5천이에요. <span class="hl">방 3개에 화장실 2개</span>이고요. 거실에서 한강 조망이 됩니다."'}})
+    );
+
+    if(screen==='ai-loading') return h('div',{className:'ai-loading'},h('div',{className:'ai-spinner'},'✨'),h('div',{className:'ai-loading-text'},'AI가 매물 정보를 정리하고 있어요'),h('div',{className:'ai-loading-sub'},'음성에서 자동 추출합니다'),h('div',{className:'ai-progress-bar'},h('div',{className:'ai-progress-fill'})));
+
+    if(screen==='edit'){
+      var ep=P[selProp];
+      return h(React.Fragment,null,
+        h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('voice')}},'←'),h('h1',null,'매물 확인')),
+        h('div',{style:{padding:'0 20px'}},h('div',{className:'ai-badge'},'✨ AI가 자동으로 채운 정보입니다')),
+        h('div',{className:'edit-form'},
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'매물명'),h('input',{className:'edit-input',defaultValue:ep.name})),
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'주소'),h('input',{className:'edit-input',defaultValue:ep.addr})),
+          h('div',{className:'edit-row',style:{marginBottom:16}},h('div',{className:'edit-section'},h('div',{className:'edit-label'},'유형'),h('input',{className:'edit-input',defaultValue:ep.type})),h('div',{className:'edit-section'},h('div',{className:'edit-label'},'거래'),h('input',{className:'edit-input',defaultValue:ep.deal}))),
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'가격'),h('input',{className:'edit-input price',defaultValue:ep.price})),
+          h('div',{className:'edit-row',style:{marginBottom:16}},h('div',{className:'edit-section'},h('div',{className:'edit-label'},'면적'),h('input',{className:'edit-input',defaultValue:ep.area})),h('div',{className:'edit-section'},h('div',{className:'edit-label'},'층수'),h('input',{className:'edit-input',defaultValue:ep.floor}))),
+          h('div',{style:{marginBottom:12,paddingTop:12,borderTop:'2px solid var(--orange-light)'}},h('div',{style:{fontSize:13,fontWeight:700,color:'var(--orange)',marginBottom:12}},'👤 집주인 정보')),
+          h('div',{className:'edit-row',style:{marginBottom:16}},h('div',{className:'edit-section'},h('div',{className:'edit-label'},'이름'),h('input',{className:'edit-input',defaultValue:ep.ownerName})),h('div',{className:'edit-section'},h('div',{className:'edit-label'},'연락처'),h('input',{className:'edit-input',defaultValue:ep.ownerPhone}))),
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'📝 메모'),h('textarea',{className:'edit-textarea',defaultValue:ep.memo})),
+          h('div',{className:'save-actions'},h('button',{className:'btn-re',onClick:function(){go('voice')}},'← 다시 녹음'),h('button',{className:'btn-save',onClick:function(){go('detail')}},'✅ 저장하기'))
+        )
+      );
+    }
+
+    if(screen==='detail'){
+      var dp=P[selProp];
+      var matches=getMatches(selProp);
+      return h(React.Fragment,null,
+        h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('list')}},'←'),h('h1',null,'매물 상세')),
+        h('div',{className:'detail-hero'},
+          h('div',{className:'emoji'},dp.emoji),
+          h('div',{className:'detail-tags'},h('span',{className:'tag tag-type'},dp.type+' · '+dp.deal),h(StatusTag,{s:dp.status})),
+          h('div',{className:'detail-name'},dp.name),
+          h('div',{className:'detail-addr-t'},dp.addr+' · '+dp.floor)
+        ),
+        h('div',{className:'detail-body'},
+          h('div',{className:'detail-price'},dp.deal+' '+dp.price),
+          h('div',{className:'info-grid'},
+            h('div',{className:'info-cell'},h('div',{className:'label'},'면적'),h('div',{className:'value'},'전용 '+dp.area)),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'방 · 욕실'),h('div',{className:'value'},dp.rooms+' · '+dp.baths)),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'방향'),h('div',{className:'value'},dp.dir+' 🧭')),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'입주가능일'),h('div',{className:'value'},dp.moveIn))
+          ),
+          h('div',{style:{marginBottom:20}},h('div',{style:{fontSize:15,fontWeight:800,marginBottom:10}},'📝 메모'),h('div',{style:{padding:18,background:'var(--bg)',borderRadius:16,borderLeft:'4px solid var(--orange)',fontSize:14,lineHeight:2,whiteSpace:'pre-wrap'}},dp.memo)),
+          h('div',{className:'owner-card'},
+            h('div',{className:'memo-title'},'👤 집주인 정보'),
+            h('div',{className:'owner-row'},h('span',{className:'owner-label'},'이름'),h('span',{className:'owner-val'},dp.ownerName)),
+            h('div',{className:'owner-row'},h('span',{className:'owner-label'},'연락처'),h('span',{className:'owner-val',style:{color:'var(--orange)'}},dp.ownerPhone)),
+            h('div',{className:'owner-row'},h('span',{className:'owner-label'},'관계'),h('span',{className:'owner-val'},dp.ownerRel)),
+            h('div',{className:'owner-memo'},'💬 '+dp.ownerMemo)
+          ),
+          h('div',{className:'match-section'},
+            h('div',{className:'match-title'},'🎯 매칭 고객 ',h('span',{style:{fontSize:13,color:'var(--orange)'}},matches.length+'명')),
+            matches.map(function(m,i){var c=C[m.idx];return h('div',{className:'match-item',key:i,onClick:function(){setSelCust(m.idx);go('customer-detail')}},
+              h('div',{className:'match-avatar'},c.name[0]),
+              h('div',{className:'match-info'},h('div',{className:'match-name'},c.name,' ',h('span',{className:'match-badge'},m.score+'%')),h('div',{className:'match-meta'},c.need+' · '+c.type+' · '+c.area))
+            )})
+          ),
+          h('div',{className:'detail-actions'},h('button',{className:'btn-edit-d',onClick:function(){go('edit')}},'✏️ 수정'),h('button',{className:'btn-share',onClick:function(){setSlide(0);go('share')}},'📤 공유하기')),
+          h('div',{style:{marginBottom:20}},
+            h('div',{className:'memo-title'},'📤 공유 이력'),
+            h('div',{className:'history-item'},h('div',{className:'history-icon-w kakao'},'💬'),h('div',{className:'history-info'},h('div',{className:'history-method'},'카카오톡'),h('div',{className:'history-date'},'2026.02.27')),h('div',{className:'history-count'},'사진 3장')),
+            h('div',{className:'history-item'},h('div',{className:'history-icon-w sms'},'💌'),h('div',{className:'history-info'},h('div',{className:'history-method'},'문자'),h('div',{className:'history-date'},'2026.02.26')),h('div',{className:'history-count'},'사진 5장'))
+          )
+        )
+      );
+    }
+
+    if(screen==='share'){
+      var photos=['🏢','🛋️','🍳','🛁','🌇'];
+      var labels=['거실','안방','주방','욕실','베란다'];
+      return h(React.Fragment,null,
+        h('div',{className:'m-sub-header',style:{justifyContent:'space-between'}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:12}},h('button',{className:'m-back',onClick:function(){go('detail')}},'←'),h('h1',null,'매물 공유')),
+          h('div',{style:{padding:'5px 12px',borderRadius:20,background:'var(--orange-light)',color:'var(--orange)',fontSize:13,fontWeight:700}},'5/5장')
+        ),
+        h('div',{className:'carousel-wrap'},
+          h('div',{className:'carousel-track',style:{transform:'translateX(-'+slide*100+'%)'}},photos.map(function(em,i){return h('div',{className:'slide',key:i},h('div',{className:'slide-img'},em),h('div',{className:'slide-label'},labels[i]))})),
+          h('div',{className:'carousel-dots'},photos.map(function(_,i){return h('span',{key:i,className:'dot '+(i===slide?'active':''),onClick:function(){setSlide(i)}})}))
+        ),
+        h('div',{className:'biz-card-w'},
+          h('div',{className:'biz-left'},h('div',{className:'biz-logo-w'},'오'),h('div',null,h('div',{className:'biz-name-t'},'김민수'),h('div',{className:'biz-title-t'},'공인중개사'))),
+          h('div',{className:'biz-right'},h('div',{className:'biz-contact-t'},'📞 02-1234-5678'),h('div',{className:'biz-contact-t'},'📱 010-9876-5432'),h('div',{className:'biz-org'},'오름공인중개사사무소'))
+        ),
+        h('div',{className:'share-actions-row'},
+          h('button',{className:'share-btn-w'},h('div',{className:'share-icon-w kakao'},'💬'),h('div',{className:'share-title'},'카카오톡'),h('div',{className:'share-sub'},'사진 5장 + 명함')),
+          h('button',{className:'share-btn-w'},h('div',{className:'share-icon-w sms-s'},'💌'),h('div',{className:'share-title'},'문자'),h('div',{className:'share-sub'},'사진 5장 + 명함')),
+          h('button',{className:'share-btn-w'},h('div',{className:'share-icon-w img'},'🖼️'),h('div',{className:'share-title'},'저장'),h('div',{className:'share-sub'},'사진 5장 + 명함'))
+        )
+      );
+    }
+
+    if(screen==='customer-list'){
+      var cFilters=['전체','매수','전세','월세','매칭완료'];
+      var cFiltered=C.filter(function(c){if(filter==='전체')return true;if(filter==='매칭완료')return c.status==='matched';return c.need===filter;});
+      return h(React.Fragment,null,
+        h('div',{className:'sticky-top'},
+          h('div',{className:'m-header'},h('h1',null,'고객')),
+          h('div',{style:{padding:'0 20px 12px'}},h('input',{className:'search-input',placeholder:'🔍 고객명, 연락처 검색'})),
+          h('div',{className:'m-stats'},
+            h('div',{className:'m-stat-card orange'},h('div',{className:'m-stat-num'},C.length),h('div',{className:'m-stat-label'},'전체 고객')),
+            h('div',{className:'m-stat-card green'},h('div',{className:'m-stat-num'},C.filter(function(c){return c.status==='matched'}).length),h('div',{className:'m-stat-label'},'매칭완료')),
+            h('div',{className:'m-stat-card blue'},h('div',{className:'m-stat-num'},C.filter(function(c){return c.status==='searching'}).length),h('div',{className:'m-stat-label'},'찾는 중'))
+          ),
+          h('div',{className:'customer-filter'},cFilters.map(function(f){return h('button',{key:f,className:'cfilter '+(filter===f?'active':''),onClick:function(){setFilter(f)}},f)}))
+        ),
+        h('div',{className:'customer-list'},cFiltered.map(function(c){var ri=C.indexOf(c);return h('div',{className:'customer-item',key:ri,onClick:function(){setSelCust(ri);go('customer-detail')}},
+          h('div',{className:'customer-avatar'},c.name[0]),
+          h('div',{className:'customer-info'},h('div',{className:'customer-name'},c.name,' ',h(CTag,{s:c.status})),h('div',{className:'customer-meta'},c.phone+' · '+c.area),h('div',{className:'customer-need'},c.need+' · '+c.budget)),
+          h('div',{className:'customer-arrow'},'›')
+        )}))
+      );
+    }
+
+    if(screen==='customer-detail'){
+      var cd=C[selCust];
+      return h(React.Fragment,null,
+        h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go(prevScr==='detail'?'detail':'customer-list')}},'←'),h('h1',null,'고객 카드')),
+        h('div',{className:'cd-profile'},h('div',{className:'cd-avatar'},cd.name[0]),h('div',null,h('div',{className:'cd-name'},cd.name),h('div',{className:'cd-role'},cd.need+' 고객',cd.status==='matched'?h('span',{style:{color:'var(--green)'}},' · 매칭완료'):null))),
+        h('div',{className:'cd-contact'},
+          h('button',{className:'cd-btn',style:{background:'#FEE500',borderColor:'#FEE500',color:'#3C1E1E'}},'💬 카카오'),
+          h('button',{className:'cd-btn',style:{background:'var(--green)',borderColor:'var(--green)',color:'#fff'}},'📱 문자'),
+          h('button',{className:'cd-btn'},'📞 전화')
+        ),
+        h('div',{className:'cd-section'},
+          h('div',{className:'cd-section-title'},'📋 요구사항'),
+          h('div',{className:'cd-card'},
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'희망 지역'),h('span',{className:'cd-val'},cd.area)),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'거래 유형'),h('span',{className:'cd-val'},cd.need)),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'예산'),h('span',{className:'cd-val'},cd.budget)),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'유형'),h('span',{className:'cd-val'},cd.type)),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'면적'),h('span',{className:'cd-val'},cd.size)),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'층수'),h('span',{className:'cd-val'},cd.floor))
+          )
+        ),
+        h('div',{className:'cd-section',style:{paddingBottom:100}},h('div',{className:'cd-section-title'},'📝 메모'),h('div',{className:'cd-memo-box'},cd.memo))
+      );
+    }
+
+    if(screen==='noti') return h(React.Fragment,null,
+      h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('list')}},'←'),h('h1',null,'알림')),
+      h('div',{className:'noti-list'},NOTI.map(function(n,i){return h('div',{className:'noti-item '+(n.unread?'unread':''),key:i,onClick:function(){if(n.propIdx>=0){setSelProp(n.propIdx);go('detail')}}},
+        h('div',{className:'noti-icon-w'},n.type==='match'?'🎯':'✅'),
+        h('div',{className:'noti-info'},h('div',{className:'noti-title-t'},n.title),h('div',{className:'noti-desc'},n.desc)),
+        h('div',{className:'noti-time'},n.time)
+      )}))
+    );
+
+    if(screen==='my') return h(React.Fragment,null,
+      h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('list')}},'←'),h('h1',null,'마이')),
+      h('div',{className:'my-profile'},
+        h('div',{className:'my-avatar'},h('svg',{width:28,height:28,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:8,r:4}),h('path',{d:'M20 21a8 8 0 0 0-16 0'}))),
+        h('div',null,h('div',{className:'my-name'},'김민수'),h('div',{className:'my-role'},'공인중개사'))
+      ),
+      h('div',{className:'my-biz'},
+        h('div',{className:'my-biz-title'},'🏠 오름공인중개사사무소'),
+        h('div',{className:'my-biz-row'},h('span',{className:'my-biz-label'},'전화'),h('span',{className:'my-biz-val'},'02-1234-5678')),
+        h('div',{className:'my-biz-row'},h('span',{className:'my-biz-label'},'휴대폰'),h('span',{className:'my-biz-val'},'010-9876-5432')),
+        h('div',{className:'my-biz-row'},h('span',{className:'my-biz-label'},'주소'),h('span',{className:'my-biz-val'},'서울시 서초구 반포대로 123'))
+      ),
+      h('div',{className:'my-menu'},
+        h('button',{className:'my-menu-item'},'📷 명함 다시 촬영'),
+        h('button',{className:'my-menu-item'},'⚙️ 설정'),
+        h('button',{className:'my-menu-item danger',onClick:function(){setLoggedIn(false);go('login')}},'🚪 로그아웃')
+      )
+    );
+
+    return null;
+  };
+
+  return h('div',{className:'app-shell'},
+    h('div',{className:'notch'}),
+    h('div',{className:'status-bar'},h('span',{className:'time'},'9:41'),h('span',{className:'icons'},h('span',null,'📶'),h('span',null,'📡'),h('span',null,'🔋'))),
+    showTabs?h('div',{className:'top-bar'},
+      h('button',{onClick:function(){setNotiCnt(0);go('noti')}},'🔔',notiCnt>0?h('span',{className:'noti-badge'},notiCnt):null),
+      h('button',{onClick:function(){go('my')}},'👤')
+    ):null,
+    h('div',{className:'content-area',ref:ref},renderScreen()),
+    screen==='voice'?h('div',{className:'voice-actions'},h('button',{className:'btn-cancel-v',onClick:function(){go('list')}},'취소'),h('button',{className:'btn-convert',onClick:function(){go('ai-loading');goDelayed('edit',2200)}},'녹음 완료 →')):null,
+    showTabs?h('div',{className:'tab-bar'},
+      h('button',{className:'tab-item '+((screen==='list'||screen==='detail'||screen==='share')?'active':''),onClick:function(){go('list')}},h('span',{className:'tab-icon'},'📋'),h('span',{className:'tab-label'},'매물')),
+      h('button',{className:'tab-item '+((screen==='voice'||screen==='edit'||screen==='ai-loading')?'active':''),onClick:function(){go('voice')}},h('span',{className:'tab-icon'},'🎙️'),h('span',{className:'tab-label'},'녹음')),
+      h('button',{className:'tab-item '+((screen==='customer-list'||screen==='customer-detail')?'active':''),onClick:function(){go('customer-list')}},h('span',{className:'tab-icon'},'👥'),h('span',{className:'tab-label'},'고객'))
+    ):null
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+</body>
+</html>
