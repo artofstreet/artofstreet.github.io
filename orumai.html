@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>오름AI 부동산</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+:root {
+  --orange:#F05A28;--orange-light:#FFF4EE;--orange-gradient:linear-gradient(135deg,#F05A28 0%,#FF8A5C 100%);
+  --green:#34C759;--green-light:#F0FAF3;--blue:#4A90D9;--blue-light:#F0F5FF;
+  --bg:#F5F6F8;--card:#FFFFFF;--text:#1C1C28;--text-secondary:#8891A0;--border:#E8ECF0;--radius:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',sans-serif;background:#fff;min-height:100vh;min-height:100dvh}
+
+.app-shell{width:100%;height:100vh;height:100dvh;background:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.notch{display:none}
+.status-bar{display:none}
+
+@media(min-width:500px){
+  body{background:#ECEDF0;display:flex;align-items:center;justify-content:center;padding:20px 0;min-height:100vh}
+  .app-shell{width:375px;height:812px;max-height:calc(100vh - 40px);border-radius:40px;box-shadow:0 24px 60px rgba(0,0,0,.12),0 0 0 2px #2A2A2A,0 0 0 6px #3A3A3A,0 0 0 8px #2A2A2A}
+  .notch{display:block;position:absolute;top:10px;left:50%;transform:translateX(-50%);width:120px;height:32px;background:#222;border-radius:20px;z-index:50}
+  .status-bar{display:flex;height:54px;padding:14px 24px 0;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;position:relative;z-index:40;flex-shrink:0}
+  .status-bar .time{font-size:14px;font-weight:700}
+  .status-bar .icons{display:flex;gap:5px;font-size:11px}
+}
+
+@media(min-width:1024px){
+  body{background:#F0F2F5;display:flex;align-items:flex-start;justify-content:center;padding:0;min-height:100vh}
+  .app-shell{width:100%;max-width:100%;height:100vh;border-radius:0;box-shadow:none}
+  .notch{display:none}
+  .status-bar{display:none}
+  .pc-layout{display:flex;height:100%;overflow:hidden}
+  .pc-sidebar{width:360px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;background:#fff;overflow:hidden}
+  .pc-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#fff}
+  .pc-sidebar .content-area{flex:1;overflow-y:auto}
+  .pc-main .content-area{flex:1;overflow-y:auto;max-width:680px;margin:0 auto;width:100%;padding:0 0 20px}
+  .pc-sidebar .tab-bar{display:none}
+  .property-item:hover{background:#F8F9FB;border-color:#D0D5DD}
+  .pc-sidebar-header{padding:14px 20px;border-bottom:1px solid var(--border);font-size:17px;font-weight:800;color:var(--text);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .tab-bar{height:60px;padding-bottom:0}
+}
+
+.top-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 20px;flex-shrink:0;position:sticky;top:0;z-index:100;background:#fff;border-bottom:1px solid var(--border);min-height:44px}
+@media(min-width:500px){.top-bar{padding:8px 20px}}
+.top-bar button{width:36px;height:36px;border-radius:12px;border:none;background:var(--bg);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative}
+.noti-badge{position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#EF4444;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center}
+
+.content-area{flex:1;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.content-area::-webkit-scrollbar{display:none}
+
+.tab-bar{height:calc(78px + env(safe-area-inset-bottom,0px));padding-top:8px;padding-bottom:env(safe-area-inset-bottom,0px);background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;align-items:flex-start;flex-shrink:0}
+@media(min-width:500px){.tab-bar{height:78px;padding-bottom:0}}
+.tab-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;border:none;background:none;font-family:'Noto Sans KR',sans-serif}
+.tab-icon{font-size:22px}
+.tab-label{font-size:10px;font-weight:500;color:var(--text-secondary)}
+.tab-item.active .tab-label{color:var(--orange);font-weight:700}
+
+.m-header{padding:4px 20px 6px;display:flex;justify-content:space-between;align-items:center}
+.m-header h1{font-size:20px;font-weight:800}
+.m-sub-header{padding:6px 20px 12px;display:flex;align-items:center;gap:12px}
+.m-back{background:none;border:none;font-size:18px;cursor:pointer;padding:4px}
+.m-sub-header h1{font-size:18px;font-weight:700}
+
+.sticky-top{position:sticky;top:0;z-index:20;background:#fff;padding-bottom:2px}
+.m-stats{display:flex;gap:8px;padding:0 20px 6px}
+.m-stat-card{flex:1;padding:5px 8px;border-radius:10px;text-align:center}
+.m-stat-card.orange{background:var(--orange-light)}.m-stat-card.green{background:var(--green-light)}.m-stat-card.blue{background:var(--blue-light)}
+.m-stat-num{font-size:17px;font-weight:800}
+.m-stat-card.orange .m-stat-num{color:var(--orange)}.m-stat-card.green .m-stat-num{color:var(--green)}.m-stat-card.blue .m-stat-num{color:var(--blue)}
+.m-stat-label{font-size:10px;color:var(--text-secondary);margin-top:1px;font-weight:500}
+.section-title{display:flex;justify-content:space-between;align-items:center;padding:0 20px 12px}
+.section-title h2{font-size:16px;font-weight:700}
+
+.search-input{width:100%;padding:9px 14px;border-radius:10px;border:1.5px solid transparent;font-size:13px;font-weight:600;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:var(--bg);outline:none;transition:border .2s}
+.search-input:focus{border-color:var(--orange)}
+
+.property-list{padding:0 20px 100px;display:flex;flex-direction:column;gap:12px}
+.property-item{display:flex;gap:14px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.property-item:active{transform:scale(.98)}
+.prop-thumb{width:80px;height:80px;border-radius:14px;overflow:hidden;flex-shrink:0;position:relative;background:#eee}
+.prop-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prop-thumb-fallback{width:80px;height:80px;border-radius:14px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0}
+.prop-photo-count{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,.55);color:#fff;font-size:9px;font-weight:700;padding:2px 5px;border-radius:5px}
+.prop-info{flex:1;min-width:0}
+.prop-name{font-size:15px;font-weight:700;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prop-addr{font-size:12px;color:var(--text-secondary);margin-bottom:6px}
+.prop-price{font-size:16px;font-weight:800;color:var(--orange);margin-bottom:6px}
+.prop-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600}
+.tag-type{background:#F3F4F6;color:#4B5563}.tag-done{background:var(--green-light);color:var(--green)}.tag-draft{background:var(--blue-light);color:var(--blue)}
+
+.fab{position:absolute;bottom:calc(90px + env(safe-area-inset-bottom,0px));right:20px;width:56px;height:56px;border-radius:50%;background:var(--orange-gradient);border:none;font-size:24px;color:#fff;cursor:pointer;z-index:50;box-shadow:0 6px 20px rgba(240,90,40,.35);display:flex;align-items:center;justify-content:center;transition:transform .2s}
+@media(min-width:500px){.fab{bottom:90px}}
+.fab:active{transform:scale(.9)}
+
+.voice-area{display:flex;flex-direction:column;align-items:center;padding:12px 20px;background:linear-gradient(180deg,#FFFFFF,#F8F9FB)}
+.recording-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;background:var(--orange);color:#fff;font-size:13px;font-weight:600;margin-bottom:12px}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:#fff;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.rec-btn-wrap{position:relative;margin-bottom:10px;width:170px;height:170px;display:flex;align-items:center;justify-content:center}
+.rec-pulse{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(240,90,40,.15);animation:pulse 2s infinite}
+.rec-pulse.p1{width:140px;height:140px}.rec-pulse.p2{width:170px;height:170px;animation-delay:.5s}
+@keyframes pulse{0%{transform:translate(-50%,-50%) scale(.9);opacity:.6}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0}}
+.rec-btn{width:110px;height:110px;border-radius:50%;background:var(--orange-gradient);border:none;font-size:40px;color:#fff;cursor:pointer;box-shadow:0 10px 40px rgba(240,90,40,.35);position:relative;z-index:2;display:flex;align-items:center;justify-content:center}
+.rec-timer{font-size:28px;font-weight:800;margin:4px 0}
+.rec-hint{text-align:center;font-size:12px;color:var(--text-secondary);line-height:1.6}
+.transcript-area{margin:12px 20px 0;padding:16px;background:var(--bg);border-radius:var(--radius);font-size:14px;line-height:1.7;color:var(--text-secondary);min-height:70px;height:auto}
+.transcript-area .hl{color:var(--orange);font-weight:600}
+.voice-actions{display:flex;gap:12px;padding:12px 20px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px));background:rgba(255,255,255,.95);backdrop-filter:blur(20px);border-top:1px solid var(--border);flex-shrink:0}
+@media(min-width:500px){.voice-actions{padding-bottom:12px}}
+.btn-cancel-v{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary)}
+.btn-convert{flex:1.5;padding:14px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+.ai-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:500px;padding:40px 20px;text-align:center}
+.ai-spinner{width:80px;height:80px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;font-size:36px;animation:spinPulse 1.5s ease-in-out infinite;margin-bottom:24px}
+@keyframes spinPulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,90,40,.4)}50%{transform:scale(1.1);box-shadow:0 0 0 20px rgba(240,90,40,0)}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(240,90,40,0)}}
+.ai-loading-text{font-size:18px;font-weight:700;margin-bottom:8px}
+.ai-loading-sub{font-size:13px;color:var(--text-secondary);line-height:1.6}
+.ai-progress-bar{width:200px;height:4px;background:var(--border);border-radius:2px;margin-top:20px;overflow:hidden}
+.ai-progress-fill{height:100%;background:var(--orange-gradient);border-radius:2px;animation:progressAnim 2s ease-in-out forwards}
+@keyframes progressAnim{0%{width:0}30%{width:40%}60%{width:70%}90%{width:90%}100%{width:100%}}
+
+.detail-hero{background:linear-gradient(135deg,var(--orange-light),#FAFBFC);height:220px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.detail-hero .emoji{font-size:56px;margin:8px 0}
+.detail-tags{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.detail-name{font-size:20px;font-weight:800}
+.detail-addr-t{font-size:13px;color:var(--text-secondary);margin-top:4px}
+.detail-body{padding:20px}
+.detail-price{font-size:28px;font-weight:800;color:var(--orange);margin-bottom:20px}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.info-cell{padding:14px;background:var(--bg);border-radius:12px}
+.info-cell .label{font-size:11px;color:var(--text-secondary);margin-bottom:4px;font-weight:500}
+.info-cell .value{font-size:15px;font-weight:700}
+.memo-card{padding:16px;background:var(--bg);border-radius:var(--radius);margin-bottom:20px}
+.memo-title{font-size:14px;font-weight:700;margin-bottom:8px}
+.owner-card{padding:16px;background:var(--bg);border-radius:var(--radius);margin-bottom:20px;border-left:3px solid var(--orange)}
+.owner-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+.owner-label{color:var(--text-secondary);font-size:11px}.owner-val{font-weight:700}
+.owner-memo{font-size:12px;color:var(--text-secondary);background:#fff;padding:8px 10px;border-radius:8px;margin-top:6px}
+.detail-actions{display:flex;gap:12px;margin-bottom:12px}
+.btn-edit-d{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text)}
+.btn-share{flex:1;padding:14px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+.match-section{margin-bottom:20px}
+.match-title{font-size:15px;font-weight:800;margin-bottom:10px}
+.match-item{display:flex;gap:12px;padding:12px;border-radius:12px;background:var(--bg);border:1px solid var(--orange-light);margin-bottom:8px;cursor:pointer;align-items:center;position:relative}
+.match-avatar{width:36px;height:36px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px;flex-shrink:0}
+.match-info{flex:1;min-width:0}
+.match-name{font-size:13px;font-weight:700}
+.match-badge{padding:2px 8px;border-radius:12px;background:var(--orange-light);color:var(--orange);font-size:11px;font-weight:800;margin-left:4px}
+.match-meta{font-size:11px;color:var(--text-secondary);margin-top:2px}
+
+.edit-form{padding:0 20px 120px}
+.edit-section{margin-bottom:16px}
+.edit-label{font-size:12px;font-weight:600;color:var(--text-secondary);margin-bottom:6px}
+.edit-input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:14px;font-weight:600;font-family:'Noto Sans KR',sans-serif;color:var(--text);background:#fff;outline:none;transition:border .2s}
+.edit-input:focus{border-color:var(--orange)}
+.edit-input.price{color:var(--orange);font-size:18px;font-weight:800}
+.edit-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.edit-textarea{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--border);font-size:13px;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary);min-height:180px;resize:none;outline:none;line-height:1.8;overflow:hidden}
+.edit-textarea:focus{border-color:var(--orange)}
+
+/* ── 인라인 필드: 뷰/편집 토글 ── */
+.fi{width:100%;border:1.5px solid transparent;background:transparent;outline:none;font-family:'Noto Sans KR',sans-serif;color:var(--text);border-radius:10px;padding:6px 8px;transition:border .15s;pointer-events:none;cursor:default}
+.fi.on{border-color:var(--border);background:#fff;pointer-events:auto;cursor:text}
+.fi-small.on{border-color:var(--border);background:#fff;pointer-events:auto;cursor:text}
+.fi.on:focus{border-color:var(--orange)}
+.fi:not(.on)::placeholder{color:transparent}
+.fi-ta:not(.on)::placeholder{color:transparent}
+.fi-owner-ta:not(.on)::placeholder{color:transparent}
+.fi-name{font-size:20px;font-weight:800;line-height:1.3;display:block}
+.fi-price{font-size:28px;font-weight:800;color:var(--orange);line-height:1.2;display:block}
+.fi-addr{font-size:13px;font-weight:600;flex:1}
+.fi-val{font-size:15px;font-weight:700;display:block}
+.fi-small{font-size:13px;font-weight:700;display:block;width:auto;padding:2px 4px}
+.fi-ta{width:100%;border:1.5px solid transparent;background:transparent;outline:none;font-family:'Noto Sans KR',sans-serif;color:var(--text);resize:none;line-height:2;border-radius:10px;padding:16px 18px;transition:border .15s,background .15s,padding .15s;overflow:visible;pointer-events:none;cursor:default;font-size:14px;min-height:260px;height:auto}
+.fi-ta.on{border-color:var(--border);background:#fff;padding:12px 14px;min-height:320px;pointer-events:auto;cursor:text}
+.fi-ta.on:focus{border-color:var(--orange)}
+.fi-owner-ta{width:100%;border:1.5px solid transparent;background:transparent;outline:none;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary);resize:none;line-height:1.7;border-radius:10px;padding:6px 0;transition:border .15s,background .15s,padding .15s;overflow:hidden;pointer-events:none;cursor:default;font-size:12px;min-height:60px}
+.fi-owner-ta.on{border-color:var(--border);background:#fff;padding:8px 10px;min-height:80px;pointer-events:auto;cursor:text}
+.fi-owner-ta.on:focus{border-color:var(--orange)}
+.ai-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:12px;background:var(--orange-light);color:var(--orange);font-size:11px;font-weight:700;margin-bottom:16px}
+.save-actions{display:flex;gap:12px;margin-top:20px}
+.btn-re{flex:1;padding:14px;border-radius:12px;border:1px solid var(--border);background:#fff;font-size:15px;font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.btn-save{flex:1;padding:14px;border-radius:12px;border:none;background:var(--orange);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+
+.customer-filter{display:flex;gap:6px;padding:0 20px 8px;overflow-x:auto}
+.cfilter{padding:4px 6px;border-radius:20px;border:none;background:transparent;font-size:11.5px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary);white-space:nowrap;flex-shrink:0}
+.cfilter.active{background:transparent;color:var(--text);font-weight:800}
+.filter-row1{display:flex;gap:0px;padding:0 10px 6px;overflow-x:auto;align-items:center}
+.filter-row1::-webkit-scrollbar{display:none}
+.filter-pipe{width:1px;height:13px;background:#D1D5DB;flex-shrink:0;margin:0 3px}
+.filter-row2{display:flex;gap:0px;padding:0 10px 8px;overflow-x:auto;border-bottom:1px solid var(--border);margin-bottom:2px}
+.filter-row2::-webkit-scrollbar{display:none}
+.catfilter{padding:4px 6px;border-radius:20px;border:none;background:transparent;font-size:11.5px;font-weight:500;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-secondary);white-space:nowrap;flex-shrink:0;transition:all .15s}
+.catfilter.active{background:transparent;color:var(--text);font-weight:800}
+.catfilter.active-com{background:transparent;color:var(--text);font-weight:800}
+.tag-commercial{background:#FFF0F3;color:#E0335A}
+.prop-cat-badge{display:inline-flex;align-items:center;gap:2px;padding:2px 7px;border-radius:6px;font-size:10px;font-weight:700;margin-right:4px}
+.customer-list{padding:0 20px 100px;display:flex;flex-direction:column;gap:10px}
+.customer-item{display:flex;gap:14px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);cursor:pointer;align-items:center;transition:all .15s}
+.customer-item:active{transform:scale(.98)}
+.customer-avatar{width:44px;height:44px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:16px;flex-shrink:0}
+.customer-info{flex:1;min-width:0}
+.customer-name{font-size:14px;font-weight:700;margin-bottom:2px}
+.customer-meta{font-size:12px;color:var(--text-secondary)}
+.customer-need{font-size:12px;color:var(--orange);font-weight:600;margin-top:2px}
+.customer-arrow{color:var(--text-secondary);font-size:18px}
+
+.cd-profile{display:flex;align-items:center;gap:14px;padding:0 20px 16px}
+.cd-avatar{width:52px;height:52px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:20px}
+.cd-name{font-size:18px;font-weight:800}
+.cd-role{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.cd-contact{display:flex;gap:8px;padding:0 20px 16px}
+.cd-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans KR',sans-serif;text-align:center}
+.cd-section{padding:0 20px 16px}
+.cd-section-title{font-size:14px;font-weight:700;margin-bottom:10px}
+.cd-card{background:var(--bg);border-radius:var(--radius);padding:14px}
+.cd-row{display:flex;justify-content:space-between;padding:7px 0;font-size:13px}
+.cd-label-t{color:var(--text-secondary)}.cd-val{font-weight:700}
+.cd-memo-box{padding:18px;background:var(--bg);border-radius:16px;border-left:4px solid var(--orange);font-size:14px;line-height:2;white-space:pre-wrap}
+
+.my-profile{display:flex;align-items:center;gap:14px;margin:0 20px 16px;padding:20px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border)}
+.my-avatar{width:52px;height:52px;border-radius:50%;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center}
+.my-name{font-size:18px;font-weight:800}.my-role{font-size:13px;color:var(--text-secondary);margin-top:2px}
+.my-biz{margin:0 20px 16px;padding:18px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);border-left:3px solid var(--orange)}
+.my-biz-title{font-size:15px;font-weight:700;margin-bottom:14px}
+.my-biz-row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0}
+.my-biz-label{color:var(--text-secondary)}.my-biz-val{font-weight:700}
+.my-menu{margin:0 20px 100px;display:flex;flex-direction:column;gap:2px;background:var(--card);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden}
+.my-menu-item{display:flex;align-items:center;gap:10px;padding:16px 18px;font-size:14px;font-weight:600;border:none;background:none;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text);text-align:left;transition:background .15s;width:100%}
+.my-menu-item:active{background:var(--bg)}
+.my-menu-item+.my-menu-item{border-top:1px solid var(--border)}
+.my-menu-item.danger{color:#EF4444}
+
+.noti-list{padding:0 20px 100px;display:flex;flex-direction:column;gap:10px}
+.noti-item{display:flex;gap:12px;padding:14px;border-radius:var(--radius);background:var(--card);border:1px solid var(--border);cursor:pointer;align-items:center;transition:all .15s}
+.noti-item.unread{background:#FFF8F0}
+.noti-item:active{transform:scale(.98)}
+.noti-icon-w{width:42px;height:42px;border-radius:12px;background:var(--orange-light);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.noti-info{flex:1}
+.noti-title-t{font-size:13px;font-weight:700;margin-bottom:2px}
+.noti-desc{font-size:11px;color:var(--text-secondary)}
+.noti-time{font-size:11px;color:var(--text-secondary);flex-shrink:0}
+
+.onboard{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(40px + env(safe-area-inset-top,0px)) 32px 40px;text-align:center;min-height:100%}
+@media(min-width:500px){.onboard{padding:40px 32px}}
+.onboard-logo{width:64px;height:64px;border-radius:18px;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin-bottom:24px;box-shadow:0 8px 24px rgba(240,90,40,.25)}
+.onboard-title{font-size:24px;font-weight:800;margin-bottom:10px}
+.onboard-desc{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:36px}
+.kakao-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border-radius:12px;border:none;background:#FEE500;font-size:16px;font-weight:700;color:#3C1E1E;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;margin-bottom:12px}
+.kakao-btn:active{transform:scale(.97)}
+.phone-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s;margin-bottom:12px}
+.phone-btn:active{transform:scale(.97)}
+.email-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;border-radius:12px;border:1.5px solid var(--border);background:#fff;font-size:15px;font-weight:600;color:var(--text);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.email-btn:active{transform:scale(.97)}
+.onboard-terms{margin-top:20px;font-size:11px;color:var(--text-secondary)}
+.onboard-terms a{color:var(--orange);text-decoration:none}
+
+.scan-screen{display:flex;flex-direction:column;align-items:center;padding:calc(20px + env(safe-area-inset-top,0px)) 20px 20px}
+@media(min-width:500px){.scan-screen{padding:20px}}
+.scan-header{display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:20px}
+.scan-step{padding:5px 14px;border-radius:20px;background:var(--orange-light);color:var(--orange);font-size:13px;font-weight:700}
+.scan-skip{background:none;border:none;font-size:13px;color:var(--text-secondary);font-weight:600;cursor:pointer;font-family:'Noto Sans KR',sans-serif}
+.scan-title{font-size:20px;font-weight:800;margin-bottom:6px}
+.scan-desc{font-size:13px;color:var(--text-secondary);margin-bottom:24px}
+.scan-frame{position:relative;width:100%;height:180px;background:#1A1A2E;border-radius:16px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer}
+.scan-corner{position:absolute;width:24px;height:24px;border:3px solid var(--orange)}
+.scan-corner.tl{top:16px;left:16px;border-right:none;border-bottom:none;border-radius:4px 0 0 0}
+.scan-corner.tr{top:16px;right:16px;border-left:none;border-bottom:none;border-radius:0 4px 0 0}
+.scan-corner.bl{bottom:16px;left:16px;border-right:none;border-top:none;border-radius:0 0 0 4px}
+.scan-corner.br{bottom:16px;right:16px;border-left:none;border-top:none;border-radius:0 0 4px 0}
+.scan-detecting{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;background:rgba(240,90,40,.9);color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+
+.share-actions-row{padding:0 20px 100px;display:flex;gap:10px}
+.share-btn-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;border-radius:14px;border:1px solid var(--border);background:#fff;cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .15s}
+.share-btn-w:active{transform:scale(.96);background:var(--bg)}
+.share-icon-w{width:44px;height:44px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.share-icon-w.kakao{background:#FEE500}.share-icon-w.sms-s{background:var(--green);color:#fff}.share-icon-w.img{background:var(--orange-light);color:var(--orange)}
+.share-title{font-size:13px;font-weight:700;text-align:center}
+.share-sub{font-size:10px;color:var(--orange);font-weight:600;text-align:center;margin-top:2px}
+
+.biz-card-w{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;margin:0 20px 16px;background:#fff;border-radius:var(--radius);border:1px solid var(--border);border-left:3px solid var(--orange);box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.biz-left{display:flex;align-items:center;gap:10px}
+.biz-logo-w{width:36px;height:36px;border-radius:8px;background:var(--orange-gradient);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.biz-name-t{font-size:14px;font-weight:800}.biz-title-t{font-size:11px;color:var(--text-secondary)}
+.biz-right{text-align:right}
+.biz-contact-t{font-size:12px;font-weight:700;line-height:1.6}
+.biz-org{font-size:10px;color:var(--text-secondary);margin-top:2px}
+
+.carousel-wrap{position:relative;margin:0 20px 16px;border-radius:var(--radius);overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1);background:#1a1a1a}
+.carousel-track{display:flex;transition:transform .3s ease}
+.slide{flex:0 0 100%;position:relative}
+.slide-img{width:100%;height:220px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#1a1a1a}
+.slide-img img{width:100%;height:100%;object-fit:cover;display:block}
+.slide-img-fallback{width:100%;height:220px;display:flex;align-items:center;justify-content:center;font-size:72px;background:linear-gradient(135deg,#FFE8D6,#FFF4EE 50%,#FFECD2)}
+.slide-label{position:absolute;bottom:12px;left:12px;padding:4px 12px;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;font-weight:600}
+.slide-num{position:absolute;top:12px;right:12px;padding:3px 10px;border-radius:12px;background:rgba(0,0,0,.5);color:#fff;font-size:11px;font-weight:700}
+.carousel-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;z-index:5}
+.carousel-dots .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.45);cursor:pointer;transition:all .2s}
+.carousel-dots .dot.active{background:#fff;width:20px;border-radius:4px}
+
+.history-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.history-item:last-child{border-bottom:none}
+.history-icon-w{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.history-icon-w.kakao{background:#FEE500}.history-icon-w.sms{background:var(--green);color:#fff}
+.history-info{flex:1}
+.history-method{font-size:13px;font-weight:700}
+.history-date{font-size:11px;color:var(--text-secondary);margin-top:1px}
+.history-count{font-size:12px;color:var(--orange);font-weight:600}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+var h = React.createElement;
+var useState = React.useState;
+var useRef = React.useRef;
+
+var P=[
+  {category:'주거',name:'래미안 레이크뷰 108동',addr:'서초구 반포동',type:'아파트',deal:'매매',price:'18.5억',area:'84㎡',floor:'25층',status:'done',emoji:'🏢',dir:'남향',rooms:'3개',baths:'2개',moveIn:'즉시입주',photos:['https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1484154218962-a197022b5858?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1507652313519-d4e9174996dd?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방','욕실','베란다'],memo:'• 한강뷰 직접 조망 가능\n• 인테리어 올수리 완료\n• 주차 2대 가능\n• 반포역 도보 5분\n• 관리비 약 35만원/월',regDate:'2026.02.25',ownerName:'박정수',ownerPhone:'010-1234-5678',ownerRel:'소유자',ownerMemo:'오후 2시 이후 통화'},
+  {category:'주거',name:'반포 자이 아파트 203동',addr:'서초구 반포동',type:'아파트',deal:'전세',price:'9.8억',area:'109㎡',floor:'12층',status:'done',emoji:'🏠',dir:'동향',rooms:'4개',baths:'2개',moveIn:'2026.04.01',photos:['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1583608205776-bfd35f0d9f83?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방','안방'],memo:'• 올수리 상태 양호\n• 반포초·세화중 학군 우수\n• 반포역 도보 7분',regDate:'2026.02.20',ownerName:'이미영',ownerPhone:'010-2345-6789',ownerRel:'소유자',ownerMemo:'문자 선호'},
+  {category:'주거',name:'강남 오피스텔 B동',addr:'강남구 역삼동',type:'오피스텔',deal:'월세',price:'보증금3천/월120',area:'42㎡',floor:'8층',status:'draft',emoji:'🏬',dir:'남서향',rooms:'1개',baths:'1개',moveIn:'즉시입주',photos:['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1564540586988-aa4e53c3d799?w=400&h=300&fit=crop'],photoLabels:['외관','내부','욕실'],memo:'• 역삼역 도보 3분\n• 풀옵션\n• 관리비 10만',regDate:'2026.02.27',ownerName:'김태호',ownerPhone:'010-3456-7890',ownerRel:'대리인',ownerMemo:'아버지와 직접 협의'},
+  {category:'주거',name:'래미안 퍼스티지 501동',addr:'서초구 서초동',type:'아파트',deal:'매매',price:'22억',area:'118㎡',floor:'18층',status:'done',emoji:'🏢',dir:'남향',rooms:'4개',baths:'2개',moveIn:'협의',photos:['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방','욕실'],memo:'• 서초역 초역세권\n• 대형 평형, 4베이 구조',regDate:'2026.02.22',ownerName:'최수진',ownerPhone:'010-4567-8901',ownerRel:'소유자',ownerMemo:'해외 거주, 카톡 필수'},
+  {category:'주거',name:'마포 용강동 빌라',addr:'마포구 용강동',type:'빌라',deal:'매매',price:'5.2억',area:'66㎡',floor:'3층',status:'draft',emoji:'🏘️',dir:'남향',rooms:'2개',baths:'1개',moveIn:'즉시입주',photos:['https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1560185007-cde436f6a4d0?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방'],memo:'• 대흥역 도보 5분\n• 조용한 주택가\n• 주차 1대',regDate:'2026.02.28',ownerName:'정민호',ownerPhone:'010-5678-9012',ownerRel:'소유자',ownerMemo:'직접 거주 중'},
+  {category:'주거',name:'잠실 엘스 307동',addr:'송파구 잠실동',type:'아파트',deal:'매매',price:'24억',area:'119㎡',floor:'22층',status:'done',emoji:'🏢',dir:'남향',rooms:'4개',baths:'2개',moveIn:'협의',photos:['https://images.unsplash.com/photo-1574362848149-11496d93a7c7?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600607687644-c7171b42498f?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600566753151-384129cf4e3e?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600573472591-ee6b68d14c68?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방','안방'],memo:'• 잠실역 도보 3분\n• 롯데월드타워뷰',regDate:'2026.02.15',ownerName:'한지수',ownerPhone:'010-6111-2222',ownerRel:'소유자',ownerMemo:'주말 통화 선호'},
+  {category:'주거',name:'헬리오시티 204동',addr:'송파구 가락동',type:'아파트',deal:'전세',price:'11억',area:'84㎡',floor:'15층',status:'done',emoji:'🏠',dir:'남동향',rooms:'3개',baths:'2개',moveIn:'2026.05.01',photos:['https://images.unsplash.com/photo-1565182999561-18d7dc61c393?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1565538810643-b5bdb714032a?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방'],memo:'• 송파역 도보 7분\n• 주차 2대',regDate:'2026.02.10',ownerName:'오세준',ownerPhone:'010-6222-3333',ownerRel:'소유자',ownerMemo:'카톡 선호'},
+  {category:'주거',name:'역삼 센트럴 오피스텔',addr:'강남구 역삼동',type:'오피스텔',deal:'월세',price:'보증금5천/월150',area:'55㎡',floor:'12층',status:'done',emoji:'🏬',dir:'동향',rooms:'1개',baths:'1개',moveIn:'즉시입주',photos:['https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1617103996702-96ff29b1c467?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop'],photoLabels:['외관','내부','욕실'],memo:'• 역삼역 도보 5분\n• 풀옵션 + 빌트인',regDate:'2026.02.12',ownerName:'배지현',ownerPhone:'010-6333-4444',ownerRel:'소유자',ownerMemo:'이메일 선호'},
+  {category:'주거',name:'성수동 트리마제',addr:'성동구 성수동',type:'아파트',deal:'매매',price:'28억',area:'140㎡',floor:'30층',status:'done',emoji:'🏢',dir:'남향',rooms:'4개',baths:'2개',moveIn:'즉시입주',photos:['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600047509358-9dc75507daeb?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1600047509782-20d39509f26d?w=400&h=300&fit=crop'],photoLabels:['외관','거실','주방','안방'],memo:'• 한강뷰 프리미엄\n• 초고층 랜드마크',regDate:'2026.02.08',ownerName:'윤태영',ownerPhone:'010-6444-5555',ownerRel:'소유자',ownerMemo:'해외 출장 잦음'},
+  {category:'주거',name:'논현동 원룸 2층',addr:'강남구 논현동',type:'원룸',deal:'월세',price:'보증금1천/월80',area:'22㎡',floor:'2층',status:'done',emoji:'🏠',dir:'동향',rooms:'1개',baths:'1개',moveIn:'즉시입주',photos:['https://images.unsplash.com/photo-1540518614846-7eded433c457?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&h=300&fit=crop'],photoLabels:['전체','욕실'],memo:'• 학동역 도보 5분\n• 풀옵션\n• 관리비 7만',regDate:'2026.03.01',ownerName:'신재원',ownerPhone:'010-7111-2222',ownerRel:'소유자',ownerMemo:'오전 통화 선호'},
+  {category:'상가',name:'논현역 1층 상가',addr:'강남구 논현동',type:'상가',deal:'월세',price:'보증금5천/월300',area:'92㎡',floor:'1층',status:'done',emoji:'🏪',keymoney:'8천만원',bizType:'음식점·카페',currentBiz:'카페 영업 중',traffic:'유동인구 매우 많음',parking:'건물 주차 10대',photos:['https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1559925393-8be0ec4767c8?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=400&h=300&fit=crop'],photoLabels:['외부','내부','주방','간판'],memo:'• 논현역 도보 3분\n• 유동인구 일 3,000명+\n• 주방 시설 풀세팅\n• 화장실 별도',regDate:'2026.01.25',ownerName:'장세영',ownerPhone:'010-6777-8888',ownerRel:'소유자',ownerMemo:'직접 방문 선호'},
+  {category:'상가',name:'강남대로 사무실 4층',addr:'강남구 역삼동',type:'사무실',deal:'월세',price:'보증금3천/월250',area:'115㎡',floor:'4층',status:'done',emoji:'🏢',keymoney:'없음',bizType:'업종 무관',currentBiz:'공실',traffic:'강남역 도보 2분',parking:'건물 주차 가능',photos:['https://images.unsplash.com/photo-1497366216548-37526070297c?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=400&h=300&fit=crop'],photoLabels:['전경','내부','회의실'],memo:'• 강남역 초역세권\n• 인테리어 신규 시공\n• 회의실 2개 포함\n• 1~5인 사무실 적합',regDate:'2026.02.05',ownerName:'김상호',ownerPhone:'010-7555-6666',ownerRel:'임대인',ownerMemo:'평일 오전 연락'},
+  {category:'상가',name:'이태원 경리단길 상가',addr:'용산구 이태원동',type:'상가',deal:'전세',price:'3억',area:'68㎡',floor:'1층',status:'done',emoji:'🏪',keymoney:'5천만원',bizType:'주류·음식점',currentBiz:'공실',traffic:'주말 유동인구 많음',parking:'인근 공영주차장',photos:['https://images.unsplash.com/photo-1525610553991-2bede1a236e2?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=400&h=300&fit=crop'],photoLabels:['외부','내부','테라스'],memo:'• 경리단길 메인 거리\n• 테라스 공간 있음\n• 에어컨 2대 포함\n• 외국인 방문 많은 상권',regDate:'2026.02.18',ownerName:'이수빈',ownerPhone:'010-8111-9999',ownerRel:'소유자',ownerMemo:'카카오톡 선호'},
+  {category:'상가',name:'홍대 상권 1층 점포',addr:'마포구 서교동',type:'상가',deal:'월세',price:'보증금3천/월200',area:'45㎡',floor:'1층',status:'draft',emoji:'🏪',keymoney:'3천만원',bizType:'판매·잡화',currentBiz:'의류 매장 운영 중',traffic:'홍대입구역 도보 5분',parking:'없음',photos:['https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=400&h=300&fit=crop'],photoLabels:['외부','내부','간판'],memo:'• 홍대 메인 상권\n• 20~30대 유동인구\n• 간판 크게 가능\n• 내부 리모델링 2024',regDate:'2026.03.02',ownerName:'최정훈',ownerPhone:'010-9222-3333',ownerRel:'임차인 (전대)',ownerMemo:'저녁 7시 이후 통화'},
+  {category:'상가',name:'성수동 카페거리 상가',addr:'성동구 성수동',type:'상가',deal:'매매',price:'12억',area:'82㎡',floor:'1층',status:'done',emoji:'🏪',keymoney:'해당없음',bizType:'카페·F&B',currentBiz:'카페 영업 중',traffic:'성수역 도보 7분',parking:'건물 앞 2대',photos:['https://images.unsplash.com/photo-1600093463592-8e36ae95ef56?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&h=300&fit=crop'],photoLabels:['외부','내부','카운터','테라스'],memo:'• 성수동 핫플레이스\n• 임차인 월세 수익 중\n• 건물 통매각 가능\n• 인스타 명소 인근',regDate:'2026.02.28',ownerName:'박민준',ownerPhone:'010-6888-7777',ownerRel:'소유자',ownerMemo:'공인중개사 통해서만'},
+  {category:'상가',name:'서초 사거리 2층 사무실',addr:'서초구 서초동',type:'사무실',deal:'전세',price:'2억',area:'78㎡',floor:'2층',status:'draft',emoji:'🏢',keymoney:'없음',bizType:'업종 무관',currentBiz:'공실',traffic:'서초역 도보 5분',parking:'건물 주차 2대',photos:['https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=400&h=300&fit=crop','https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=300&fit=crop'],photoLabels:['전경','내부'],memo:'• 소형 사무실 희소\n• 주거 지역 인근 조용한 환경\n• 인터넷·전기 용량 충분\n• 분리된 개인사무소 추천',regDate:'2026.03.03',ownerName:'오한결',ownerPhone:'010-5333-4444',ownerRel:'임대인',ownerMemo:'문자 후 전화'},
+];
+
+var C=[
+  {name:'이서연',phone:'010-1111-2222',need:'매수',area:'서초구 반포동',budget:'15~20억',type:'아파트',size:'84㎡ 이상',floor:'고층',memo:'• 한강뷰 선호\n• 자녀 2명, 학군 중요\n• 대출 5억 가능',status:'searching'},
+  {name:'박준혁',phone:'010-3333-4444',need:'전세',area:'서초구 반포동',budget:'8~10억',type:'아파트',size:'109㎡',floor:'중층 이상',memo:'• 반포초 학군 필수\n• 주차 2대 필요',status:'matched'},
+  {name:'최영은',phone:'010-5555-6666',need:'월세',area:'강남구 역삼동',budget:'보증금3~5천/월100~150',type:'오피스텔',size:'30~50㎡',floor:'무관',memo:'• 역세권 필수\n• 풀옵션 선호',status:'searching'},
+  {name:'정태우',phone:'010-7777-8888',need:'매수',area:'마포구',budget:'4~6억',type:'빌라',size:'60㎡ 이상',floor:'저층 가능',memo:'• 신혼부부\n• 주차 1대 필수',status:'searching'},
+  {name:'김하늘',phone:'010-8111-2233',need:'매수',area:'송파구 잠실동',budget:'20~25억',type:'아파트',size:'109㎡ 이상',floor:'고층',memo:'• 잠실역 인근\n• 학군 중요',status:'searching'},
+  {name:'한소희',phone:'010-8333-4455',need:'월세',area:'용산구 이태원동',budget:'보증금2~3천/월150~200',type:'상가',size:'50㎡ 이상',floor:'1층',memo:'• 카페 창업 목적',status:'matched'},
+  {name:'류승범',phone:'010-8444-5566',need:'매수',area:'성동구 성수동',budget:'25~30억',type:'아파트',size:'120㎡ 이상',floor:'고층',memo:'• 한강뷰 프리미엄',status:'matched'},
+];
+
+var NOTI=[
+  {type:'match',title:'래미안 108동 → 매칭 고객 2명',desc:'이서연, 박준혁 조건 일치',time:'방금',unread:true,propIdx:0},
+  {type:'match',title:'강남 오피스텔 B동 → 매칭 1명',desc:'최영은 조건 일치',time:'1시간 전',unread:true,propIdx:2},
+  {type:'match',title:'마포 용강동 빌라 → 매칭 1명',desc:'정태우 조건 일치',time:'3시간 전',unread:true,propIdx:4},
+  {type:'system',title:'매물 등록 완료',desc:'래미안 퍼스티지 501동 등록됨',time:'어제',unread:false,propIdx:3},
+  {type:'system',title:'명함 정보 업데이트',desc:'김민수 명함 저장',time:'2일 전',unread:false,propIdx:-1},
+];
+
+function getMatches(pi){
+  var p=P[pi],r=[];
+  C.forEach(function(c,ci){var s=0;var dm=(c.need==='매수'&&p.deal==='매매')||(c.need==='전세'&&p.deal==='전세')||(c.need==='월세'&&p.deal==='월세');if(!dm)return;s+=30;if(c.type!==p.type)return;s+=20;if(c.area&&p.addr&&p.addr.includes(c.area.split(' ')[0]))s+=20;else s+=10;s+=Math.floor(Math.random()*10)+5;if(s>=60)r.push({idx:ci,score:Math.min(s,99)});});
+  r.sort(function(a,b){return b.score-a.score});return r;
+}
+
+function App(){
+  var _screen=useState('login'),screen=_screen[0],setScreen=_screen[1];
+  var _prevScr=useState(null),prevScr=_prevScr[0],setPrevScr=_prevScr[1];
+  var _selProp=useState(0),selProp=_selProp[0],setSelProp=_selProp[1];
+  var _selCust=useState(0),selCust=_selCust[0],setSelCust=_selCust[1];
+  var _loggedIn=useState(false),loggedIn=_loggedIn[0],setLoggedIn=_loggedIn[1];
+  var _search=useState(''),search=_search[0],setSearch=_search[1];
+  var _csearch=useState(''),csearch=_csearch[0],setCsearch=_csearch[1];
+  var _notiCnt=useState(3),notiCnt=_notiCnt[0],setNotiCnt=_notiCnt[1];
+  var _notiList=useState(NOTI),notiList=_notiList[0],setNotiList=_notiList[1];
+  var _filter=useState('전체'),filter=_filter[0],setFilter=_filter[1];
+  var _pfilter=useState('전체'),pfilter=_pfilter[0],setPfilter=_pfilter[1];
+  var _catfilter=useState('전체'),catfilter=_catfilter[0],setCatfilter=_catfilter[1];
+  var _slide=useState(0),slide=_slide[0],setSlide=_slide[1];
+  var _voiceText=useState(''),voiceText=_voiceText[0],setVoiceText=_voiceText[1];
+  var _aiResult=useState(null),aiResult=_aiResult[0],setAiResult=_aiResult[1];
+  var _aiError=useState(''),aiError=_aiError[0],setAiError=_aiError[1];
+  var _isAnalyzing=useState(false),isAnalyzing=_isAnalyzing[0],setIsAnalyzing=_isAnalyzing[1];
+  var _removedMatches=useState({}),removedMatches=_removedMatches[0],setRemovedMatches=_removedMatches[1];
+  var _isEditing=useState(false),isEditing=_isEditing[0],setIsEditing=_isEditing[1];
+  var _isCustEditing=useState(false),isCustEditing=_isCustEditing[0],setIsCustEditing=_isCustEditing[1];
+  var custFormRef=React.useRef(null);
+  var _isMyEditing=useState(false),isMyEditing=_isMyEditing[0],setIsMyEditing=_isMyEditing[1];
+  var myFormRef=React.useRef(null);
+  var voiceTextRef=useRef('');
+  var ref=useRef(null);
+  var screenRef=useRef('login');
+  var timerRef=useRef(null);
+  var editFormRef=useRef(null);
+
+  var go=function(s){if(timerRef.current){clearTimeout(timerRef.current);timerRef.current=null;}setPrevScr(screenRef.current);screenRef.current=s;setScreen(s);if(ref.current)ref.current.scrollTop=0;};
+  var goDelayed=function(s,ms){timerRef.current=setTimeout(function(){timerRef.current=null;go(s);},ms);};
+
+  var analyzeWithAI=function(){
+    var text=voiceTextRef.current||voiceText||'새 매물';
+    setIsAnalyzing(true);setAiError('');go('ai-loading');
+
+    // 데모 자동분류 함수
+    var demoAnalyze=function(t){
+      var lower=t.toLowerCase();
+      // 고객 감지
+      if(t.includes('고객')||t.includes('찾는')||t.includes('구합니다')||t.includes('원합니다')||t.includes('원함')){
+        var nameM=t.match(/([가-힣]{2,3})\s*(고객|씨|님)/);
+        var phoneM=t.match(/01[0-9]-?\d{3,4}-?\d{4}/);
+        var budgetM=t.match(/예산\s*([^\n,。]+)/);
+        var areaM=t.match(/([가-힣]+[구동로])\s/);
+        return {category:'고객',name:nameM?nameM[1]:'신규고객',phone:phoneM?phoneM[0]:'',need:t.includes('매수')?'매수':t.includes('전세')?'전세':'월세',area:areaM?areaM[1]:'',budget:budgetM?budgetM[1].trim():'',type:t.includes('상가')||t.includes('사무실')?t.includes('사무실')?'사무실':'상가':t.includes('오피스텔')?'오피스텔':t.includes('빌라')?'빌라':'아파트',size:'',floor:'',memo:t};
+      }
+      // 상가 감지
+      if(t.includes('상가')||t.includes('사무실')||t.includes('점포')||t.includes('권리금')){
+        var priceM=t.match(/보증금\s*([^\s\/,]+)\/월\s*([^\s,]+)/)||t.match(/([0-9억천만]+)\s*(월세|전세|매매)/);
+        var keyM=t.match(/권리금\s*([^\s,]+)/);
+        var bizM=t.match(/(카페|음식점|의류|편의점|사무실|업종)/);
+        return {category:'상가',name:t.split(' ').slice(0,3).join(' '),addr:t.match(/([가-힣]+[구동로])/)?t.match(/([가-힣]+[구동로])/)[1]:'',type:t.includes('사무실')?'사무실':'상가',deal:t.includes('매매')?'매매':t.includes('전세')?'전세':'월세',price:priceM?priceM[0]:'',area:t.match(/(\d+[평㎡])/)?t.match(/(\d+[평㎡])/)[1]:'',floor:t.match(/(\d+층)/)?t.match(/(\d+층)/)[1]:'',keymoney:keyM?keyM[1]:'없음',bizType:bizM?bizM[1]:'업종무관',currentBiz:t.includes('영업중')?'영업 중':'공실',traffic:'',parking:'',ownerName:'',ownerPhone:t.match(/01[0-9]-?\d{3,4}-?\d{4}/)?t.match(/01[0-9]-?\d{3,4}-?\d{4}/)[0]:'',ownerRel:'소유자',ownerMemo:'',memo:t};
+      }
+      // 주거 매물
+      var nameM2=t.match(/([가-힣A-Za-z0-9\s]+(?:아파트|빌라|오피스텔|원룸|투룸|주택|동))/);
+      var phoneM2=t.match(/01[0-9]-?\d{3,4}-?\d{4}/);
+      var ownerM=t.match(/([가-힣]{2,3})\s*(집주인|소유자|010)/);
+      return {category:'주거',name:nameM2?nameM2[1].trim():t.split(' ').slice(0,3).join(' '),addr:t.match(/([가-힣]+[구동로])/)?t.match(/([가-힣]+[구동로])/)[1]:'',type:t.includes('오피스텔')?'오피스텔':t.includes('빌라')?'빌라':t.includes('원룸')?'원룸':t.includes('투룸')?'투룸':t.includes('주택')?'주택':'아파트',deal:t.includes('매매')?'매매':t.includes('전세')?'전세':'월세',price:t.match(/([0-9]+억[0-9천]*|보증금[^\s]+\/월[^\s]+)/)?t.match(/([0-9]+억[0-9천]*|보증금[^\s]+\/월[^\s]+)/)[0]:'',area:t.match(/(\d+[평㎡])/)?t.match(/(\d+[평㎡])/)[1]:'',floor:t.match(/(\d+층)/)?t.match(/(\d+층)/)[1]:'',dir:t.match(/(남향|북향|동향|서향|남동향|남서향)/)?t.match(/(남향|북향|동향|서향|남동향|남서향)/)[1]:'',rooms:t.match(/방\s*(\d+)/)?t.match(/방\s*(\d+)/)[1]+'개':'',baths:t.match(/욕실\s*(\d+)|화장실\s*(\d+)/)?((t.match(/욕실\s*(\d+)/)||t.match(/화장실\s*(\d+)/))[1])+'개':'',moveIn:t.includes('즉시')?'즉시입주':'협의',ownerName:ownerM?ownerM[1]:'',ownerPhone:phoneM2?phoneM2[0]:'',ownerRel:'소유자',ownerMemo:'',memo:t};
+    };
+
+    fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1000,
+        system:'당신은 부동산 중개사 앱의 AI 분석기입니다. 입력된 텍스트를 분석해서 반드시 JSON만 반환하세요. 다른 텍스트 절대 포함 금지.\n\n주거매물:{"category":"주거","name":"","addr":"","type":"아파트|빌라|오피스텔|원룸|투룸|주택","deal":"매매|전세|월세","price":"","area":"","floor":"","dir":"","rooms":"","baths":"","moveIn":"","ownerName":"","ownerPhone":"","ownerRel":"","ownerMemo":"","memo":""}\n\n상가매물:{"category":"상가","name":"","addr":"","type":"상가|사무실","deal":"매매|전세|월세","price":"","area":"","floor":"","keymoney":"","bizType":"","currentBiz":"","traffic":"","parking":"","ownerName":"","ownerPhone":"","ownerRel":"","ownerMemo":"","memo":""}\n\n고객:{"category":"고객","name":"","phone":"","need":"매수|전세|월세","area":"","budget":"","type":"","size":"","floor":"","memo":""}',
+        messages:[{role:'user',content:'분석해서 JSON으로:\n'+text}]
+      })
+    })
+    .then(function(r){return r.json();})
+    .then(function(data){
+      try{
+        var txt=data.content[0].text.trim().replace(/```json|```/g,'').trim();
+        var parsed=JSON.parse(txt);
+        setAiResult(parsed);setIsAnalyzing(false);
+        if(parsed.category==='고객'){go('ai-edit-customer');}else{saveAndGo(parsed);}
+      }catch(e){
+        var demo=demoAnalyze(text);
+        setAiResult(demo);setIsAnalyzing(false);
+        if(demo.category==='고객'){go('ai-edit-customer');}else{saveAndGo(demo);}
+      }
+    })
+    .catch(function(){
+      var demo=demoAnalyze(text);
+      setAiResult(demo);setIsAnalyzing(false);
+      if(demo.category==='고객'){go('ai-edit-customer');}else{saveAndGo(demo);}
+    });
+  };
+
+  var saveAndGo=function(ap){
+    var isCom=ap.category==='상가';
+    var newP={category:isCom?'상가':'주거',name:ap.name||'새 매물',addr:ap.addr||'',type:ap.type||'',deal:ap.deal||'',price:ap.price||'',area:ap.area||'',floor:ap.floor||'',status:'draft',emoji:isCom?'🏪':'🏠',dir:ap.dir||'',rooms:ap.rooms||'',baths:ap.baths||'',moveIn:ap.moveIn||'',keymoney:ap.keymoney||'',bizType:ap.bizType||'',currentBiz:ap.currentBiz||'',traffic:ap.traffic||'',parking:ap.parking||'',photos:[],photoLabels:[],memo:ap.memo||'',regDate:new Date().toLocaleDateString('ko-KR'),ownerName:ap.ownerName||'',ownerPhone:ap.ownerPhone||'',ownerRel:ap.ownerRel||'소유자',ownerMemo:ap.ownerMemo||''};
+    P.push(newP);
+    setSelProp(P.length-1);
+    setVoiceText('');
+    setAiResult(null);
+    // 유형별 필터 자동 설정 후 상세로 (확인 후 완료 누르게)
+    var t=ap.type||'';
+    if(t==='상가'){setCatfilter('상가');setPfilter('전체');}
+    else if(t==='사무실'){setCatfilter('사무실');setPfilter('전체');}
+    else if(t==='아파트'){setCatfilter('아파트');setPfilter('전체');}
+    else if(t==='빌라'){setCatfilter('빌라');setPfilter('전체');}
+    else if(t==='오피스텔'){setCatfilter('오피스텔');setPfilter('전체');}
+    else if(t==='원룸'||t==='투룸'){setCatfilter('원룸·투룸');setPfilter('전체');}
+    else if(t==='주택'){setCatfilter('주택');setPfilter('전체');}
+    else{setCatfilter('전체');}
+    setIsEditing(true);
+    go('detail');
+  };
+  var showTabs=loggedIn&&['login','card-scan','card-loading','card-confirm','voice','ai-loading','ai-edit-customer'].indexOf(screen)===-1;
+  var done=P.filter(function(p){return p.status==='done'}).length;
+
+  function StatusTag(props){return props.s==='done'?h('span',{className:'tag tag-done'},'등록완료'):h('span',{className:'tag tag-draft'},'작성중');}
+  function CTag(props){return props.s==='matched'?h('span',{className:'tag tag-done'},'매칭완료'):h('span',{className:'tag tag-draft'},'찾는 중');}
+
+  var isPC=typeof window!=='undefined'&&window.innerWidth>=1024;
+  var [pcWidth,setPcWidth]=React.useState(typeof window!=='undefined'?window.innerWidth:0);
+  React.useEffect(function(){var fn=function(){setPcWidth(window.innerWidth)};window.addEventListener('resize',fn);return function(){window.removeEventListener('resize',fn);};},[]);
+  var isPCView=pcWidth>=1024&&loggedIn;
+
+  var renderSidebar=function(){
+    var filtered=P.filter(function(p){
+      if(!search)return true;
+      var fields=[p.name,p.addr,p.type,p.deal,p.price,p.area,p.floor,p.dir,p.ownerName,p.ownerPhone,p.memo,p.bizType,p.currentBiz,p.keymoney].filter(Boolean).join(' ');
+      return search.trim().split(/\s+/).every(function(kw){return fields.includes(kw);});
+    });
+    return h(React.Fragment,null,
+      h('div',{className:'pc-sidebar-header'},
+        h('span',null,'📋 매물 목록'),
+        h('button',{onClick:function(){go('voice')},style:{padding:'6px 14px',borderRadius:8,border:'none',background:'var(--orange)',color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}},'+ 녹음 등록')
+      ),
+      h('div',{style:{padding:'8px 16px 8px'}},h('input',{className:'search-input',placeholder:'🔍 매물명, 주소 검색',value:search,onChange:function(e){setSearch(e.target.value)}})),
+      h('div',{className:'content-area'},
+        h('div',{className:'property-list',style:{padding:'0 16px 40px'}},filtered.map(function(p){
+          var ri=P.indexOf(p);var isCom=p.category==='상가';
+          return h('div',{className:'property-item',key:ri,
+            style:{background:selProp===ri?'var(--orange-light)':'',borderColor:selProp===ri?'var(--orange)':''},
+            onClick:function(){setSelProp(ri);go('detail')}},
+            h('div',{className:'prop-thumb'},
+              p.photos&&p.photos.length>0
+                ?h(React.Fragment,null,
+                    h('img',{src:p.photos[0],alt:p.name,onError:function(e){e.target.style.display='none';e.target.nextSibling.style.display='flex'}}),
+                    h('div',{style:{display:'none',width:'100%',height:'100%',alignItems:'center',justifyContent:'center',fontSize:32,background:isCom?'#FFF0F3':'var(--orange-light)',borderRadius:14}},p.emoji),
+                    p.photos.length>1?h('div',{className:'prop-photo-count'},p.photos.length+'장'):null
+                  )
+                :h('div',{style:{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:32}},p.emoji)
+            ),
+            h('div',{className:'prop-info'},
+              h('div',{className:'prop-name'},p.name),
+              h('div',{className:'prop-addr'},p.addr),
+              h('div',{className:'prop-price'},p.deal+' '+p.price),
+              h('div',{className:'prop-tags'},
+                h('span',{className:'tag '+(isCom?'tag-commercial':'tag-type')},isCom?'🏪 '+p.type:'🏠 '+p.type),
+                h(StatusTag,{s:p.status})
+              )
+            )
+          );
+        }))
+      )
+    );
+  };
+
+  var renderScreen=function(){
+    if(screen==='login') return h('div',{className:'onboard'},
+      h('div',{className:'onboard-logo'},h('svg',{width:28,height:28,viewBox:'0 0 36 36',fill:'none'},h('path',{d:'M4 28L13 8l6 10 5-6 8 16H4z',fill:'#fff'}))),
+      h('div',{className:'onboard-title'},'오름AI 부동산'),
+      h('div',{className:'onboard-desc',dangerouslySetInnerHTML:{__html:'녹음 한 번이면 매물정보, 고객정보를 한번에.<br/>AI가 알아서 분류하고 정리합니다.'}}),
+      h('button',{className:'kakao-btn',onClick:function(){go('card-scan')}},'💬 카카오로 시작하기'),
+      h('button',{className:'phone-btn',onClick:function(){go('card-scan')}},'📱 휴대폰 번호로 시작하기'),
+      h('button',{className:'email-btn',onClick:function(){go('card-scan')}},'📧 이메일로 시작하기'),
+      h('div',{className:'onboard-terms',dangerouslySetInnerHTML:{__html:'시작하면 <a href="#">이용약관</a> 및 <a href="#">개인정보처리방침</a>에 동의합니다'}})
+    );
+
+    if(screen==='card-scan') return h('div',{className:'scan-screen'},
+      h('div',{className:'scan-header'},h('div',{className:'scan-step'},'1/2'),h('button',{className:'scan-skip',onClick:function(){setLoggedIn(true);go('list')}},'건너뛰기')),
+      h('div',{className:'scan-title'},'명함을 비춰주세요'),
+      h('div',{className:'scan-desc'},'자동으로 인식됩니다'),
+      h('div',{className:'scan-frame',onClick:function(){go('card-loading');goDelayed('card-confirm',2000)}},
+        h('div',{className:'scan-corner tl'}),h('div',{className:'scan-corner tr'}),h('div',{className:'scan-corner bl'}),h('div',{className:'scan-corner br'}),
+        h('div',{style:{background:'rgba(255,255,255,.12)',borderRadius:8,padding:'14px 20px',textAlign:'left',border:'1px dashed rgba(255,255,255,.2)'}},
+          h('div',{style:{fontSize:14,fontWeight:700,color:'#fff',marginBottom:4}},'오름공인중개사사무소'),
+          h('div',{style:{fontSize:12,color:'rgba(255,255,255,.7)',marginBottom:8}},'김민수 공인중개사'),
+          h('div',{style:{fontSize:12,color:'rgba(255,255,255,.6)'}},'02-1234-5678')
+        ),
+        h('div',{className:'scan-detecting'},h('span',{className:'rec-dot'}),' 명함 인식 중…')
+      )
+    );
+
+    if(screen==='card-loading') return h('div',{className:'ai-loading'},h('div',{className:'ai-spinner'},'🔍'),h('div',{className:'ai-loading-text'},'명함을 인식하고 있어요'),h('div',{className:'ai-loading-sub'},'텍스트를 자동으로 추출합니다'),h('div',{className:'ai-progress-bar'},h('div',{className:'ai-progress-fill'})));
+
+    if(screen==='card-confirm') return h('div',{className:'scan-screen'},
+      h('div',{className:'scan-header'},h('div',{className:'scan-step'},'2/2')),
+      h('div',{className:'scan-title'},'정보가 맞는지 확인해주세요'),
+      h('div',{className:'ai-badge'},'✨ AI 자동 인식 완료'),
+      h('div',{className:'edit-form',style:{paddingBottom:20,width:'100%'}},
+        h('div',{className:'edit-section'},h('div',{className:'edit-label'},'사무소명'),h('input',{className:'edit-input',defaultValue:'오름공인중개사사무소'})),
+        h('div',{className:'edit-row',style:{marginBottom:16}},h('div',{className:'edit-section'},h('div',{className:'edit-label'},'이름'),h('input',{className:'edit-input',defaultValue:'김민수'})),h('div',{className:'edit-section'},h('div',{className:'edit-label'},'직함'),h('input',{className:'edit-input',defaultValue:'공인중개사'}))),
+        h('div',{className:'edit-section'},h('div',{className:'edit-label'},'전화번호'),h('input',{className:'edit-input',defaultValue:'02-1234-5678'})),
+        h('div',{className:'edit-section'},h('div',{className:'edit-label'},'주소'),h('input',{className:'edit-input',defaultValue:'서울시 서초구 반포대로 123'}))
+      ),
+      h('button',{className:'btn-save',style:{width:'100%',maxWidth:300},onClick:function(){setLoggedIn(true);go('list')}},'✅ 완료')
+    );
+
+    if(screen==='list'){
+      var pFilters2=['전체','매매','전세','월세'];
+      var typeFilters=['전체','아파트','주택','빌라','오피스텔','원룸·투룸'];
+      var comFilters=['상가','사무실'];
+      var filtered=P.filter(function(p){
+        if(!search)return true;
+        var fields=[p.name,p.addr,p.type,p.deal,p.price,p.area,p.floor,p.dir,p.ownerName,p.ownerPhone,p.memo,p.bizType,p.currentBiz,p.keymoney].filter(Boolean).join(' ');
+        return search.trim().split(/\s+/).every(function(kw){return fields.includes(kw);});
+      });
+      var resCnt=P.filter(function(p){return p.category==='주거'}).length;
+      var comCnt=P.filter(function(p){return p.category==='상가'}).length;
+      return h(React.Fragment,null,
+        h('div',{className:'sticky-top'},
+          h('div',{style:{padding:'8px 20px 8px'}},h('input',{className:'search-input',placeholder:'🔍 매물명, 주소 검색',value:search,onChange:function(e){setSearch(e.target.value)}})),
+
+        ),
+        h('div',{className:'property-list'},filtered.map(function(p){var ri=P.indexOf(p);var isCom=p.category==='상가';return h('div',{className:'property-item',key:ri,onClick:function(){setSelProp(ri);go('detail')}},
+          h('div',{className:'prop-thumb'},
+            p.photos&&p.photos.length>0
+              ?h(React.Fragment,null,
+                  h('img',{src:p.photos[0],alt:p.name,onError:function(e){e.target.style.display='none';e.target.nextSibling.style.display='flex'}}),
+                  h('div',{style:{display:'none',width:'100%',height:'100%',alignItems:'center',justifyContent:'center',fontSize:32,background:isCom?'#FFF0F3':'var(--orange-light)',borderRadius:14}},p.emoji),
+                  p.photos.length>1?h('div',{className:'prop-photo-count'},p.photos.length+'장'):null
+                )
+              :h('div',{style:{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:32}},p.emoji)
+          ),
+          h('div',{className:'prop-info'},
+            h('div',{className:'prop-name'},p.name),
+            h('div',{className:'prop-addr'},p.addr),
+            h('div',{className:'prop-price'},p.deal+' '+p.price),
+            h('div',{className:'prop-tags'},
+              h('span',{className:'tag '+(isCom?'tag-commercial':'tag-type')},isCom?'🏪 '+p.type:'🏠 '+p.type),
+              h(StatusTag,{s:p.status})
+            )
+          )
+        )})),
+        h('button',{className:'fab',onClick:function(){go('voice')}},'🎙️')
+      );
+    }
+
+    if(screen==='voice') return h('div',{style:{display:'flex',flexDirection:'column',height:'100%'}},
+      h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('list')}},'←'),h('h1',null,'AI 매물 등록')),
+      h('div',{className:'voice-area',style:{paddingBottom:8}},
+        h('div',{className:'recording-badge'},h('span',{className:'rec-dot'}),' 입력 대기 중'),
+        h('div',{className:'rec-btn-wrap'},h('div',{className:'rec-pulse p1'}),h('div',{className:'rec-pulse p2'}),h('button',{className:'rec-btn'},'🎙️')),
+        h('div',{className:'rec-hint',dangerouslySetInnerHTML:{__html:'아래에 매물이나 고객 정보를 입력하세요<br/>🏠 주거 · 🏪 상가 · 👤 고객 AI가 자동 분류합니다'}})
+      ),
+      h('div',{style:{flex:1,padding:'0 20px 12px',display:'flex',flexDirection:'column'}},
+        h('textarea',{
+          style:{width:'100%',padding:'14px',borderRadius:12,border:'1.5px solid var(--border)',fontSize:14,fontFamily:'Noto Sans KR,sans-serif',lineHeight:1.7,flex:1,resize:'none',outline:'none',color:'var(--text)',boxSizing:'border-box'},
+          placeholder:'예: 반포동 래미안 84㎡ 25층 매매 18억5천, 방3 욕실2\n역삼역 1층 상가 월세 보증금3천/월300 권리금8천\n이서연 고객, 반포 아파트 매수 예산 15~20억',
+          value:voiceText,
+          onChange:function(e){setVoiceText(e.target.value);voiceTextRef.current=e.target.value;}
+        }),
+        aiError?h('div',{style:{color:'#EF4444',fontSize:12,marginTop:6}},aiError):null
+      ),
+      h('div',{className:'voice-actions'},
+        h('button',{className:'btn-cancel-v',onClick:function(){go('list')}},'취소'),
+        h('button',{className:'btn-convert',onClick:function(){analyzeWithAI();}},'✨ AI 분석하기 →')
+      )
+    );
+
+    if(screen==='ai-loading') return h('div',{className:'ai-loading'},h('div',{className:'ai-spinner'},'✨'),h('div',{className:'ai-loading-text'},'AI가 유형을 분석하고 있어요'),h('div',{className:'ai-loading-sub',dangerouslySetInnerHTML:{__html:'🏠 주거 매물 &nbsp;|&nbsp; 🏪 상가·사무실 &nbsp;|&nbsp; 👤 고객<br/>자동으로 분류하고 정리합니다'}}),h('div',{className:'ai-progress-bar'},h('div',{className:'ai-progress-fill'})));
+
+    if(screen==='ai-edit-customer'&&aiResult){
+      var ac=aiResult;
+      return h(React.Fragment,null,
+        h('div',{className:'m-sub-header'},h('button',{className:'m-back',onClick:function(){go('voice')}},'←'),h('h1',null,'👤 고객 확인')),
+        h('div',{style:{padding:'0 20px'}},h('div',{className:'ai-badge'},'✨ AI가 고객 정보를 분류했어요')),
+        h('div',{className:'edit-form'},
+          h('div',{className:'edit-row',style:{marginBottom:16}},
+            h('div',{className:'edit-section'},h('div',{className:'edit-label'},'고객명'),h('input',{className:'edit-input',defaultValue:ac.name||''})),
+            h('div',{className:'edit-section'},h('div',{className:'edit-label'},'연락처'),h('input',{className:'edit-input',defaultValue:ac.phone||''}))
+          ),
+          h('div',{className:'edit-row',style:{marginBottom:16}},
+            h('div',{className:'edit-section'},h('div',{className:'edit-label'},'거래유형'),h('input',{className:'edit-input',defaultValue:ac.need||''})),
+            h('div',{className:'edit-section'},h('div',{className:'edit-label'},'매물유형'),h('input',{className:'edit-input',defaultValue:ac.type||''}))
+          ),
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'희망지역'),h('input',{className:'edit-input',defaultValue:ac.area||''})),
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'예산'),h('input',{className:'edit-input price',defaultValue:ac.budget||''})),
+          h('div',{className:'edit-row',style:{marginBottom:16}},
+            h('div',{className:'edit-section'},h('div',{className:'edit-label'},'희망면적'),h('input',{className:'edit-input',defaultValue:ac.size||''})),
+            h('div',{className:'edit-section'},h('div',{className:'edit-label'},'층수선호'),h('input',{className:'edit-input',defaultValue:ac.floor||''}))
+          ),
+          h('div',{className:'edit-section'},h('div',{className:'edit-label'},'📝 요구사항'),h('textarea',{className:'edit-textarea',defaultValue:ac.memo||''})),
+          h('div',{className:'save-actions'},
+            h('button',{className:'btn-re',onClick:function(){go('voice')}},'← 다시 입력'),
+            h('button',{className:'btn-save',onClick:function(){
+              var newC={name:ac.name||'새 고객',phone:ac.phone||'',need:ac.need||'매수',area:ac.area||'',budget:ac.budget||'',type:ac.type||'아파트',size:ac.size||'',floor:ac.floor||'',memo:ac.memo||'',status:'searching'};
+              C.push(newC);setSelCust(C.length-1);setVoiceText('');setAiResult(null);go('customer-list');
+            }},'✅ 저장하기')
+          )
+        )
+      );
+    }
+
+    if(screen==='detail'){
+      var dp=P[selProp];
+      var matches=getMatches(selProp);
+      var isCommercial=dp.category==='상가';
+      var MAX_PHOTOS=7;
+      var addPhoto=function(urls){
+        var current=dp.photos||[];
+        if(current.length>=MAX_PHOTOS){alert('사진은 최대 7장까지 추가할 수 있어요.');return;}
+        var add=urls.slice(0,MAX_PHOTOS-current.length);
+        dp.photos=current.concat(add);
+        dp.photoLabels=(dp.photoLabels||[]).concat(add.map(function(_,i){return '사진'+(current.length+i+1);}));
+        setScreen(function(s){return s;});
+      };
+      var e=isEditing?'on':''; // CSS 토글 클래스
+      var hasPhotos=dp.photos&&dp.photos.length>0;
+      return h('div',{ref:editFormRef,style:{paddingBottom:10}},
+        // ── 사진 영역 ──
+        hasPhotos
+          ? h('div',{style:{position:'relative',width:'100%',height:220,overflow:'hidden',background:'#111'}},
+              h('img',{src:dp.photos[0],alt:'매물사진',style:{width:'100%',height:'100%',objectFit:'cover',display:'block'}}),
+              isEditing&&h('div',{style:{position:'absolute',bottom:10,right:10,display:'flex',gap:6,alignItems:'center'}},
+                h('label',{style:{padding:'4px 10px',borderRadius:10,background:'#FEE500',border:'1px solid rgba(0,0,0,.08)',fontSize:11,fontWeight:700,cursor:'pointer',color:'#3C1E1E',display:'flex',alignItems:'center',gap:3}},
+                  '📸',h('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:function(e){var f=e.target.files[0];if(!f)return;addPhoto([URL.createObjectURL(f)]);}})),
+                h('label',{style:{padding:'4px 10px',borderRadius:10,background:'#FEE500',border:'1px solid rgba(0,0,0,.08)',fontSize:11,fontWeight:700,cursor:'pointer',color:'#3C1E1E',display:'flex',alignItems:'center',gap:3}},
+                  '🖼️',h('input',{type:'file',accept:'image/*',multiple:true,style:{display:'none'},onChange:function(e){var urls=Array.from(e.target.files).map(function(f){return URL.createObjectURL(f);});addPhoto(urls);}})),
+                h('div',{style:{padding:'4px 8px',borderRadius:10,background:'rgba(240,90,40,.85)',color:'#fff',fontSize:11,fontWeight:700}},dp.photos.length+'/7')
+              )
+            )
+          : h('div',{className:'detail-hero',style:{background:isCommercial?'linear-gradient(135deg,#FFF0F3,#FAFBFC)':'linear-gradient(135deg,var(--orange-light),#FAFBFC)'}},
+              h('div',{className:'emoji'},dp.emoji),
+              isEditing&&h('div',{style:{display:'flex',justifyContent:'center',gap:12,marginTop:16}},
+                h('label',{style:{padding:'10px 20px',borderRadius:14,background:'#fff',border:'1.5px solid var(--border)',fontSize:13,fontWeight:700,cursor:'pointer',color:'var(--text)',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}},
+                  '📸 촬영',h('input',{type:'file',accept:'image/*',capture:'environment',style:{display:'none'},onChange:function(e){var f=e.target.files[0];if(!f)return;addPhoto([URL.createObjectURL(f)]);}})),
+                h('label',{style:{padding:'10px 20px',borderRadius:14,background:'#fff',border:'1.5px solid var(--border)',fontSize:13,fontWeight:700,cursor:'pointer',color:'var(--text)',display:'flex',alignItems:'center',gap:5,boxShadow:'0 2px 8px rgba(0,0,0,.06)'}},
+                  '🖼️ 갤러리',h('input',{type:'file',accept:'image/*',multiple:true,style:{display:'none'},onChange:function(e){var urls=Array.from(e.target.files).map(function(f){return URL.createObjectURL(f);});addPhoto(urls);}})
+                )
+              )
+            ),
+        h('div',{className:'detail-body'},
+          // 매물명
+          h('input',{className:'fi fi-name '+e,'data-field':'name',defaultValue:dp.name,readOnly:!isEditing,placeholder:'매물 이름',style:{marginBottom:6}}),
+          // 가격
+          h('input',{className:'fi fi-price '+e,'data-field':'price',defaultValue:dp.deal+' '+dp.price,readOnly:!isEditing,placeholder:'예) 매매 18.5억',style:{marginBottom:14}}),
+          // 주소
+          h('div',{style:{marginBottom:16,padding:'8px 12px',background:'var(--bg)',borderRadius:10,display:'flex',alignItems:'center',gap:8}},
+            h('span',{style:{fontSize:13}},'📍'),
+            h('input',{className:'fi fi-addr '+e,'data-field':'addr',
+              defaultValue:dp.addr+(dp.floor?' '+dp.floor:''),
+              readOnly:!isEditing,
+              placeholder:isEditing?'전체 주소 (동·번지·층수 포함)':''})
+          ),
+          // 정보 그리드
+          isCommercial?h('div',{className:'info-grid'},
+            h('div',{className:'info-cell'},h('div',{className:'label'},'면적'),h('input',{className:'fi fi-val '+e,'data-field':'area',defaultValue:dp.area,placeholder:'예) 92㎡',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'권리금'),h('input',{className:'fi fi-val '+e,style:{color:isEditing?'var(--text)':'#E0335A'},'data-field':'keymoney',defaultValue:dp.keymoney,placeholder:'예) 8천만원',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'허용 업종'),h('input',{className:'fi fi-val '+e,'data-field':'bizType',defaultValue:dp.bizType,placeholder:'예) 음식점·카페',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'현재 영업'),h('input',{className:'fi fi-val '+e,'data-field':'currentBiz',defaultValue:dp.currentBiz,placeholder:'예) 카페 영업 중',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'유동인구'),h('input',{className:'fi fi-val '+e,'data-field':'traffic',defaultValue:dp.traffic,placeholder:'예) 일 3,000명+',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'주차'),h('input',{className:'fi fi-val '+e,'data-field':'parking',defaultValue:dp.parking,placeholder:'예) 건물 10대',readOnly:!isEditing}))
+          ):h('div',{className:'info-grid'},
+            h('div',{className:'info-cell'},h('div',{className:'label'},'면적'),h('input',{className:'fi fi-val '+e,'data-field':'area',defaultValue:'전용 '+dp.area,placeholder:'예) 84㎡',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'방 · 욕실'),h('input',{className:'fi fi-val '+e,'data-field':'roomsbaths',defaultValue:dp.rooms+' · '+dp.baths,placeholder:'예) 3개 · 2개',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'방향'),h('input',{className:'fi fi-val '+e,'data-field':'dir',defaultValue:dp.dir+(isEditing?'':' 🧭'),placeholder:'예) 남향',readOnly:!isEditing})),
+            h('div',{className:'info-cell'},h('div',{className:'label'},'입주가능일'),h('input',{className:'fi fi-val '+e,'data-field':'moveIn',defaultValue:dp.moveIn,placeholder:'예) 즉시입주',readOnly:!isEditing}))
+          ),
+          // 메모
+          h('div',{style:{marginBottom:20}},
+            h('div',{style:{fontSize:15,fontWeight:800,marginBottom:8}},'📝 메모'),
+            h('div',{style:{borderLeft:'4px solid '+(isCommercial?'#E0335A':'var(--orange)'),borderRadius:16,background:'var(--bg)'}},
+              h('textarea',{className:'fi-ta '+e,'data-field':'memo',defaultValue:dp.memo||'',readOnly:!isEditing,
+                placeholder:'매물 특징, 장단점, 특이사항 등을 입력하세요',
+                style:{color:dp.memo?'var(--text)':'#9CA3AF'},
+                onInput:function(ev){if(isEditing){ev.target.style.height='auto';ev.target.style.height=ev.target.scrollHeight+'px';}}
+              })
+            )
+          ),
+          // 매칭 고객
+          h('div',{className:'match-section'},
+            h('div',{className:'match-title'},'🎯 매칭 고객 ',h('span',{style:{fontSize:13,color:'var(--orange)'}},matches.length+'명')),
+            matches.filter(function(m){return !(removedMatches[selProp]&&removedMatches[selProp][m.idx]);}).map(function(m,i){var c=C[m.idx];return h('div',{className:'match-item',key:i},
+              h('div',{style:{display:'flex',alignItems:'center',gap:12,flex:1},onClick:function(){setSelCust(m.idx);go('customer-detail')}},
+                h('div',{className:'match-avatar'},c.name[0]),
+                h('div',{className:'match-info'},h('div',{className:'match-name'},c.name,' ',h('span',{className:'match-badge'},m.score+'%')),h('div',{className:'match-meta'},c.need+' · '+c.type+' · '+c.area))),
+              h('button',{style:{width:24,height:24,borderRadius:'50%',border:'none',background:'#E8ECF0',color:'#8891A0',fontSize:14,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0},onClick:function(ev){ev.stopPropagation();var rm=Object.assign({},removedMatches);if(!rm[selProp])rm[selProp]={};rm[selProp][m.idx]=true;setRemovedMatches(rm);}},'×')
+            )})
+          ),
+          // 집주인 정보
+          h('div',{className:'owner-card'},
+            h('div',{className:'memo-title'},isCommercial?'👤 임대인 정보':'👤 집주인 정보'),
+            // 이름·연락처·관계 가로 한 줄씩
+            h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}},
+              h('span',{className:'owner-label',style:{flexShrink:0}},'이름'),
+              h('input',{className:'fi fi-small '+e,'data-field':'ownerName',defaultValue:dp.ownerName,readOnly:!isEditing,
+                style:{textAlign:'right',fontWeight:700,width:'auto',flex:1,maxWidth:180}})
+            ),
+            h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}},
+              h('span',{className:'owner-label',style:{flexShrink:0}},'연락처'),
+              h('input',{className:'fi fi-small '+e,'data-field':'ownerPhone',defaultValue:dp.ownerPhone,readOnly:!isEditing,
+                style:{textAlign:'right',fontWeight:700,color:isEditing?'var(--text)':'var(--orange)',width:'auto',flex:1,maxWidth:180}})
+            ),
+            h('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'6px 0',borderBottom:'1px solid var(--border)'}},
+              h('span',{className:'owner-label',style:{flexShrink:0}},'관계'),
+              h('input',{className:'fi fi-small '+e,'data-field':'ownerRel',defaultValue:dp.ownerRel,readOnly:!isEditing,
+                style:{textAlign:'right',fontWeight:700,width:'auto',flex:1,maxWidth:180}})
+            ),
+            h('div',{style:{marginTop:10}},
+              h('textarea',{className:'fi-owner-ta '+e,'data-field':'ownerMemo',
+                defaultValue:dp.ownerMemo||'',readOnly:!isEditing,
+                placeholder:isEditing?'집주인 메모':'',
+                onInput:function(ev){if(isEditing){ev.target.style.height='auto';ev.target.style.height=ev.target.scrollHeight+'px';}}
+              })
+            )
+          )
+        )
+      );
+    }
+
+    if(screen==='share'){
+      var dp2=P[selProp];
+      var photos=dp2.photos||[dp2.emoji];
+      var labels=dp2.photoLabels||['사진'];
+      return h(React.Fragment,null,
+        h('div',{className:'m-sub-header',style:{justifyContent:'space-between'}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:12}},h('button',{className:'m-back',onClick:function(){go('detail')}},'←'),h('h1',null,'매물 공유')),
+          h('div',{style:{padding:'5px 12px',borderRadius:20,background:'var(--orange-light)',color:'var(--orange)',fontSize:13,fontWeight:700}},photos.length+'/'+photos.length+'장')
+        ),
+        h('div',{className:'carousel-wrap'},
+          h('div',{className:'carousel-track',style:{transform:'translateX(-'+slide*100+'%)'}},photos.map(function(ph,i){return h('div',{className:'slide',key:i},
+            h('div',{className:'slide-img'},h('img',{src:ph,alt:labels[i]||'사진',style:{width:'100%',height:'100%',objectFit:'cover'}})),
+            h('div',{className:'slide-label'},labels[i]||'사진'),
+            h('div',{className:'slide-num'},(i+1)+'/'+photos.length)
+          )})),
+          h('div',{className:'carousel-dots'},photos.map(function(_,i){return h('span',{key:i,className:'dot '+(i===slide?'active':''),onClick:function(){setSlide(i)}})}))
+        ),
+        h('div',{className:'biz-card-w'},
+          h('div',{className:'biz-left'},h('div',{className:'biz-logo-w'},'오'),h('div',null,h('div',{className:'biz-name-t'},'김민수'),h('div',{className:'biz-title-t'},'공인중개사'))),
+          h('div',{className:'biz-right'},h('div',{className:'biz-contact-t'},'📞 02-1234-5678'),h('div',{className:'biz-contact-t'},'📱 010-9876-5432'),h('div',{className:'biz-org'},'오름공인중개사사무소'))
+        ),
+        h('div',{className:'share-actions-row'},
+          h('button',{className:'share-btn-w'},h('div',{className:'share-icon-w kakao'},'💬'),h('div',{className:'share-title'},'카카오톡'),h('div',{className:'share-sub'},'사진 '+photos.length+'장 + 명함')),
+          h('button',{className:'share-btn-w'},h('div',{className:'share-icon-w sms-s'},'💌'),h('div',{className:'share-title'},'문자'),h('div',{className:'share-sub'},'사진 '+photos.length+'장 + 명함')),
+          h('button',{className:'share-btn-w'},h('div',{className:'share-icon-w img'},'🖼️'),h('div',{className:'share-title'},'저장'),h('div',{className:'share-sub'},'사진 '+photos.length+'장 + 명함'))
+        )
+      );
+    }
+
+    if(screen==='customer-list'){
+      var cFiltered=C.filter(function(c){
+        if(!csearch)return true;
+        var fields=[c.name,c.phone,c.area,c.need,c.budget,c.type,c.size,c.floor,c.memo].filter(Boolean).join(' ');
+        return csearch.trim().split(/\s+/).every(function(kw){return fields.includes(kw);});
+      });
+      return h(React.Fragment,null,
+        h('div',{className:'sticky-top'},
+          h('div',{style:{padding:'8px 20px 8px'}},h('input',{className:'search-input',placeholder:'🔍 고객명, 연락처, 지역 검색',value:csearch,onChange:function(e){setCsearch(e.target.value)}})),
+        ),
+        h('div',{className:'customer-list'},cFiltered.map(function(c){var ri=C.indexOf(c);return h('div',{className:'customer-item',key:ri,onClick:function(){setSelCust(ri);go('customer-detail')}},
+          h('div',{className:'customer-avatar'},c.name[0]),
+          h('div',{className:'customer-info'},h('div',{className:'customer-name'},c.name,' ',h(CTag,{s:c.status})),h('div',{className:'customer-meta'},c.phone+' · '+c.area),h('div',{className:'customer-need'},c.need+' · '+c.budget)),
+          h('div',{className:'customer-arrow'},'›')
+        )}))
+      );
+    }
+
+    if(screen==='customer-detail'){
+      var cd=C[selCust];
+      var ce=isCustEditing?'on':'';
+      return h('div',{ref:custFormRef,style:{paddingBottom:10}},
+        // 프로필 헤더
+        h('div',{className:'cd-profile'},
+          h('div',{className:'cd-avatar'},cd.name[0]),
+          h('div',{style:{flex:1}},
+            h('input',{className:'fi fi-name '+ce,'data-cfield':'name',defaultValue:cd.name,readOnly:!isCustEditing,
+              placeholder:'고객 이름',style:{fontSize:17,fontWeight:800,marginBottom:2}}),
+            h('div',{className:'cd-role'},cd.status==='matched'?h('span',{style:{color:'var(--green)'}},'매칭완료'):null)
+          )
+        ),
+        // 전화 버튼
+        h('div',{className:'cd-contact'},
+          h('button',{className:'cd-btn',style:{background:'#34C759',borderColor:'#34C759',color:'#fff'}},'📞 전화')
+        ),
+        // 요구사항
+        h('div',{className:'cd-section'},
+          h('div',{className:'cd-section-title'},'📋 요구사항'),
+          h('div',{className:'cd-card'},
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'희망 지역'),h('input',{className:'fi fi-small '+ce,'data-cfield':'area',defaultValue:cd.area,readOnly:!isCustEditing,placeholder:'예) 서초구 반포동',style:{textAlign:'right',flex:1,maxWidth:200}})),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'거래 유형'),h('input',{className:'fi fi-small '+ce,'data-cfield':'need',defaultValue:cd.need,readOnly:!isCustEditing,placeholder:'예) 매수',style:{textAlign:'right',flex:1,maxWidth:200}})),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'예산'),h('input',{className:'fi fi-small '+ce,'data-cfield':'budget',defaultValue:cd.budget,readOnly:!isCustEditing,placeholder:'예) 15~20억',style:{textAlign:'right',flex:1,maxWidth:200}})),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'유형'),h('input',{className:'fi fi-small '+ce,'data-cfield':'type',defaultValue:cd.type,readOnly:!isCustEditing,placeholder:'예) 아파트',style:{textAlign:'right',flex:1,maxWidth:200}})),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'면적'),h('input',{className:'fi fi-small '+ce,'data-cfield':'size',defaultValue:cd.size,readOnly:!isCustEditing,placeholder:'예) 84㎡ 이상',style:{textAlign:'right',flex:1,maxWidth:200}})),
+            h('div',{className:'cd-row'},h('span',{className:'cd-label-t'},'층수'),h('input',{className:'fi fi-small '+ce,'data-cfield':'floor',defaultValue:cd.floor,readOnly:!isCustEditing,placeholder:'예) 고층',style:{textAlign:'right',flex:1,maxWidth:200}}))
+          )
+        ),
+        // 메모
+        h('div',{className:'cd-section',style:{paddingBottom:100}},
+          h('div',{className:'cd-section-title'},'📝 메모'),
+          h('div',{style:{borderLeft:'4px solid var(--orange)',borderRadius:16,background:'var(--bg)'}},
+            h('textarea',{className:'fi-ta '+ce,'data-cfield':'memo',defaultValue:cd.memo||'',readOnly:!isCustEditing,
+              placeholder:'고객 특이사항, 선호조건 등 메모',
+              style:{color:cd.memo?'var(--text)':'#9CA3AF'},
+              onInput:function(ev){if(isCustEditing){ev.target.style.height='auto';ev.target.style.height=ev.target.scrollHeight+'px';}}
+            })
+          )
+        )
+      );
+    }
+
+    if(screen==='noti') return h(React.Fragment,null,
+      h('div',{className:'noti-list'},
+        notiList.length===0?h('div',{style:{textAlign:'center',color:'var(--text-secondary)',padding:'60px 0',fontSize:14}},'알림이 없습니다'):
+        notiList.map(function(n,i){return h('div',{className:'noti-item '+(n.unread?'unread':''),key:i,style:{position:'relative'}},
+          h('div',{onClick:function(){if(n.propIdx>=0){setSelProp(n.propIdx);setIsEditing(false);go('detail')}},style:{display:'flex',gap:12,alignItems:'center',flex:1,cursor:'pointer'}},
+            h('div',{className:'noti-icon-w'},n.type==='match'?'🎯':'✅'),
+            h('div',{className:'noti-info'},h('div',{className:'noti-title-t'},n.title),h('div',{className:'noti-desc'},n.desc))
+          ),
+          h('div',{style:{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:6,flexShrink:0}},
+            h('button',{onClick:function(e){e.stopPropagation();var next=notiList.filter(function(_,j){return j!==i});setNotiList(next);setNotiCnt(next.filter(function(x){return x.unread}).length)},style:{background:'none',border:'none',cursor:'pointer',color:'var(--text-secondary)',fontSize:16,lineHeight:1,padding:'0 2px'}},'×'),
+            h('div',{className:'noti-time'},n.time)
+          )
+        )})
+      )
+    );
+
+    if(screen==='my'){
+    var me=isMyEditing?'on':'';
+    return h('div',{ref:myFormRef,style:{paddingBottom:80}},
+      h('div',{className:'my-profile'},
+        h('div',{className:'my-avatar'},h('svg',{width:28,height:28,viewBox:'0 0 24 24',fill:'none',stroke:'#fff',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round'},h('circle',{cx:12,cy:8,r:4}),h('path',{d:'M20 21a8 8 0 0 0-16 0'}))),
+        h('div',{style:{flex:1}},
+          h('input',{className:'fi fi-name '+me,'data-myfield':'agentName',defaultValue:'김민수',readOnly:!isMyEditing,style:{fontSize:17,fontWeight:800,marginBottom:2}}),
+          h('input',{className:'fi fi-small '+me,'data-myfield':'agentRole',defaultValue:'공인중개사',readOnly:!isMyEditing,style:{color:'var(--text-secondary)'}})
+        )
+      ),
+      h('div',{className:'my-biz'},
+        h('div',{style:{display:'flex',alignItems:'center',marginBottom:14}},
+          h('span',{style:{fontSize:15,fontWeight:700,marginRight:6}},'🏠'),
+          h('input',{className:'fi '+me,'data-myfield':'bizName',defaultValue:'오름공인중개사사무소',readOnly:!isMyEditing,style:{fontWeight:700,fontSize:15}})
+        ),
+        h('div',{className:'my-biz-row'},h('span',{className:'my-biz-label'},'전화'),h('input',{className:'fi fi-small '+me,'data-myfield':'bizPhone',defaultValue:'02-1234-5678',readOnly:!isMyEditing,style:{textAlign:'right',fontWeight:700}})),
+        h('div',{className:'my-biz-row'},h('span',{className:'my-biz-label'},'휴대폰'),h('input',{className:'fi fi-small '+me,'data-myfield':'mobile',defaultValue:'010-9876-5432',readOnly:!isMyEditing,style:{textAlign:'right',fontWeight:700}})),
+        h('div',{className:'my-biz-row'},h('span',{className:'my-biz-label'},'주소'),h('input',{className:'fi fi-small '+me,'data-myfield':'bizAddr',defaultValue:'서울시 서초구 반포대로 123',readOnly:!isMyEditing,style:{textAlign:'right',fontWeight:700}}))
+      ),
+      h('div',{className:'my-menu'},
+        h('button',{className:'my-menu-item'},'⚙️ 설정'),
+        h('button',{className:'my-menu-item danger',onClick:function(){setLoggedIn(false);go('login')}},'🚪 로그아웃')
+      )
+    );}
+
+    return null;
+  };
+
+  return h('div',{className:'app-shell'},
+    h('div',{className:'notch'}),
+    h('div',{className:'status-bar'},h('span',{className:'time'},'9:41'),h('span',{className:'icons'},h('span',null,'📶'),h('span',null,'📡'),h('span',null,'🔋'))),
+    isPCView
+      // ── PC 2컬럼 레이아웃 ──
+      ? h('div',{className:'pc-layout'},
+          h('div',{className:'pc-sidebar'},renderSidebar()),
+          h('div',{className:'pc-main'},
+            h('div',{className:'top-bar'},
+              h('div',{style:{display:'flex',alignItems:'center',gap:8}},
+                h('span',{style:{fontWeight:700,fontSize:17,color:'var(--text)'}},
+                  screen==='detail'?'매물카드':
+                  screen==='customer-list'?'고객':
+                  screen==='customer-detail'?'고객카드':
+                  screen==='voice'?'녹음 등록':
+                  screen==='noti'?'알림':
+                  screen==='my'?'마이페이지':'매물')
+              ),
+              h('div',{style:{marginLeft:'auto',display:'flex',gap:8,alignItems:'center'}},
+                screen==='detail'?(
+                  isEditing
+                    ?h('button',{onClick:function(){
+                        if(editFormRef.current){var inputs=editFormRef.current.querySelectorAll('[data-field]');inputs.forEach(function(el){P[selProp][el.getAttribute('data-field')]=el.value;});}
+                        setIsEditing(false);setScreen(function(s){return s;});
+                      },style:{padding:'7px 20px',borderRadius:8,border:'none',background:'var(--orange)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}},'✅ 완료')
+                    :h('button',{onClick:function(){setIsEditing(true);},style:{padding:'7px 20px',borderRadius:8,border:'none',background:'var(--orange)',color:'#fff',fontSize:13,fontWeight:700,cursor:'pointer'}},'✏️ 편집')
+                ):null,
+                h('button',{onClick:function(){setNotiCnt(0);go('noti')},style:{position:'relative',background:'none',border:'none',fontSize:20,cursor:'pointer'}},
+                  '🔔',notiCnt>0?h('span',{className:'noti-badge'},notiCnt):null),
+                h('button',{onClick:function(){go('my')},style:{background:'none',border:'none',fontSize:20,cursor:'pointer'}},'👤')
+              )
+            ),
+            h('div',{className:'content-area',ref:ref},renderScreen()),
+            h('div',{className:'tab-bar'},
+              h('button',{className:'tab-item '+((screen==='list'||screen==='detail')?'active':''),onClick:function(){go('list')}},h('span',{className:'tab-icon'},'📋'),h('span',{className:'tab-label'},'매물')),
+              h('button',{className:'tab-item '+((screen==='voice'||screen==='ai-loading')?'active':''),onClick:function(){go('voice')}},h('span',{className:'tab-icon'},'🎙️'),h('span',{className:'tab-label'},'녹음')),
+              h('button',{className:'tab-item '+((screen==='customer-list'||screen==='customer-detail')?'active':''),onClick:function(){go('customer-list')}},h('span',{className:'tab-icon'},'👥'),h('span',{className:'tab-label'},'고객'))
+            )
+          )
+        )
+      // ── 모바일 레이아웃 ──
+      : h(React.Fragment,null,
+    showTabs?h('div',{className:'top-bar'},
+      // 좌측: 뒤로가기 or 타이틀
+      h('div',{style:{display:'flex',alignItems:'center',gap:8}},
+            h('button',{onClick:function(){
+              var dest=screen==='list'?'list':
+                       screen==='customer-list'?'list':
+                       screen==='noti'?'list':
+                       screen==='my'?'list':
+                       screen==='detail'?'list':
+                       screen==='share'?'detail':
+                       screen==='customer-detail'?(prevScr||'customer-list'):
+                       screen==='ai-edit-customer'?'customer-list':
+                       'list';
+              if(dest!=='detail') setIsEditing(false);
+              go(dest);
+            },style:{background:'none',border:'none',fontSize:18,cursor:'pointer',padding:'0 4px 0 0',color:'var(--text)',visibility:(screen==='list'||screen==='customer-list')?'hidden':'visible'},'aria-label':'뒤로'},'←'),
+            h('span',{style:{fontWeight:700,fontSize:17,color:'var(--text)'}},
+              screen==='list'?'매물':
+              screen==='customer-list'?'고객':
+              screen==='detail'?'매물카드':
+              screen==='share'?'매물 공유':
+              screen==='customer-detail'?'고객카드':
+              screen==='ai-edit-customer'?'고객 확인':
+              screen==='noti'?'알림':
+              screen==='my'?'마이페이지':'')
+          ),
+      // 우측: 알림+프로필 (edit 화면은 하단 버튼으로)
+      h('div',{style:{marginLeft:'auto',display:'flex',gap:8,alignItems:'center'}},
+        h('button',{onClick:function(){setNotiCnt(0);go('noti')},style:{position:'relative',background:'none',border:'none',fontSize:20,cursor:'pointer'}},
+          '🔔',notiCnt>0?h('span',{className:'noti-badge'},notiCnt):null),
+        h('button',{onClick:function(){go('my')},style:{background:'none',border:'none',fontSize:20,cursor:'pointer'}},'👤')
+      )
+    ):null,
+    h('div',{className:'content-area',ref:ref},renderScreen()),
+    showTabs?(screen==='detail'?
+      h(React.Fragment,null,
+        h('div',{style:{display:'flex',gap:10,padding:'10px 20px',background:'#fff',borderTop:'1px solid var(--border)',flexShrink:0}},
+          isEditing?h('button',{onClick:function(){
+              if(editFormRef.current){
+                var inputs=editFormRef.current.querySelectorAll('[data-field]');
+                inputs.forEach(function(el){P[selProp][el.getAttribute('data-field')]=el.value;});
+              }
+              setIsEditing(false);
+              setScreen(function(s){return s;});
+            },style:{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--orange)',fontSize:13,fontWeight:700,cursor:'pointer',color:'#fff',fontFamily:"'Noto Sans KR',sans-serif"}},'✅ 완료'
+          ):h('button',{onClick:function(){setIsEditing(true);},style:{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--orange)',fontSize:13,fontWeight:700,cursor:'pointer',color:'#fff',fontFamily:"'Noto Sans KR',sans-serif"}},'✏️ 편집')
+        ),
+        h('div',{className:'tab-bar'},
+          h('button',{className:'tab-item active',onClick:function(){setIsEditing(false);go('list')}},h('span',{className:'tab-icon'},'📋'),h('span',{className:'tab-label'},'매물')),
+          h('button',{className:'tab-item',onClick:function(){go('voice')}},h('span',{className:'tab-icon'},'🎙️'),h('span',{className:'tab-label'},'녹음')),
+          h('button',{className:'tab-item',onClick:function(){go('customer-list')}},h('span',{className:'tab-icon'},'👥'),h('span',{className:'tab-label'},'고객'))
+        )
+      ):screen==='customer-detail'?
+      h(React.Fragment,null,
+        h('div',{style:{display:'flex',gap:10,padding:'10px 20px',background:'#fff',borderTop:'1px solid var(--border)',flexShrink:0}},
+          isCustEditing?h('button',{onClick:function(){
+              if(custFormRef.current){
+                var inputs=custFormRef.current.querySelectorAll('[data-cfield]');
+                inputs.forEach(function(el){C[selCust][el.getAttribute('data-cfield')]=el.value;});
+              }
+              setIsCustEditing(false);
+              setScreen(function(s){return s;});
+            },style:{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--orange)',fontSize:13,fontWeight:700,cursor:'pointer',color:'#fff',fontFamily:"'Noto Sans KR',sans-serif"}},'✅ 완료'
+          ):h('button',{onClick:function(){setIsCustEditing(true);},style:{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--orange)',fontSize:13,fontWeight:700,cursor:'pointer',color:'#fff',fontFamily:"'Noto Sans KR',sans-serif"}},'✏️ 편집')
+        ),
+        h('div',{className:'tab-bar'},
+          h('button',{className:'tab-item',onClick:function(){go('list')}},h('span',{className:'tab-icon'},'📋'),h('span',{className:'tab-label'},'매물')),
+          h('button',{className:'tab-item',onClick:function(){go('voice')}},h('span',{className:'tab-icon'},'🎙️'),h('span',{className:'tab-label'},'녹음')),
+          h('button',{className:'tab-item active',onClick:function(){setIsCustEditing(false);go('customer-list')}},h('span',{className:'tab-icon'},'👥'),h('span',{className:'tab-label'},'고객'))
+        )
+      ):screen==='my'?
+      h(React.Fragment,null,
+        h('div',{style:{display:'flex',gap:10,padding:'10px 20px',background:'#fff',borderTop:'1px solid var(--border)',flexShrink:0}},
+          isMyEditing?h('button',{onClick:function(){setIsMyEditing(false);setScreen(function(s){return s;});},
+            style:{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--orange)',fontSize:13,fontWeight:700,cursor:'pointer',color:'#fff',fontFamily:"'Noto Sans KR',sans-serif"}},'✅ 완료'
+          ):h('button',{onClick:function(){setIsMyEditing(true);},
+            style:{flex:1,padding:'10px',borderRadius:10,border:'none',background:'var(--orange)',fontSize:13,fontWeight:700,cursor:'pointer',color:'#fff',fontFamily:"'Noto Sans KR',sans-serif"}},'✏️ 편집')
+        ),
+        h('div',{className:'tab-bar'},
+          h('button',{className:'tab-item',onClick:function(){go('list')}},h('span',{className:'tab-icon'},'📋'),h('span',{className:'tab-label'},'매물')),
+          h('button',{className:'tab-item',onClick:function(){go('voice')}},h('span',{className:'tab-icon'},'🎙️'),h('span',{className:'tab-label'},'녹음')),
+          h('button',{className:'tab-item',onClick:function(){go('customer-list')}},h('span',{className:'tab-icon'},'👥'),h('span',{className:'tab-label'},'고객'))
+        )
+      ):
+      h('div',{className:'tab-bar'},
+        h('button',{className:'tab-item '+((screen==='list'||screen==='detail'||screen==='share')?'active':''),onClick:function(){go('list')}},h('span',{className:'tab-icon'},'📋'),h('span',{className:'tab-label'},'매물')),
+        h('button',{className:'tab-item '+((screen==='voice'||screen==='ai-loading')?'active':''),onClick:function(){go('voice')}},h('span',{className:'tab-icon'},'🎙️'),h('span',{className:'tab-label'},'녹음')),
+        h('button',{className:'tab-item '+((screen==='customer-list'||screen==='customer-detail')?'active':''),onClick:function(){go('customer-list')}},h('span',{className:'tab-icon'},'👥'),h('span',{className:'tab-label'},'고객'))
+      )
+    ):null
+  ));
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+</body>
+</html>
