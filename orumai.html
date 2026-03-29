@@ -318,6 +318,18 @@ var h=React.createElement;
 var useState=React.useState;
 var useRef=React.useRef;
 
+// ── 검색어 정규화 (한글 단위 ↔ 숫자 변환) ────────────────────
+function normalizeSearch(s){
+  if(!s)return '';
+  s=s.replace(/\s+/g,''); // 공백 제거
+  s=s.replace(/(\d+)억(\d+)천/g,function(_,a,b){return String(Number(a)*10000+Number(b)*1000);});
+  s=s.replace(/(\d+)억/g,function(_,a){return String(Number(a)*10000);});
+  s=s.replace(/(\d+)천(\d+)/g,function(_,a,b){return String(Number(a)*1000+Number(b));});
+  s=s.replace(/(\d+)천/g,function(_,a){return String(Number(a)*1000);});
+  s=s.replace(/(\d+)만/g,function(_,a){return String(Number(a)*10000);});
+  return s.toLowerCase();
+}
+
 // ── 전화번호 자동 포맷 ────────────────────────────────────────
 // 숫자만 입력하면 010-0000-0000 으로 자동 변환
 function formatPhone(v){
@@ -405,12 +417,12 @@ function App(){
   // ── 통합 검색 ──────────────────────────────────────────────
   var searchActive=q.trim().length>0;
   var matchedP=searchActive?P.filter(function(p){
-    var f=[p.name,p.addr,p.type,p.deal,p.price,p.area,p.floor,p.dir,p.ownerName,p.ownerPhone,p.memo,p.bizType,p.currentBiz].filter(Boolean).join(' ');
-    return q.trim().split(/\s+/).every(function(kw){return f.includes(kw);});
+    var f=normalizeSearch([p.name,p.addr,p.type,p.deal,p.price,p.area,p.floor,p.dir,p.ownerName,p.ownerPhone,p.memo,p.bizType,p.currentBiz].filter(Boolean).join(' '));
+    return q.trim().split(/\s+/).every(function(kw){return f.includes(normalizeSearch(kw));});
   }):[];
   var matchedC=searchActive?C.filter(function(c){
-    var f=[c.name,c.phone,c.memo].filter(Boolean).join(' ');
-    return q.trim().split(/\s+/).every(function(kw){return f.includes(kw);});
+    var f=normalizeSearch([c.name,c.phone,c.memo].filter(Boolean).join(' '));
+    return q.trim().split(/\s+/).every(function(kw){return f.includes(normalizeSearch(kw));});
   }):[];
 
   // ── AI 분석 ────────────────────────────────────────────────
